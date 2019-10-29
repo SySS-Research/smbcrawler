@@ -1,0 +1,38 @@
+I 2020-11-27 09:57:15 app.py:302 Starting up with these arguments: 127.0.0.1:1445 -u testcrawler -p crawlerpass -D -1 -w -vv -oA /tmp/smbcrawler_test/output/standard_run/output
+I 2020-11-27 09:57:15 struct.py:34 127.0.0.1:1445 - Port open
+I 2020-11-27 09:57:16 scanner.py:133 127.0.0.1:1445 - Connected
+D 2020-11-27 09:57:16 struct.py:137 public is listable
+D 2020-11-27 09:57:16 struct.py:128 public is writable
+I 2020-11-27 09:57:16 scanner.py:53 127.0.0.1:1445 - Found share: public [] READ, LIST_ROOT, WRITE, GUEST
+I 2020-11-27 09:57:16 scanner.py:75 \\SYSS-AVOLLMER-KALI\public\level1 [0]
+I 2020-11-27 09:57:16 scanner.py:75 \\SYSS-AVOLLMER-KALI\public\level1\level2 [0]
+I 2020-11-27 09:57:16 scanner.py:75 \\SYSS-AVOLLMER-KALI\public\level1\level2\fileA [5]
+I 2020-11-27 09:57:16 scanner.py:75 \\SYSS-AVOLLMER-KALI\public\level1\fileB [5]
+D 2020-11-27 09:57:16 struct.py:137 public_ro is listable
+D 2020-11-27 09:57:16 struct.py:130 SMB SessionError: STATUS_ACCESS_DENIED({Access Denied} A process has requested access to an object but has not been granted those access rights.)
+D 2020-11-27 09:57:16 struct.py:131 public_ro is readonly
+I 2020-11-27 09:57:16 scanner.py:53 127.0.0.1:1445 - Found share: public_ro [] READ, LIST_ROOT, GUEST
+I 2020-11-27 09:57:16 scanner.py:75 \\SYSS-AVOLLMER-KALI\public_ro\level1 [0]
+I 2020-11-27 09:57:16 scanner.py:75 \\SYSS-AVOLLMER-KALI\public_ro\level1\level2 [0]
+I 2020-11-27 09:57:16 scanner.py:75 \\SYSS-AVOLLMER-KALI\public_ro\level1\level2\fileA [5]
+I 2020-11-27 09:57:16 scanner.py:75 \\SYSS-AVOLLMER-KALI\public_ro\level1\fileB [5]
+D 2020-11-27 09:57:16 struct.py:116 SMB SessionError: STATUS_ACCESS_DENIED({Access Denied} A process has requested access to an object but has not been granted those access rights.)
+I 2020-11-27 09:57:16 scanner.py:53 127.0.0.1:1445 - Found share: private [] ACCESS DENIED, GUEST
+D 2020-11-27 09:57:16 struct.py:137 GuestShare is listable
+D 2020-11-27 09:57:16 struct.py:130 SMB SessionError: STATUS_ACCESS_DENIED({Access Denied} A process has requested access to an object but has not been granted those access rights.)
+D 2020-11-27 09:57:16 struct.py:131 GuestShare is readonly
+I 2020-11-27 09:57:16 scanner.py:53 127.0.0.1:1445 - Found share: GuestShare [This is a guest share] READ, LIST_ROOT, GUEST
+I 2020-11-27 09:57:16 scanner.py:75 \\SYSS-AVOLLMER-KALI\GuestShare\level1 [0]
+I 2020-11-27 09:57:16 scanner.py:75 \\SYSS-AVOLLMER-KALI\GuestShare\level1\level2 [0]
+I 2020-11-27 09:57:16 scanner.py:75 \\SYSS-AVOLLMER-KALI\GuestShare\level1\level2\fileA [5]
+I 2020-11-27 09:57:16 scanner.py:75 \\SYSS-AVOLLMER-KALI\GuestShare\level1\fileB [5]
+I 2020-11-27 09:57:16 scanner.py:163 127.0.0.1:1445 - print$: Crawling with non-default depth 0
+D 2020-11-27 09:57:16 struct.py:116 SMB SessionError: STATUS_ACCESS_DENIED({Access Denied} A process has requested access to an object but has not been granted those access rights.)
+I 2020-11-27 09:57:16 scanner.py:53 127.0.0.1:1445 - Found share: print$ [Printer Drivers] ACCESS DENIED, GUEST
+I 2020-11-27 09:57:16 scanner.py:163 127.0.0.1:1445 - IPC$: Crawling with non-default depth 0
+D 2020-11-27 09:57:16 struct.py:139 SMB SessionError: STATUS_OBJECT_NAME_NOT_FOUND(The object name is not found.)
+D 2020-11-27 09:57:16 struct.py:140 IPC$ is not listable
+D 2020-11-27 09:57:16 struct.py:130 SMB SessionError: STATUS_OBJECT_NAME_NOT_FOUND(The object name is not found.)
+D 2020-11-27 09:57:16 struct.py:131 IPC$ is readonly
+I 2020-11-27 09:57:16 scanner.py:53 127.0.0.1:1445 - Found share: IPC$ [IPC Service (Samba 4.12.5-Debian)] READ, GUEST
+I 2020-11-27 09:57:16 io.py:29 Writing output...

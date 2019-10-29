@@ -1,0 +1,14 @@
+test.sh
+
+__pycache__
+*.pyc
+*.egg-info
+build
+dist
+
+env
+venv
+.env
+.venv
+
+.tox
