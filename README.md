@@ -67,7 +67,7 @@ Hint: Don't increase verbosity, but check progress with `tail -f
 <filename>.log` in another shell. This will make it easier to see the
 progress report that is printed when you press `<space>`.
 
-Note: `READ` is not an interesing property. This means you have read
+Note: `READ` is not an interesting property. This means you have read
 permissions at the share level, but access can still be restricted at the
 file system level. `LIST_ROOT` means you can actually list the root
 directory of that share.
