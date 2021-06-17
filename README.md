@@ -66,8 +66,10 @@ Unless you expect a large amount of data, it makes sense to almost always
 run it with `-oA` to gather the most amount of information.
 
 When you finnished running `smbcrawler`, take a look at the `*.grep` file or
-the `*.xml` file in a browers, if it small enough, and look for interesting
-file names.
+the `*.xml` file in a browser, if it small enough, and look for interesting
+file names. Virtual hard drives (typically ending on `vhdx`, `vhd`, `vmdk`,
+...) are worth investigating. Lots of times you find other sensitive data,
+like applications, contracts, credit cards, e-mails, etc.
 
 It's also a good idea to grep for several keywords (case insensitive) in the
 autodownload directory:
