@@ -118,8 +118,8 @@ class SMBShare(object):
         """Create an empty directory and delete it right after."""
 
         distribution = (string.ascii_letters + string.digits)
-        dirname = "smbcrawler_" + ''.join(random.choice(distribution)
-                                          for _ in range(8))
+        dirname = "smbcrawler_DELETEME_" + ''.join(random.choice(distribution)
+                                                   for _ in range(8))
         try:
             self.smbClient.createDirectory(str(self), dirname)
             self.smbClient.deleteDirectory(str(self), dirname)
