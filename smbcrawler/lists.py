@@ -81,6 +81,7 @@ LISTS = dict(
     boring_filenames=[
         (".*\\.dll", "Very unlikely to contain passwords"),
         (".*\\.exe", "Very unlikely to contain passwords"),
+        (".*\\.css", "Very unlikely to contain passwords"),
     ],
 
     interesting_shares=[
@@ -88,8 +89,8 @@ LISTS = dict(
 
     boring_shares=[
         (r"print\$", "Probably only contains drivers"),
-        (r"sccmcontentlib\$", "Contains only binary packages"),
-        (r"wsuscontent", "Contains only binary packages"),
+        (r"sccm.*", "Contains only binary packages"),
+        (r"wsus.*", "Contains only binary packages"),
     ],
 )
 
