@@ -54,14 +54,28 @@ lots of shares are found and when it does, it's annoying.
 You also may want to run it first with crawling depth 0 to get an idea of
 what you're dealing with. In this first run, you can enable the write check
 with `-w`, but note that this will attempt to create a directory on each share.
-Its name is `smbcrawler_<8 random characters>` and will be deleted
-immediately, but be aware anyway.
+Its name is `smbcrawler_DELETEME_<8 random characters>` and will be deleted
+immediately, but be aware anyway. Sometimes you have the permission to
+create directories, but not to delete them, so you will leave an empty
+directory there.
 
 Afterwards, you can identify interesting and boring shares for your next run
 or several runs.
 
 Unless you expect a large amount of data, it makes sense to almost always
 run it with `-oA` to gather the most amount of information.
+
+When you finnished running `smbcrawler`, take a look at the `*.grep` file or
+the `*.xml` file in a browers, if it small enough, and look for interesting
+file names.
+
+It's also a good idea to grep for several keywords (case insensitive) in the
+autodownload directory:
+
+* `net use`
+* `runas`
+* `password`
+* etc.
 
 Hint: Don't increase verbosity, but check progress with `tail -f
 <filename>.log` in another shell. This will make it easier to see the
