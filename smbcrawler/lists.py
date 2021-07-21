@@ -91,6 +91,7 @@ LISTS = dict(
         (r"print\$", "Probably only contains drivers"),
         (r"sccm.*", "Contains only binary packages"),
         (r"wsus.*", "Contains only binary packages"),
+        (r"sms.*", "Contains only binary packages"),
     ],
 )
 
