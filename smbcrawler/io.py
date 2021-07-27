@@ -193,7 +193,7 @@ def write_grep(output, filename):
                       p.get_full_path(),
                       share.get_permissions()]:
                 line += s + "\t"
-            f.write(line + "\n")
+            f.write(line.replace('\n', ' ') + "\n")
             write_to_file(smbClient, p, f)
 
     with open(filename, "w") as f:
