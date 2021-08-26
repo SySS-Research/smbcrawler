@@ -302,6 +302,11 @@ def get_diff(output_dir, data_dir):
             buff1 = re.sub(Pattern, r'', buff1)
             buff2 = re.sub(Pattern, r'', buff2)
 
+        # Remove versions:
+        re3 = r'(Samba .*)'
+        buff1 = re.sub(re3, r'', buff1, flags=re.MULTILINE)
+        buff2 = re.sub(re3, r'', buff2, flags=re.MULTILINE)
+
         diff = unified_diff(buff1.splitlines(), buff2.splitlines())
         result += '\n'.join(diff)
     return result
