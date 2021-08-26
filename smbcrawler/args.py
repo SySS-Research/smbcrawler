@@ -180,12 +180,13 @@ crawl_grp.add_argument(
 
 assess_grp = parser.add_argument_group(
     "Assessment",
-    """smbcrawler keeps four lists: a list of \"interesting\" and \"boring\"
-    filenames and a list of \"interesting\" and \"boring\" share names.
-    Files with names that match a regex on the \"interesting\" list are
+    """smbcrawler keeps lists of "interesting" and "boring"
+    filenames, directories and shares.
+    Files with names that match a regex on the "interesting" list are
     automatically downloaded unless they also match a regex on the
-    \"boring\" list. \"Interesting\" shares are crawled with depth infinity.
-    \"Boring\" shares are crawled with depth 0 (permissions check only).
+    "boring" list. "Boring" directories are skipped from crawling.
+    "Interesting" shares are crawled with depth infinity. "Boring" shares
+    are crawled with depth 0 (permissions check only).
     All matches are case-insensitive."""
 )
 

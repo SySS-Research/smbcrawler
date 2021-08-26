@@ -77,17 +77,20 @@ class CrawlerThread(object):
                     f.size,
                 ))
                 if f.is_directory():
-                    try:
-                        self.spider_share(
-                            share,
-                            pwd=f,
-                            level=level-1,
-                        )
-                    except Exception as e:
-                        if log.level == logging.DEBUG:
-                            log.exception(e)
-                        else:
-                            log.error(e)
+                    if get_regex('boring_directories').match(str(f)):
+                        log.info("Skip boring directory: %s" % str(f))
+                    else:
+                        try:
+                            self.spider_share(
+                                share,
+                                pwd=f,
+                                level=level-1,
+                            )
+                        except Exception as e:
+                            if log.level == logging.DEBUG:
+                                log.exception(e)
+                            else:
+                                log.error(e)
                 elif (
                     get_regex('interesting_filenames').match(str(f))
                     and not get_regex('boring_filenames').match(str(f))

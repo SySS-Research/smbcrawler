@@ -82,6 +82,7 @@ LISTS = dict(
         (".*\\.dll", "Very unlikely to contain passwords"),
         (".*\\.exe", "Very unlikely to contain passwords"),
         (".*\\.css", "Very unlikely to contain passwords"),
+        (".*\\.msi", "Very unlikely to contain passwords"),
     ],
 
     interesting_shares=[
@@ -92,6 +93,13 @@ LISTS = dict(
         (r"sccm.*", "Contains only binary packages"),
         (r"wsus.*", "Contains only binary packages"),
         (r"sms.*", "Contains only binary packages"),
+    ],
+
+    interesting_directories=[
+    ],
+
+    boring_directories=[
+        (r"WinSxS", "Backups of binaries"),
     ],
 )
 
