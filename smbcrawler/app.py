@@ -5,6 +5,7 @@ import logging
 
 from multiprocessing.dummy import Pool as ThreadPool
 
+import smbcrawler.monkeypatch  # noqa monkeypatch impacket scripts
 from smbcrawler.io import get_targets, output_files_are_writeable, \
         DataCollector
 from smbcrawler.scanner import CrawlerThread
