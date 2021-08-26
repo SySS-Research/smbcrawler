@@ -6,7 +6,7 @@ setuptools.setup(
     version=__version__,
     author='Adrian Vollmer',
     author_email='adrian.vollmer@syss.de',
-    url='https://git.syss.intern/avollmer/smbcrawler',
+    url='https://github.com/SySS-Research/smbcrawler',
     description='Search SMB shares for interesting files',
     long_description=open('README.md', 'r').read(),
     long_description_content_type='text/markdown',
