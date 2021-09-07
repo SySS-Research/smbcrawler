@@ -93,6 +93,7 @@ LISTS = dict(
         (r"sccm.*", "Contains only binary packages"),
         (r"wsus.*", "Contains only binary packages"),
         (r"sms.*", "Contains only binary packages"),
+        (r"WinSxS", "Backups of binaries"),
     ],
 
     interesting_directories=[
