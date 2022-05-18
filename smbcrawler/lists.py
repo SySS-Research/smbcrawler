@@ -39,6 +39,7 @@ LISTS = dict(
         (".*\\.ppk", "putty private keys"),
         (".*\\.psafe3", "password safe"),
         (".*\\.cscfg", "Cloud config"),
+        (".*\\.kix", "KiXtart Script"),
         (".*\\.kwallet", "kde wallet manager"),
         (".*\\.tblk", "VPN profiles"),
         (".*\\.ovpn", "VPN profiles"),
