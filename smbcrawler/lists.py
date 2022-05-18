@@ -63,6 +63,7 @@ LISTS = dict(
         ("logins\\.json", "Firefox - Encrypted passwords"),
         ("key3\\.db", "Firefox - Key for logins.json"),
         ("Login Data", "Chrome - Encrypted passwords"),
+        (".*\\.bds", "Baramundi Scripts"),
         ("filezilla.xml", ),
         ("recentservers.xml", ),
         ("terraform.tfvars", ),
