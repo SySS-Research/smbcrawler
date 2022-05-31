@@ -192,8 +192,10 @@ def write_grep(output, filename):
                       share.remark,
                       p.get_full_path(),
                       share.get_permissions()]:
+                # Remove unwanted characters
+                s = ''.join(x for x in s if ord(x) >= 32)
                 line += s + "\t"
-            f.write(line.replace('\n', ' ') + "\n")
+            f.write(line + "\n")
             write_to_file(smbClient, p, f)
 
     with open(filename, "w") as f:
