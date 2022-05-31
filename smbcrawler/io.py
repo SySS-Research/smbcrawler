@@ -68,7 +68,7 @@ def parse_targets(s):
         return [s]
     elif re.match(r"^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$", s):
         # ip range
-        net = ipaddress.ip_network(s)
+        net = ipaddress.ip_network(s, False)
         return [str(ip) for ip in net.hosts()]
     else:
         log.error("Invalid host name or IP address: %s" % s)
