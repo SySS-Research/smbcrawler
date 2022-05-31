@@ -102,7 +102,7 @@ def parse_plain_file(filename):
         with open(filename, 'r') as f:
             for line in f:
                 # strip newlines
-                targets += parse_targets(line[:-1])
+                targets += parse_targets(line.strip())
     return targets
 
 
