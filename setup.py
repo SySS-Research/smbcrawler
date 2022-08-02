@@ -20,6 +20,7 @@ setuptools.setup(
         'impacket>=0.9.20',
         'python-libnmap',
         'lxml',
+        'pdftotext',
     ],
     python_requires='>=3.5',
     tests_require=[

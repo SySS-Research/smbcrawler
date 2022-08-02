@@ -19,72 +19,53 @@ output_grp = parser.add_argument_group("Input and output")
 output_grp.add_argument(
     "-v", "--verbose",
     action="count",
-    help="Increase verbosity by one",
+    help="increase verbosity of console log by one",
 )
 
 output_grp.add_argument(
     "-q", "--quiet",
     action="count",
-    help="Decrease verbosity by one",
+    help="decrease verbosity of console log by one",
 )
 
 output_grp.add_argument(
-    '-oN',
-    dest="no_output",
+    '-o', '--output-dir',
+    default='.',
+    help="place all output into this directory (default: %(default)s)"
+)
+
+output_grp.add_argument(
+    '-s', '--session-name',
+    default='smbcrawler',
+    help="basename for output files and directories (default: %(default)s)"
+)
+
+output_grp.add_argument(
+    '-dS', '--disable-share-output',
     default=False,
     action='store_true',
-    help="proceed without writing output to any file"
+    help="disable the logging of shares to a greppable file"
 )
 
 output_grp.add_argument(
-    '-oX',
-    dest="outputfilename_xml",
-    type=str,
-    help="output in XML format to the given filename"
+    '-dP', '--disable-path-output',
+    default=False,
+    action='store_true',
+    help="disable the logging of paths to a greppable file"
 )
 
 output_grp.add_argument(
-    '-oJ',
-    dest="outputfilename_json",
-    type=str,
-    help="output in JSON format to the given filename"
+    '-dL', '--disable-log-file',
+    default=False,
+    action='store_true',
+    help="disable extensive logging to a file"
 )
 
 output_grp.add_argument(
-    '-oG',
-    dest="outputfilename_grep",
-    type=str,
-    help="output in grepable format to the given filename"
-)
-
-output_grp.add_argument(
-    '-oL',
-    dest="outputfilename_log",
-    type=str,
-    help="write the log at the INFO level to the given filename"
-)
-
-output_grp.add_argument(
-    '-oD',
-    dest="outputdirname",
-    default="autodownload",
-    type=str,
-    help="directory to put auto-downloaded files in"
-)
-
-output_grp.add_argument(
-    '-oA',
-    dest="outputfilename_all",
-    type=str,
-    help="output in all formats to the given filename"
-)
-
-output_grp.add_argument(
-    dest="target",
-    type=str,
-    nargs="*",
-    help="target specification; can be a host name, a single IP address,"
-         " or an IP range in CIDR notation"
+    '-dA', '--disable-autodownload',
+    default=False,
+    action='store_true',
+    help="disable autodownload"
 )
 
 output_grp.add_argument(
@@ -94,6 +75,14 @@ output_grp.add_argument(
     help="input from list of hosts/networks (use - for stdin);"
          " can either be XML output from nmap or a target"
          " specification on each line"
+)
+
+output_grp.add_argument(
+    dest="target",
+    type=str,
+    nargs="*",
+    help="target specification; can be a host name, a single IP address,"
+         " or an IP range in CIDR notation"
 )
 
 creds_grp = parser.add_argument_group("Credentials")
@@ -160,11 +149,11 @@ crawl_grp.add_argument(
 
 crawl_grp.add_argument(
     '-D', '--depth',
-    dest="spider_depth",
+    dest="depth",
     default=1,
     type=int,
-    help="spider depth; 0 lists only share names and no directories, -1"
-         " lists everything (default: %(default)s)"
+    help="crawling depth; 0 lists only share names and no directories or "
+         "files, -1 lists everything (default: %(default)s)"
 )
 
 
@@ -241,10 +230,42 @@ assess_grp.add_argument(
 )
 
 
+def output_files_are_writeable(args):
+    import os
+
+    # "*.log" not checked because overwriting it would be unexpected to the
+    # user. It's not how log files behave.
+    for filename in [
+        'shares.grep',
+        'paths.grep',
+        'secrets.json',
+        'files.json'
+    ]:
+        if filename:
+            path = "%s_%s" % (
+                os.path.join(args.output_dir, args.session_name),
+                filename,
+            )
+            try:
+                with open(path, 'w',) as f:
+                    f.write('')
+            except Exception as e:
+                print(e)
+                return False
+    return True
+
+
+def sanity_check(args):
+    if not args.target and not args.inputfilename:
+        print("You must supply a target or an input filename (or both)")
+        exit(1)
+    if not output_files_are_writeable(args):
+        print("Aborting because output file could not be written. "
+              "This is just going to waste everybody's time.")
+        exit(1)
+
+
 def parse_args(argv):
-    global args  # TODO don't use global arguments
-    global original_args
-    original_args = argv
     args = parser.parse_args(argv)
 
     if args.show in LISTS:
@@ -262,23 +283,5 @@ def parse_args(argv):
     if args.user and not (args.password is not None or args.hash):
         args.password = getpass.getpass("Enter password: ")
 
-    if args.outputfilename_all:
-        args.outputfilename_xml = args.outputfilename_all
-        args.outputfilename_json = args.outputfilename_all
-        args.outputfilename_log = args.outputfilename_all
-        #  args.outputfilename_normal = args.outputfilename_all
-        args.outputfilename_grep = args.outputfilename_all
-        args.outputdirname = args.outputfilename_all + "-autodownload"
-
-    if args.outputfilename_xml:
-        args.outputfilename_xml += ".xml"
-    if args.outputfilename_json:
-        args.outputfilename_json += ".json"
-    if args.outputfilename_log:
-        args.outputfilename_log += ".log"
-    #  if args.outputfilename_normal:
-    #      args.outputfilename_normal += ".txt"
-    if args.outputfilename_grep:
-        args.outputfilename_grep += ".grep"
-
+    sanity_check(args)
     return args

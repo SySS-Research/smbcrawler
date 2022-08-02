@@ -1,20 +1,39 @@
-import multiprocessing
-import threading
 import sys
+import os
 import logging
-
-from multiprocessing.dummy import Pool as ThreadPool
+import queue
+import threading
+import time
 
 import smbcrawler.monkeypatch  # noqa monkeypatch impacket scripts
-from smbcrawler.io import get_targets, output_files_are_writeable, \
-        DataCollector
-from smbcrawler.scanner import CrawlerThread
-from smbcrawler.args import parse_args
-from smbcrawler.log import init_log
+from smbcrawler.io import get_targets, save_file, write_files, write_secrets, \
+        to_grep_line
+from smbcrawler.shares import SMBShare
+from smbcrawler.lists import get_regex
 
+from impacket.smbconnection import SMBConnection
 from impacket.smbconnection import SessionError
 
-log = None
+log = logging.getLogger(__name__)
+sharegrep_log = logging.getLogger('sharegrep_logger')
+pathgrep_log = logging.getLogger('pathgrep_logger')
+
+
+def log_exceptions(func):
+    """Catch the exception, log it, and don't reraise it"""
+
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            msg = "[%s@%s] %s" % (
+                e.__class__.__name__,
+                func.__name__,
+                str(e),
+            )
+            log.error(msg)
+            log.debug(msg, exc_info=True)
+    return wrapper
 
 
 class Login(object):
@@ -31,55 +50,105 @@ class Login(object):
             self.lmhash = ""
 
 
-class ThreadManager(object):
-    """Manages the crawler threads
+class CrawlerApp(object):
+    def __init__(self, args, cmd=None):
+        self.args = args
+        self.cmd = cmd
 
-    :global_manager: A multiprocessing.Manager object to manage shared
-        variables
-    :total_targets: The number of total targets
-    :kill_app: callback function taking no arguments that communicates to
-        the parent app that we want to quit
-    """
+        self.targets = get_targets(
+            self.args.target,
+            self.args.inputfilename,
+            self.args.timeout,
+        )
 
-    def __init__(self, global_manager, total_targets, kill_app, is_domain,
-                 force):
-        self.total_targets = total_targets
-        self.kill_app = kill_app
-        self.is_domain = is_domain
-        self.force = force
-        self.threads = []
-        self.shared_vars = global_manager.dict()
-        self.shared_vars['scanned'] = 0
-        self.shared_vars['unpaused_threads'] = 0
-        self.shared_vars['credentials_confirmed'] = False
-        self.all_paused = global_manager.Event()
-        self.running = global_manager.Event()
-        self.running.set()
+        self.login = Login(
+            self.args.user,
+            self.args.domain,
+            password=self.args.password,
+            hash=self.args.hash,
+        )
+
+        self.credentials_confirmed = False
+        self.autodownload_dir = os.path.join(
+            self.args.output_dir,
+            self.args.session_name + "_autodownload",
+        )
+        self.secrets_filename = os.path.join(
+            self.args.output_dir,
+            self.args.session_name + "_secrets.json",
+        )
+        self.files_filename = os.path.join(
+            self.args.output_dir,
+            self.args.session_name + "_files.json",
+        )
+
+    def run(self):
+        log.info("Starting up with these arguments: " + self.cmd)
+
+        try:
+            self._run()
+        except Exception as e:
+            log.exception(e)
+            log.fatal("Exception caught, trying to exit gracefully...")
+        except KeyboardInterrupt:
+            msg = (
+                "CTRL-C caught, trying to kill threads "
+                "and exit gracefully..."
+            )
+            print(msg)
+            log.info(msg)
+            try:
+                self.kill_threads()
+            except (Exception, KeyboardInterrupt) as e:
+                log.error("Exception during thread killing")
+                log.debug(e, exc_info=True)
+        log.info("Writing output...")
+        print("Writing output...")
+        write_files(self.files_filename)
+        write_secrets(self.secrets_filename)
+        sys.exit(0)
 
     def pause(self):
-        print("Pausing threads... be patient")
-        self.running.clear()
-        self.all_paused.wait()
-        print("Threads paused. ", end='')
+        # Use print because log level might not be high enough
+        print("Pausing threads... be patient. Press CTRL-C to resume.")
+        CrawlerThread.running.clear()
+        try:
+            while True:
+                time.sleep(1)
+                count = sum(t.is_running for t in self.threads)
+                print("Pausing... %d threads still running" % count)
+                if count == 0:
+                    break
+        except KeyboardInterrupt:
+            print("CTRL-C caught, resuming...")
+            CrawlerThread.running.set()
+            return
+
+        print("Threads paused.")
         self.print_progress()
-        print("\ts <n>\tSkip share in thread <n>")
-        print("\tk <n>\tKill thread <n> and proceed with next target")
+        self.show_menu()
+
+    def show_menu(self):
+        print("\ts <n>[,<m>,...]\tSkip share in thread <n>")
+        print("\th <n>[,<m>,...]\tSkip host in thread <n>")
+        print("\td <n>\tShow debug info of thread <n>")
         print("\tr\tResume crawler")
         print("\tq\tWrite output files and quit")
         print("Threads:")
         for i, t in enumerate(self.threads):
-            host = t.target.host
+            if t.done:
+                continue
             print("\t%d) \\\\%s\\%s" % (
-                i, host, t.current_share or "",
+                i, t.current_target.host, t.current_share or "",
             ))
-        self.show_menu()
 
-    def show_menu(self):
         cmd = ""
         commands = {
-            'k': self.kill_thread,
+            'h': self.skip_host,
             's': self.skip_share,
-            'q': self.quit,
+            'q': self.kill_threads,
+            #  'd': self.show_debug_info,
+            # Leave this an undocumented feature
             'r': self.resume,
         }
         while True:
@@ -97,158 +166,104 @@ class ThreadManager(object):
             else:
                 print("Unkown command: %s" % cmd)
 
+    def show_debug_info(self, n=None):
+        if not n:
+            log.error("Missing argument")
+            return False
+        print(self.threads[int(n)].__dict__)
+
     def skip_share(self, n=None):
         if not n:
             log.error("Missing argument")
             return False
         try:
+            if ',' in n:
+                for N in n.split(','):
+                    self.threads[int(N)].skip_share()
             self.threads[int(n)].skip_share()
         except (IndexError, ValueError):
             log.error("Invalid argument: %s" % n)
             return False
+        print("Skipped shares: %s, resuming" % n)
         self.resume()
         return True
 
-    def kill_thread(self, n=None):
+    def skip_host(self, n=None):
         if not n:
             log.error("Missing argument")
             return False
         try:
-            self.threads[int(n)].kill()
+            if ',' in n:
+                for N in n.split(','):
+                    self.threads[int(N)].skip_host()
+            self.threads[int(n)].skip_host()
         except (IndexError, ValueError):
             log.error("Invalid argument: %s" % n)
             return False
+        print("Skipped hosts: %s, resuming" % n)
         self.resume()
         return True
 
-    def quit(self):
-        for i, t in enumerate(self.threads):
+    def kill_threads(self):
+        for t in self.threads:
             t.kill()
-        self.kill_app()
-        self.resume(msg="Quitting...")
+        self.resume(msg="Killing threads...")
+        for t in self.threads:
+            t.join()
         return True
 
     def resume(self, msg="Resuming..."):
-        print(msg)
-        self.all_paused.clear()
-        self.running.set()
+        log.info(msg)
+        CrawlerThread.running.set()
         return True
-
-    def check_paused(self, thread):
-        if not self.running.is_set():
-            self.shared_vars['unpaused_threads'] -= 1
-            if self.shared_vars['unpaused_threads'] == 0:
-                self.all_paused.set()
-            self.running.wait()
-            self.shared_vars['unpaused_threads'] += 1
-
-    def add(self, thread):
-        self.threads.append(thread)
-        self.shared_vars['unpaused_threads'] += 1
-
-    def remove(self, thread):
-        self.threads.remove(thread)
-        self.shared_vars['scanned'] += 1
-        self.shared_vars['unpaused_threads'] -= 1
 
     def print_progress(self):
         message = ""
-        if self.total_targets > 0:
-            scanned = self.shared_vars['scanned']
-            message = "Processed %d out of %d hosts (%.2f%%)" % (
-                scanned,
-                self.total_targets,
-                100.*scanned/self.total_targets,
-            )
+        scanned = CrawlerThread.targets_finished
+        targets = len(self.targets)
+        message = "Processed %d out of %d hosts (%.2f%%)" % (
+            scanned,
+            targets,
+            100.*scanned/targets,
+        )
         print(message)
 
     def report_logon_failure(self, target):
-        if (
-            not self.shared_vars['credentials_confirmed']
-            and not self.force
-            and self.is_domain
-        ):
+        if not self.credentials_confirmed:
             log.fatal("%s:%d - Logon failure; "
                       "aborting to prevent account lockout; "
-                      "consider using --force to continue anyway"
+                      "consider using the 'force' flag to continue anyway"
                       % (target.host, target.port))
-            self.quit()
+            self.kill_threads()
         else:
             log.warning("%s:%d - Logon failure" % (target.host, target.port))
 
     def confirm_credentials(self):
-        self.shared_vars['credentials_confirmed'] = True
+        self.credentials_confirmed = True
 
+    def _run(self):
+        for target in self.targets:
+            CrawlerThread.target_queue.put(target)
+        CrawlerThread.app = self
+        self.threads = []
+        for t in range(self.args.threads):
+            thread = CrawlerThread(
+                self.login,
+                check_write_access=self.args.check_write_access,
+                depth=self.args.depth,
+                crawl_printers_and_pipes=self.args.crawl_printers_and_pipes,
+            )
+            thread.start()
+            self.threads.append(thread)
+        CrawlerThread.running.set()
 
-class CrawlerApp(object):
-    def __init__(self, global_manager, args):
-        self.args = args
-        self.sanity_check()
-        self.targets = get_targets(
-            self.args.target,
-            self.args.inputfilename,
-            self.args.timeout,
-        )
-
-        self.login = Login(
-            self.args.user,
-            self.args.domain,
-            password=self.args.password,
-            hash=self.args.hash,
-        )
-
-        self.output = DataCollector(self.args)
-        self.thread_manager = ThreadManager(
-            global_manager,
-            len(self.targets),
-            self.kill,
-            self.args.domain not in ['', '.'],
-            self.args.force,
-        )
-
-        self.killed = False
-
-    def kill(self):
-        self.killed = True
-
-    def sanity_check(self):
-        if not self.args.target and not self.args.inputfilename:
-            log.critical("You must supply a target or an input filename "
-                         "(or both)")
-            exit(1)
-        if not output_files_are_writeable(self.args):
-            log.critical("Aborting because output file could not be written. "
-                         "This is just going to waste everybody's time.")
-            exit(1)
-        if not self.args.no_output and all(x is None for x in [
-            self.args.outputfilename_xml,
-            self.args.outputfilename_json,
-            self.args.outputfilename_log,
-            self.args.outputfilename_grep,
-        ]):
-            log.critical("Aborting because not output file name was given. "
-                         "This is just going to waste everybody's time. "
-                         "Use the -oN parameter to proceed anyway.")
-            exit(1)
-
-    def run(self):
         t = threading.Thread(target=self.input_thread)
         t.setDaemon(True)
         t.start()
 
-        pool = ThreadPool(self.args.threads)  # Number of threads
-        try:
-            pool.map(self.worker, self.targets)
-        except Exception as e:
-            log.exception(e)
-            log.fatal("Exception caught, trying to write output...")
-        except KeyboardInterrupt:
-            log.info("CTRL-C caught, "
-                     "trying to exit gracefully and write output...")
-            self.thread_manager.quit()
-            pass
-        self.output.write_output()
-        sys.exit(0)
+        # Wait for threads to finish
+        for t in self.threads:
+            t.join()
 
     def read_key(self):
         import termios
@@ -270,36 +285,284 @@ class CrawlerApp(object):
         while True:
             key = self.read_key()
             if key == "p":
-                self.thread_manager.pause()
+                self.pause()
             if key == " ":
-                self.thread_manager.print_progress()
+                self.print_progress()
 
-    def worker(self, target):
-        if self.killed:
-            return
-        thread = CrawlerThread(target, self.thread_manager, self.output,
-                               self.login, self.args)
-        self.thread_manager.add(thread)
+
+class CrawlerThread(threading.Thread):
+    target_queue = queue.Queue()
+    targets_finished = 0
+    running = threading.Event()
+
+    # Used for modifying class vars
+    thread_lock = threading.Lock()
+
+    # Used for first credential check
+    cred_lock = threading.Lock()
+
+    def __init__(self, login, check_write_access=False, depth=0,
+                 crawl_printers_and_pipes=False):
+        self.login = login
+        self.check_write_access = check_write_access
+        self.depth = depth
+        self.crawl_printers_and_pipes = crawl_printers_and_pipes
+
+        self.current_share = None
+        self.current_target = None
+        self._guest_session = False
+        # This if for skipping individual shares/hosts manually
+        self._skip_share = False
+        self._skip_host = False
+        self.killed = False
+        self.is_running = False
+        self.done = False
+        super().__init__()
+
+    def run(self):
+        self.is_running = True
         try:
-            thread.run()
-        except Exception as e:
-            if (isinstance(e, SessionError) and
-                    'STATUS_LOGON_FAILURE' in str(e)):
-                self.thread_manager.report_logon_failure(target)
+            while not self.killed:
+                target = self.target_queue.get(block=False)
+                self.crawl_host(target)
+                with CrawlerThread.thread_lock:
+                    CrawlerThread.targets_finished += 1
+        except queue.Empty:
+            log.debug("[%s] Queue empty, quitting thread" %
+                      self._name)
+            self.is_running = False
+            self.done = True
+
+    def kill(self):
+        self.killed = True
+
+    def check_paused(self):
+        self.is_running = False
+        CrawlerThread.running.wait()
+        self.is_running = True
+
+    def skip_share(self):
+        log.info("[%s] Skipping share %s on host %s..." % (
+            self._name,
+            self.current_share,
+            self.current_target,
+        ))
+        self._skip_share = True
+
+    def skip_host(self):
+        """Stop crawling this host"""
+        log.info("[%s] Skipping host %s..." % (
+            self._name,
+            self.current_target,
+        ))
+        self._skip_host = True
+
+    @log_exceptions
+    def crawl_share(self, share, depth=0):
+        self._skip_share = False
+
+        share.check_all_permission(
+            self._guest_session,
+            self.check_write_access,
+        )
+
+        log.info("%s:%d - Found share: %s [%s] %s"
+                 % (self.smbClient._remoteHost,
+                    self.smbClient._sess_port,
+                    share,
+                    share.remark,
+                    share.get_permissions(),
+                    ))
+        sharegrep_log.info(
+            to_grep_line(
+                [
+                    self.smbClient,
+                    self.current_target,
+                    share,
+                    share.remark,
+                    share.get_permissions(),
+                ]
+            )
+        )
+
+        if depth == 0 or not share.permissions['list_root']:
+            return None
+
+        self.crawl_dir(share, depth)
+        return None
+
+    @log_exceptions
+    def crawl_dir(self, share, depth, parent=None):
+        self.check_paused()
+        if (self._skip_share or self._skip_host or self.killed):
+            return
+
+        if depth == 0:
+            log.debug("[%s] Depth 0 reached: \\\\%s\\%s\\%s" %
+                      (self._name, self.current_target, share, parent))
+            return
+
+        for f in share.get_dir_list(parent):
+            if f.get_longname() in ['.', '..']:
+                continue
+
+            if (self._skip_share or self._skip_host or self.killed):
+                return
+
+            if parent:
+                parent.add_path(f)
             else:
-                if log.level == logging.DEBUG:
-                    log.exception(e)
-                else:
-                    log.error(e)
-        self.thread_manager.remove(thread)
+                share.add_path(f)
 
+            # output path info
+            log.info('\\\\%s\\%s\\%s [%d]' % (
+                self.smbClient,
+                share,
+                f.get_full_path(),
+                f.size,
+            ))
+            pathgrep_log.info(
+                to_grep_line([
+                    self.smbClient,
+                    share,
+                    f.get_full_path(),
+                    f.size,
+                ])
+            )
 
-def main(args=None):
-    parsed_args = parse_args(args)
-    init_log(parsed_args)
-    global log
-    log = logging.getLogger(__name__)
-    cmd_args = ' '.join(args or sys.argv[1:])
-    log.info("Starting up with these arguments: " + cmd_args)
-    global_manager = multiprocessing.Manager()
-    CrawlerApp(global_manager, parsed_args).run()
+            if f.is_directory():
+                self.process_directory(share, f, depth)
+            elif (
+                get_regex('interesting_filenames').match(str(f))
+                and not get_regex('boring_filenames').match(str(f))
+            ):
+                self.process_file(share, f)
+
+    @log_exceptions
+    def process_file(self, share, f):
+        if self.app.args.disable_autodownload:
+            return
+
+        def auto_download(data):
+            save_file(
+                self.app.autodownload_dir,
+                data,
+                str(self.smbClient),
+                str(share),
+                f.get_full_path(),
+            )
+
+        self.smbClient.getFile(
+            str(share),
+            f.get_full_path(),
+            auto_download,
+        )
+
+    @log_exceptions
+    def process_directory(self, share, f, depth):
+        if get_regex('boring_directories').match(str(f)):
+            log.info("[%s] Skip boring directory: %s" % (self._name, str(f)))
+        else:
+            self.crawl_dir(
+                share,
+                depth-1,
+                f,
+            )
+
+    @log_exceptions
+    def crawl_host(self, target):
+        log.debug("[%s] Processing host: %s" % (self._name, target.host))
+
+        self.current_share = None
+        self.current_target = target
+        self._skip_host = False
+        self.check_paused()
+        if self.killed:
+            return False
+
+        if not target.port_open(target.port):
+            log.error("[%s] %s - No SMB service found" % (
+                self._name,
+                target.host,
+            ))
+            return False
+
+        self.smbClient = SMBConnection(
+            '*SMBSERVER' if target.port == 139 else target.host,
+            target.host,
+            sess_port=target.port,
+        )
+
+        if not self.smbClient:
+            log.error("[%s] %s:%d - Could not connect" % (
+                self._name,
+                target.host,
+                target.port,
+            ))
+            return False
+
+        log.info("[%s] %s:%s - Connected"
+                 % (self._name, target.host, target.port))
+
+        self.authenticate(target)
+        if self.killed or self._skip_host:
+            return False
+
+        shares = [SMBShare(self.smbClient, s)
+                  for s in self.smbClient.listShares()]
+        for s in shares:
+            self.check_paused()
+            if self.killed or self._skip_host:
+                break
+            share_name = self.smbClient.add_share(s)
+            self.current_share = share_name
+            depth = s.effective_depth(
+                self.depth,
+                self.crawl_printers_and_pipes,
+            )
+            if depth != self.depth:
+                log.info(
+                    "\\\\%s:%d\\%s: Crawling with non-default depth %d" % (
+                        target.host,
+                        target.port,
+                        share_name,
+                        depth
+                    )
+                )
+            self.crawl_share(s, depth=depth)
+        self.smbClient.close()
+        return True
+
+    def authenticate(self, target):
+        if self.smbClient.isLoginRequired():
+            self.do_login(target)
+        else:
+            self.smbClient.login("", "")
+        if self.smbClient.isGuestSession():
+            self._guest_session = True
+
+    def do_login(self, target):
+        try:
+            if not self.app.credentials_confirmed:
+                CrawlerThread.cred_lock.acquire()
+            if self.killed:
+                return
+            self.smbClient.login(
+                self.login.username or "",
+                self.login.password or "",
+                domain=self.login.domain,
+                lmhash=self.login.lmhash,
+                nthash=self.login.nthash,
+            )
+            self.app.confirm_credentials()
+        except Exception as e:
+            if (
+                isinstance(e, SessionError)
+                and 'STATUS_LOGON_FAILURE' in str(e)
+            ):
+                self.app.report_logon_failure(target)
+            else:
+                raise
+        finally:
+            if CrawlerThread.cred_lock.locked():
+                CrawlerThread.cred_lock.release()

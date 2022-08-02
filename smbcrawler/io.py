@@ -1,64 +1,22 @@
 import os
+import io
 import re
 import ipaddress
-import json
 import sys
-from lxml import etree as ET
+import hashlib
+import collections
 import logging
+import json
 
-from impacket.smbconnection import SMBConnection
-from impacket.smb import SharedFile
-from smbcrawler.shares import Target, SMBShare
+import magic
+
+from smbcrawler.shares import Target
+from smbcrawler.secrets import Secret
 
 log = logging.getLogger(__name__)
 
-
-class DataCollector(object):
-    def __init__(self, args):
-        self.args = args
-        self.hosts = []
-
-    def __iter__(self):
-        return iter(self.hosts)
-
-    def add_smbhost(self, smbClient):
-        if smbClient not in self:
-            self.hosts.append(smbClient)
-
-    def write_output(self):
-        log.info("Writing output...")
-        if self.args.outputfilename_grep:
-            write_grep(self, self.args.outputfilename_grep)
-        if self.args.outputfilename_xml:
-            write_xml(self, self.args.outputfilename_xml)
-        if self.args.outputfilename_json:
-            write_json(self, self.args.outputfilename_json)
-        #  if self.args.outputfilename_normal:
-        #      write_normal(output)
-
-
-class MyEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, DataCollector):
-            return {str(smbClient): smbClient for smbClient in obj.hosts}
-        elif isinstance(obj, SMBConnection):
-            return {share.name: share for share in obj.shares}
-        elif isinstance(obj, SMBShare):
-            result = {}
-            result["paths"] = {path.get_full_path(): path
-                               if path.is_directory()
-                               else None
-                               for path in obj.paths}
-            result["read"] = obj.permissions['read']
-            result["write"] = obj.permissions['write']
-            result["remark"] = obj.remark
-            result["list_root"] = obj.permissions['list_root']
-            result["guest"] = obj.permissions['guest']
-            return result
-        elif isinstance(obj, SharedFile):
-            return {path.get_full_path(): path if path.is_directory() else
-                    None for path in obj.paths}
-        return json.JSONEncoder.default(self, obj)
+HASHED_FILES = collections.defaultdict(lambda: [])
+SECRETS = collections.defaultdict(lambda: [])
 
 
 def parse_targets(s):
@@ -107,6 +65,8 @@ def parse_plain_file(filename):
 
 
 def get_targets(target, inputfilename, timeout):
+    """"Load targets from file"""
+
     targets = []
     for t in target:
         targets += parse_targets(t)
@@ -126,98 +86,124 @@ def get_targets(target, inputfilename, timeout):
     return [Target(t, timeout) for t in targets]
 
 
-def output_files_are_writeable(args):
-    for filename in [
-        args.outputfilename_xml,
-        args.outputfilename_json,
-        #  args.outputfilename_normal,
-        args.outputfilename_grep,
-    ]:
-        if filename:
-            try:
-                with open(filename, 'w') as f:
-                    f.write('')
-            except Exception as e:
-                log.exception(e)
-                return False
-    return True
+def save_file(dirname, data, host, share, path):
+    # Check if file is already known
+    hash_object = hashlib.sha256(data)
+    # 4 bytes should be enough
+    content_hash = hash_object.hexdigest()[:8]
+    seen = content_hash in HASHED_FILES
+    URI = '\\'.join(['', '', host, share, path])
+    HASHED_FILES[content_hash].append(URI)
+    if seen:
+        log.info("File already seen, discarding: %s" % URI)
+        return
 
-
-def save_file(data, filename, dirname):
     if not os.path.exists(dirname):
         os.makedirs(dirname)
 
+    filename = "%s:\\\\%s\\%s\\%s" % (content_hash, host, share, path)
     path = os.path.join(dirname, filename)
+
+    # Make sure not to overwrite files, append a number
     if os.path.exists(path):
         count = 1
         while os.path.isfile("%s.%d" % (path, count)):
             count += 1
         path = "%s.%d" % (path, count)
 
+    find_secrets(data, path, content_hash)
+    # Write data to disk
     with open(path, 'wb') as f:
         f.write(data)
 
 
-def write_xml(output, filename):
-    def add_paths_to_node(paths, root):
-        for path in paths:
-            dir_node = ET.SubElement(root, "directory")
-            dir_node.set("name", path.get_full_path())
-            if path not in path.paths:
-                add_paths_to_node(path.paths, dir_node)
+def decode_bytes(data, file_type):
+    """Decode bytes from all encodings"""
 
-    root = ET.Element("smbcrawler")
-    for smbConnection in output.hosts:
-        host_node = ET.SubElement(root, "host")
-        host_node.set("name", str(smbConnection))
-        for share in smbConnection.shares:
-            share_node = ET.SubElement(host_node, "share")
-            share_node.set("name", str(share))
-            share_node.set("remark", share.remark)
-            share_node.set("read", str(share.permissions['read']))
-            share_node.set("write", str(share.permissions['write']))
-            share_node.set("list_root", str(share.permissions['list_root']))
-            share_node.set("guest", str(share.permissions['guest']))
-            add_paths_to_node(share.paths, share_node)
-    tree = ET.ElementTree(root)
-    tree.write(filename, encoding='UTF-8', pretty_print=True)
+    if 'UTF-8 (with BOM)' in file_type:
+        return data.decode('utf-8-sig', errors='replace')
+    elif 'UTF-16 (with BOM)' in file_type:
+        return data.decode('utf-16', errors='replace')
+    elif 'UTF-16, little-endian' in file_type:
+        return data.decode('utf-16', errors='replace')
+    elif 'UTF-16, big-endian' in file_type:
+        return data.decode('utf-16', errors='replace')
+    elif 'ASCII text' in file_type:
+        return data.decode(errors='replace')
+    return data.decode(errors='replace')
 
 
-def write_grep(output, filename):
-    def write_to_file(smbClient, paths, f):
-        for p in paths:
-            line = ""
-            for s in [str(smbClient),
-                      share.name,
-                      share.remark,
-                      p.get_full_path(),
-                      share.get_permissions()]:
-                # Remove unwanted characters
-                s = ''.join(x for x in s if ord(x) >= 32)
-                line += s + "\t"
-            f.write(line + "\n")
-            write_to_file(smbClient, p, f)
+def convert(data, mime, file_type):
+    """Convert bytes to string"""
 
-    with open(filename, "w") as f:
-        f.write("host\tshare\tremark\tpath\tpermissions\n")
-        for smbClient in output.hosts:
-            for share in smbClient.shares:
-                if share.paths:
-                    write_to_file(smbClient, share.paths, f)
-                else:
-                    f.write('%s\t%s\t%s\t\t%s\n' % (
-                        smbClient,
-                        share.name,
-                        share.remark,
-                        share.get_permissions(),
-                    ))
+    if mime.endswith('charset-binary') or file_type.endswith('data'):
+        if mime.startswith('application/pdf'):
+            import pdftotext
+            with io.BytesIO(data) as fp:
+                pdf = pdftotext.PDF(fp)
+            return '\n\n'.join(pdf)
+        else:
+            # TODO convert docx, xlsx
+            return ''
+    else:
+        return decode_bytes(data, file_type)
 
 
-def write_json(output, filename):
-    with open(filename, "w") as f:
-        json.dump(output, f, cls=MyEncoder, indent=1)
+def find_secrets(data, filename, content_hash):
+    """Extract secrets from byes"""
+
+    mime = magic.from_buffer(data, mime=True)
+    file_type = magic.from_buffer(data)
+    try:
+        data = convert(data, mime, file_type)
+    except Exception:
+        return
+
+    for line in data.splitlines():
+        if not line:
+            continue
+        secret = None
+        # find secret with max confidence
+        for s in Secret.__subclasses__():
+            s = s(line, mimetype=mime, filename=filename)
+            c = s.get_confidence()
+            if (not secret and c > 0) or (secret and c > secret.confidence):
+                secret = s
+        if secret and secret.confidence > 0:
+            log.success(
+                "Found secret (`%s`, confidence %d) in [%s] %s: %s" % (
+                    secret.description,
+                    secret.confidence,
+                    content_hash,
+                    secret.filename,
+                    secret.line,
+                )
+            )
+            SECRETS[content_hash].append([
+                secret.description,
+                secret.confidence,
+                secret.line,
+            ])
 
 
-def write_normal(output):
-    # TODO
-    pass
+def write_secrets(path):
+    with open(path, 'w') as fp:
+        # Make copy of dict for thread safety
+        json.dump(dict(SECRETS), fp)
+
+
+def write_files(path):
+    with open(path, 'w') as fp:
+        # Make copy of dict for thread safety
+        json.dump(dict(HASHED_FILES), fp)
+
+
+def sanitize(remark):
+    """Remove unwanted characters"""
+    result = ''.join([x for x in remark if ord(x) >= 32])
+    return result
+
+
+def to_grep_line(values):
+    result = '\t'.join([sanitize(str(x)) for x in values])
+    return result

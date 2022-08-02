@@ -92,10 +92,10 @@ LISTS = dict(
 
     boring_shares=[
         (r"print\$", "Probably only contains drivers"),
-        (r"sccm.*", "Contains only binary packages"),
-        (r"wsus.*", "Contains only binary packages"),
-        (r"sms.*", "Contains only binary packages"),
+        (r"wsus.*|sccm.*|sms.*|msscvm.*|.*reminst.*",
+         "Contains only binary packages"),
         (r"WinSxS", "Backups of binaries"),
+        (r"backup", "Backups of binaries"),
     ],
 
     interesting_directories=[

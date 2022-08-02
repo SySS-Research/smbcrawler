@@ -33,6 +33,9 @@ class Target(object):
         log.info("%s:%d - Port open" % (self.host, port))
         return True
 
+    def __str__(self):
+        return '%s:%s' % (self.host, self.port)
+
 
 def normalize_pwd(pwd):
     if pwd:
@@ -125,20 +128,18 @@ class SMBShare(object):
             self.smbClient.deleteDirectory(str(self), dirname)
             self.permissions['write'] = True
             log.debug("%s is writable" % self)
-        except Exception as e:
-            log.debug(e)
-            log.debug("%s is readonly" % self)
+        except Exception:
+            log.debug("%s is readonly" % self, exc_info=True)
 
     def check_permission_list(self):
         try:
             self.get_dir_list(None)
             self.permissions['list_root'] = True
             log.debug("%s is listable" % self)
-        except Exception as e:
-            log.debug(e)
-            log.debug("%s is not listable" % self)
+        except Exception:
+            log.debug("%s is not listable" % self, exc_info=True)
 
-    def effective_depth(self, spider_depth, crawl_printers_and_pipes):
+    def effective_depth(self, depth, crawl_printers_and_pipes):
         """Determine depth at which we want to scan this share"""
         if get_regex('interesting_shares').match(str(self)):
             return -1
@@ -146,8 +147,8 @@ class SMBShare(object):
             return 0
         elif (self.is_ipc_pipe or self.is_print_queue):
             if crawl_printers_and_pipes:
-                return spider_depth
+                return depth
             else:
                 return 0
         else:
-            return spider_depth
+            return depth
