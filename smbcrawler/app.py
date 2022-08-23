@@ -561,6 +561,13 @@ class CrawlerThread(threading.Thread):
                 and 'STATUS_LOGON_FAILURE' in str(e)
             ):
                 self.app.report_logon_failure(target)
+                self._skip_host = True
+            elif (
+                isinstance(e, SessionError)
+                and 'STATUS_LOGON_TYPE_NOT_GRANTED' in str(e)
+            ):
+                # We have no permission to this share, no big deal
+                self._skip_host = True
             else:
                 raise
         finally:
