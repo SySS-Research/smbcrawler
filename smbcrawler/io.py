@@ -17,6 +17,7 @@ log = logging.getLogger(__name__)
 
 HASHED_FILES = collections.defaultdict(lambda: [])
 SECRETS = collections.defaultdict(lambda: [])
+REPORTED = collections.defaultdict(lambda: [])
 
 
 def parse_targets(s):
@@ -169,21 +170,35 @@ def find_secrets(data, filename, content_hash):
             c = s.get_confidence()
             if (not secret and c > 0) or (secret and c > secret.confidence):
                 secret = s
-        if secret and secret.confidence > 0:
+                break
+
+        if not secret:
+            continue
+
+        reported_secret = secret.get_secret()
+        if not reported_secret:
+            reported_secret = secret.get_line()
+        max_len = 100
+        if len(reported_secret) > max_len:
+            reported_secret = reported_secret[:max_len] + '...'
+
+        if reported_secret not in REPORTED[content_hash]:
+            REPORTED[content_hash].append(reported_secret)
             log.success(
-                "Found secret (`%s`, confidence %d) in [%s] %s: %s" % (
-                    secret.description,
-                    secret.confidence,
-                    content_hash,
-                    secret.filename,
-                    secret.line,
+                "Potential secret [%(hash)s]: %(line)s" % dict(
+                    desc=secret.description,
+                    conf=secret.confidence,
+                    hash=content_hash,
+                    filename=secret.filename,
+                    line=reported_secret,
                 )
             )
-            SECRETS[content_hash].append([
-                secret.description,
-                secret.confidence,
-                secret.line,
-            ])
+            SECRETS[content_hash].append(dict(
+                description=secret.description,
+                confidence=secret.confidence,
+                secret=secret.get_secret(),
+                full_line=secret.line,
+            ))
 
 
 def write_secrets(path):

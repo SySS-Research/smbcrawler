@@ -13,6 +13,7 @@ class Secret(object):
         self.mimetype = mimetype
         self.filename = filename
         self.confidence = 0
+        self.match_result = None
 
     def description(self):
         """Must return a short string"""
@@ -28,6 +29,7 @@ class Secret(object):
         m = re.search(self.regex, self.line, flags=flags)
         if m:
             result = self.assess()
+            self.match_result = m
             return result
         return 0
 
@@ -55,6 +57,16 @@ class Secret(object):
         self.confidence = result
         return result
 
+    def get_secret(self):
+        if self.match_result:
+            return self.match_result.groupdict.get('secret', '')
+        return ""
+
+    def get_line(self):
+        if self.match_result:
+            return self.match_result.group(0).strip()
+        return ""
+
 
 class NetUser(Secret):
     description = "'net use' command in script"
@@ -76,30 +88,48 @@ class SecureString(Secret):
 
 class PasswordConfig(Secret):
     description = "'password =' in config"
-    regex = '(password|pwd|passwd)[a-z]*\\s*='
+    regex = '(password|pwd|passwd)[a-z]*\\s*=(?P<secret>.*)'
     likely_extensions = ['.ini', '.conf', '.cnf', '.config', '.properties']
+
+    def assess(self):
+        # some common strings that cause false positive
+        c = super().assess()
+        if (
+            'ShowPasswordDialog=' in self.get_line()
+        ):
+            c = 0
+        return c
 
 
 class PasswordJson(Secret):
     description = "'password' value in JSON file"
-    regex = '"[a-z]*(password|pwd|passwd)[a-z]*":'
+    regex = '"[a-z]*(password|pwd|passwd)[a-z]*":"(?P<secret>\\s*)"'
     likely_extensions = ['.json']
+
+    def assess(self):
+        # some strings in adml files on SYSVOL make it a sure false positive
+        c = super().assess()
+        if (
+            'DisableChangePassword=' in self.get_line()
+        ):
+            c = 0
+        return c
 
 
 class PasswordYaml(Secret):
     description = "'password' value in YAML file"
-    regex = 'passw[a-z]*:'
+    regex = '\\s*[a-z]*passw[a-z]*:(?P<secret>.*)'
     likely_extensions = ['.yaml', '.yml']
 
-    def _get_confidence(self):
+    def assess(self):
         # high likelihood of false positives
-        c = super()._get_confidence()
-        return c - 20
+        c = super().assess()
+        return c - 30
 
 
 class PasswordXml(Secret):
     description = "'password' element in XML file"
-    regex = '<[a-z]*pass[!>]*>[!<]+<[a-z]pass'
+    regex = '<[a-z]*pass[!>]*>(?P<secret>[!<]+)</[a-z]pass'
     likely_extensions = ['.xml']
 
     def assess(self):
@@ -108,6 +138,9 @@ class PasswordXml(Secret):
         if self.likely_extensions and \
            ext.lower() not in self.likely_extensions:
             result -= 20
+        # cpassword very likely
+        if "<cpassword>" in self.get_line():
+            result = 95
         return result
 
 
@@ -119,11 +152,17 @@ class PrivateKey(Secret):
 
 class AwsSecrets(Secret):
     description = 'AWS secrets'
-    regex = r'(aws_access_key_id|aws_secret_access_key)\s*='
+    regex = r'(aws_access_key_id|aws_secret_access_key)\s*=(?P<secret>.*)'
     likely_extensions = ['.ini']
 
 
 class EmpirumPassword(Secret):
     description = 'Empirum password'
-    regex = r'_PASSWORD_(SETUP|EIS|SYNC)=.'
+    regex = r'_PASSWORD_(SETUP|EIS|SYNC)=(?P<secret>.*)'
     likely_extensions = ['.ini']
+
+    def assess(self):
+        # high likelihood of false positives
+        c = super().assess()
+        c += 20
+        return c
