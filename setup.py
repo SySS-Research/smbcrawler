@@ -21,6 +21,7 @@ setuptools.setup(
         'python-libnmap',
         'lxml',
         'pdftotext',
+        'python-magic',
     ],
     python_requires='>=3.5',
     tests_require=[
