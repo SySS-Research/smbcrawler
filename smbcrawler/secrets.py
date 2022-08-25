@@ -59,7 +59,7 @@ class Secret(object):
 
     def get_secret(self):
         if self.match_result:
-            return self.match_result.groupdict.get('secret', '')
+            return self.match_result.groupdict().get('secret', '')
         return ""
 
     def get_line(self):
