@@ -70,7 +70,7 @@ class Secret(object):
 
 class NetUser(Secret):
     description = "'net use' command in script"
-    regex = 'net use.*/user'
+    regex = 'net use.*/user.*'
     likely_extensions = ['.ps1', '.bat']
 
 
