@@ -125,11 +125,17 @@ class SMBShare(object):
                                                    for _ in range(8))
         try:
             self.smbClient.createDirectory(str(self), dirname)
-            self.smbClient.deleteDirectory(str(self), dirname)
             self.permissions['write'] = True
             log.debug("%s is writable" % self)
         except Exception:
             log.debug("%s is readonly" % self, exc_info=True)
+            return
+
+        try:
+            self.smbClient.deleteDirectory(str(self), dirname)
+        except Exception:
+            log.error("Unable to delete test directory: %s/%s"
+                      % (self, dirname))
 
     def check_permission_list(self):
         try:
