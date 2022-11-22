@@ -117,6 +117,9 @@ needed.
 
 This makes it easier to see the progress when pressing `<space>`.
 
+Output files are machine readable, either in "grep" format or in JSON. For
+JSON files, I recommend something like `jless` to access its contents.
+
 ### Secrets
 
 SmbCrawler automatically reports obvious secrets, but it's also a good idea
@@ -131,6 +134,12 @@ directory:
 * ...
 
 Be creative!
+
+A helpful command to get an overview over all secrets is as follows:
+
+```
+$ jq  'values[]|.[].secret' fullrun_secrets.json | cut -c -80 | sort -u | less
+```
 
 Note that encoding can be an issue. `grep -ir password` will not find
 passwords in UTF-16 encoded files, for example. That's why the secret
@@ -158,4 +167,4 @@ Adrian Vollmer, SySS GmbH
 License
 -------
 
-MIT License
+MIT License; see `LICENSE` for details.
