@@ -2,6 +2,7 @@ import sys
 import os
 import logging
 import queue
+import re
 import threading
 import time
 
@@ -19,21 +20,28 @@ sharegrep_log = logging.getLogger('sharegrep_logger')
 pathgrep_log = logging.getLogger('pathgrep_logger')
 
 
-def log_exceptions(func):
-    """Catch the exception, log it, and don't reraise it"""
+def log_exceptions(silence=""):
+    """Catch the exception, log it, and don't reraise it
 
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            msg = "[%s@%s] %s" % (
-                e.__class__.__name__,
-                func.__name__,
-                str(e),
-            )
-            log.error(msg)
-            log.debug(msg, exc_info=True)
-    return wrapper
+    `silence` is a regex; if it matches, the exception is silently supressed
+     on log levels less than debug.
+    """
+
+    def outer_wrapper(func):
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                msg = "[%s@%s] %s" % (
+                    e.__class__.__name__,
+                    func.__name__,
+                    str(e),
+                )
+                if not (silence and re.match(silence, msg)):
+                    log.error(msg)
+                log.debug(msg, exc_info=True)
+        return wrapper
+    return outer_wrapper
 
 
 class Login(object):
@@ -357,7 +365,7 @@ class CrawlerThread(threading.Thread):
         ))
         self._skip_host = True
 
-    @log_exceptions
+    @log_exceptions()
     def crawl_share(self, share, depth=0):
         self._skip_share = False
 
@@ -391,7 +399,7 @@ class CrawlerThread(threading.Thread):
         self.crawl_dir(share, depth)
         return None
 
-    @log_exceptions
+    @log_exceptions(silence='.*STATUS_ACCESS_DENIED.*')
     def crawl_dir(self, share, depth, parent=None):
         self.check_paused()
         if (self._skip_share or self._skip_host or self.killed):
@@ -438,7 +446,7 @@ class CrawlerThread(threading.Thread):
             ):
                 self.process_file(share, f)
 
-    @log_exceptions
+    @log_exceptions()
     def process_file(self, share, f):
         if self.app.args.disable_autodownload:
             return
@@ -458,7 +466,7 @@ class CrawlerThread(threading.Thread):
             auto_download,
         )
 
-    @log_exceptions
+    @log_exceptions()
     def process_directory(self, share, f, depth):
         if get_regex('boring_directories').match(str(f)):
             log.info("[%s] Skip boring directory: %s" % (self._name, str(f)))
@@ -469,7 +477,7 @@ class CrawlerThread(threading.Thread):
                 f,
             )
 
-    @log_exceptions
+    @log_exceptions()
     def crawl_host(self, target):
         log.debug("[%s] Processing host: %s" % (self._name, target.host))
 
