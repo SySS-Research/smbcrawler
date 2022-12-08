@@ -75,6 +75,14 @@ characters>` and will be deleted immediately, but be aware anyway. Sometimes
 you have the permission to create directories, but not to delete them, so
 you will leave an empty directory there.
 
+Regarding NULL sessions or guest access, it's a little tricky. Guest access
+can happen on a host level, meaning you can list shares, but not actually
+access the shares. The file system permissions can also differ between a
+guest user and an authenticated user. When SmbCrawler repots a share with
+`GUEST` permission, that means you can list the shares of that host as an
+unauthenticated user. That's why I recommend running SmbCrawler separately
+against these shares without providing any credentials.
+
 
 ### Typical workflow
 
@@ -103,9 +111,19 @@ $ smbcrawler -D -1 <DC IP> \
     -s dc_only
 ```
 
+As noted above, if there are hosts with `GUEST` permissions, run it again
+without credentials:
+
+```
+$ smbcrawler -D5 -t10 -i <INPUT FILE WITH GUEST HOSTS> \
+    -aA 'boring_shares:SYSVOL|NETLOGON' \
+    -s guest_access
+```
+
+
 ### Errors
 
-Some errors like "STATUS_ACCESS_DENIED" are not necessarily a problem. It's
+Some errors like `STATUS_ACCESS_DENIED` are not necessarily a problem. It's
 normal to encounter directories to which you have no access.
 
 ### Output
