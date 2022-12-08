@@ -128,7 +128,7 @@ class SMBShare(object):
             self.permissions['write'] = True
             log.debug("%s is writable" % self)
         except Exception:
-            log.debug("%s is readonly" % self, exc_info=True)
+            log.debug("%s is readonly" % self, exc_info=False)
             return
 
         try:
@@ -143,7 +143,7 @@ class SMBShare(object):
             self.permissions['list_root'] = True
             log.debug("%s is listable" % self)
         except Exception:
-            log.debug("%s is not listable" % self, exc_info=True)
+            log.debug("%s is not listable" % self, exc_info=False)
 
     def effective_depth(self, depth, crawl_printers_and_pipes):
         """Determine depth at which we want to scan this share"""
