@@ -144,6 +144,14 @@ class PasswordXml(Secret):
         return result
 
 
+class PasswordUnattend(Secret):
+    description = "password in unattend.xml"
+    regex = '<Password>\s*<Value>(?P<secret>[!<]+)</Value'
+
+    def assess(self):
+        return 97
+
+
 class PrivateKey(Secret):
     description = 'private key'
     regex = '----- BEGIN[A-Z ]* PRIVATE KEY -----'
