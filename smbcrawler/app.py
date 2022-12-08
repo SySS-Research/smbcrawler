@@ -237,7 +237,7 @@ class CrawlerApp(object):
         print(message)
 
     def report_logon_failure(self, target):
-        if not self.credentials_confirmed:
+        if not self.credentials_confirmed and not self.args.force:
             log.fatal("%s:%d - Logon failure; "
                       "aborting to prevent account lockout; "
                       "consider using the 'force' flag to continue anyway"
