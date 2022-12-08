@@ -512,12 +512,13 @@ class CrawlerThread(threading.Thread):
         log.info("[%s] %s:%s - Connected"
                  % (self._name, target.host, target.port))
 
-        self.authenticate(target)
-        if self.killed or self._skip_host:
-            return False
+        try:
+            shares = self.list_shares(target, as_guest=True)
+            self._guest_session = True
+        except Exception:
+            self._guest_session = False
+        shares = self.list_shares(target, as_guest=False)
 
-        shares = [SMBShare(self.smbClient, s)
-                  for s in self.smbClient.listShares()]
         for s in shares:
             self.check_paused()
             if self.killed or self._skip_host:
@@ -541,28 +542,41 @@ class CrawlerThread(threading.Thread):
         self.smbClient.close()
         return True
 
-    def authenticate(self, target):
-        if self.smbClient.isLoginRequired():
-            self.do_login(target)
-        else:
-            self.smbClient.login("", "")
-        if self.smbClient.isGuestSession():
-            self._guest_session = True
+    def list_shares(self, target, as_guest=False):
+        self.authenticate(target, as_guest=as_guest)
 
-    def do_login(self, target):
+        shares = [SMBShare(self.smbClient, s)
+                  for s in self.smbClient.listShares()]
+
+        if self.killed or self._skip_host:
+            return False
+
+        log.debug("[%s] %s:%s - Guest login succeeded"
+                  % (self._name, target.host, target.port))
+
+        return shares
+
+    def authenticate(self, target, as_guest=False):
         try:
             if not self.app.credentials_confirmed:
                 CrawlerThread.cred_lock.acquire()
             if self.killed:
                 return
+            if as_guest:
+                username = ""
+                password = ""
+            else:
+                username = self.login.username or ""
+                password = self.login.password or ""
             self.smbClient.login(
-                self.login.username or "",
-                self.login.password or "",
+                username,
+                password,
                 domain=self.login.domain,
                 lmhash=self.login.lmhash,
                 nthash=self.login.nthash,
             )
-            self.app.confirm_credentials()
+            if not as_guest:
+                self.app.confirm_credentials()
         except Exception as e:
             if (
                 isinstance(e, SessionError)
