@@ -9,6 +9,8 @@ def main(args=None):
     init_log(parsed_args)
 
     cmd_args = ' '.join(args or sys.argv[1:])
+    if parsed_args.password:
+        cmd_args = cmd_args.replace(parsed_args.password, '***')
 
     from smbcrawler.app import CrawlerApp
     CrawlerApp(parsed_args, cmd=cmd_args).run()
