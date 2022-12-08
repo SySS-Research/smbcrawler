@@ -71,6 +71,7 @@ def get_targets(target, inputfilename, timeout):
     targets = []
     for t in target:
         targets += parse_targets(t)
+
     if inputfilename:
         t = []
         try:
@@ -84,7 +85,10 @@ def get_targets(target, inputfilename, timeout):
             t = parse_plain_file(inputfilename)
         if t:
             targets += t
-    return [Target(t, timeout) for t in targets]
+
+    result = [Target(t, timeout) for t in targets]
+    log.info("Loaded %s hosts" % len(result))
+    return result
 
 
 def save_file(dirname, data, host, share, path):
