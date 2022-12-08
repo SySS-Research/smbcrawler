@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Make `--force` do something
+- Don't show the password when echoing the command line arguments
+
+### Changed
+
+- Improve guest access check
+- Make log output slightly less noisy
+
+## 0.2.0 (2022-09-23)
+
 ### Removed
 
 - Support for JSON and XML output files
