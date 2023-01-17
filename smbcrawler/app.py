@@ -97,7 +97,7 @@ class CrawlerApp(object):
             self._run()
         except Exception as e:
             log.exception(e)
-            log.fatal("Exception caught, trying to exit gracefully...")
+            log.critical("Exception caught, trying to exit gracefully...")
         except KeyboardInterrupt:
             msg = (
                 "CTRL-C caught, trying to kill threads "
@@ -238,10 +238,10 @@ class CrawlerApp(object):
 
     def report_logon_failure(self, target):
         if not self.credentials_confirmed and not self.args.force:
-            log.fatal("%s:%d - Logon failure; "
-                      "aborting to prevent account lockout; "
-                      "consider using the 'force' flag to continue anyway"
-                      % (target.host, target.port))
+            log.critical("%s:%d - Logon failure; "
+                         "aborting to prevent account lockout; "
+                         "consider using the 'force' flag to continue anyway"
+                         % (target.host, target.port))
             self.kill_threads()
         else:
             log.warning("%s:%d - Logon failure" % (target.host, target.port))
@@ -446,7 +446,9 @@ class CrawlerThread(threading.Thread):
             ):
                 self.process_file(share, f)
 
-    @log_exceptions()
+    @log_exceptions(
+        silence='.*STATUS_ACCESS_DENIED|STATUS_SHARING_VIOLATION.*'
+    )
     def process_file(self, share, f):
         if self.app.args.disable_autodownload:
             return
