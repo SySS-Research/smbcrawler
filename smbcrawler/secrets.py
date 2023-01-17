@@ -158,6 +158,11 @@ class PrivateKey(Secret):
     likely_extensions = ['.pem', '.key']
 
 
+class UrlPassword(Secret):
+    description = 'URL Password'
+    regex = r'[a-z0-9]://(?P<secret>[^:]+:[^@])@[a-z0-9]'
+
+
 class AwsSecrets(Secret):
     description = 'AWS secrets'
     regex = r'(aws_access_key_id|aws_secret_access_key)\s*=(?P<secret>.*)'
