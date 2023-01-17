@@ -11,7 +11,7 @@ bold_red = "\x1b[31;1m"
 reset = "\x1b[0m"
 
 
-logging.SUCCESS = 50  # same as critical
+logging.SUCCESS = 49  # almost same as critical
 logging.addLevelName(logging.SUCCESS, 'SUCCESS')
 
 
