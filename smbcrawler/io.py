@@ -91,11 +91,16 @@ def get_targets(target, inputfilename, timeout):
     return result
 
 
-def save_file(dirname, data, host, share, path):
-    # Check if file is already known
+def get_short_hash(data):
     hash_object = hashlib.sha256(data)
     # 4 bytes should be enough
     content_hash = hash_object.hexdigest()[:8]
+    return content_hash
+
+
+def save_file(dirname, data, host, share, path):
+    # Check if file is already known
+    content_hash = get_short_hash(data)
     seen = content_hash in HASHED_FILES
     URI = '\\'.join(['', '', host, share, path])
     HASHED_FILES[content_hash].append(URI)

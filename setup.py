@@ -13,7 +13,8 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     entry_points={
         'console_scripts': [
-            'smbcrawler=smbcrawler.__main__:main'
+            'smbcrawler=smbcrawler.__main__:main',
+            'secretscrawler=smbcrawler.__main__:main_secrets',
         ],
     },
     install_requires=[
@@ -22,6 +23,7 @@ setuptools.setup(
         'lxml',
         'pdftotext',
         'python-magic',
+        'json2html',
     ],
     python_requires='>=3.5',
     tests_require=[

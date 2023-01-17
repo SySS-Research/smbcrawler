@@ -48,6 +48,9 @@ During run time, you can use the following keys:
 
 For more information, run `smbcrawler -h`.
 
+There is also a program called `secretscrawler`, which can help you create
+reports or crawl local files for secrets.
+
 
 Notes
 -----
@@ -174,6 +177,13 @@ Don't forget about the files itself. These might be interesting:
 If you notice a lot of false positives or false negatives, please help out
 and let me know. Community input is important when trying to improve
 automatic detection.
+
+
+### SecretsCrawler
+
+With the command `secretscrawler` you can either scan downloaded files again
+for secrets or use the `*_secrets.json` files (by using the `-j` switch) to
+create reports, for example in HTML.
 
 
 Credits
