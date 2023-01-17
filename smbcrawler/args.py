@@ -97,11 +97,9 @@ creds_grp.add_argument(
 
 creds_grp.add_argument(
     '-d', '--domain',
-    dest="domain",
     type=str,
     default='.',
-    help="the user's domain"
-         " (default: %(default)s)"
+    help="the user's domain (default: %(default)s)"
 )
 
 
