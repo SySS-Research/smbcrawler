@@ -514,12 +514,26 @@ class CrawlerThread(threading.Thread):
         log.info("[%s] %s:%s - Connected"
                  % (self._name, target.host, target.port))
 
+        # log on
         try:
             shares = self.list_shares(target, as_guest=True)
             self._guest_session = True
         except Exception:
             self._guest_session = False
-        shares = self.list_shares(target, as_guest=False)
+            self.smbClient.close()
+            self.smbClient = SMBConnection(
+                '*SMBSERVER' if target.port == 139 else target.host,
+                target.host,
+                sess_port=target.port,
+            )
+            try:
+                shares = self.list_shares(target, as_guest=False)
+            except SessionError as e:
+                if 'STATUS_ACCESS_DENIED' in str(e):
+                    log.error("[%s] %s:%s - Access denied when listing shares"
+                              % (self._name, target.host, target.port))
+                    return False
+                raise
 
         for s in shares:
             self.check_paused()
@@ -541,7 +555,9 @@ class CrawlerThread(threading.Thread):
                     )
                 )
             self.crawl_share(s, depth=depth)
+
         self.smbClient.close()
+
         return True
 
     def list_shares(self, target, as_guest=False):
@@ -551,10 +567,11 @@ class CrawlerThread(threading.Thread):
                   for s in self.smbClient.listShares()]
 
         if self.killed or self._skip_host:
-            return False
+            return []
 
-        log.debug("[%s] %s:%s - Guest login succeeded"
-                  % (self._name, target.host, target.port))
+        if as_guest:
+            log.debug("[%s] %s:%s - Guest login succeeded"
+                      % (self._name, target.host, target.port))
 
         return shares
 
@@ -583,6 +600,7 @@ class CrawlerThread(threading.Thread):
             if (
                 isinstance(e, SessionError)
                 and 'STATUS_LOGON_FAILURE' in str(e)
+                and not as_guest
             ):
                 self.app.report_logon_failure(target)
                 self._skip_host = True
