@@ -88,7 +88,7 @@ class SecureString(Secret):
 
 class PasswordConfig(Secret):
     description = "'password =' in config"
-    regex = '(password|pwd|passwd)[a-z]*\\s*=(?P<secret>.*)'
+    regex = '(password|pwd|passwd)[a-z]*\\s*=\\s*(?P<secret>..+)'
     likely_extensions = ['.ini', '.conf', '.cnf', '.config', '.properties']
 
     def assess(self):
@@ -103,7 +103,7 @@ class PasswordConfig(Secret):
 
 class PasswordJson(Secret):
     description = "'password' value in JSON file"
-    regex = '"[a-z]*(password|pwd|passwd)[a-z]*":"(?P<secret>\\s*)"'
+    regex = '"[a-z]*(password|pwd|passwd)[a-z]*":"(?P<secret>..+)"'
     likely_extensions = ['.json']
 
     def assess(self):
@@ -118,7 +118,7 @@ class PasswordJson(Secret):
 
 class PasswordYaml(Secret):
     description = "'password' value in YAML file"
-    regex = '\\s*[a-z]*passw[a-z]*:(?P<secret>.*)'
+    regex = '\\s*[a-z]*passw[a-z]*:\\s*(?P<secret>..+)'
     likely_extensions = ['.yaml', '.yml']
 
     def assess(self):
@@ -146,7 +146,7 @@ class PasswordXml(Secret):
 
 class PasswordUnattend(Secret):
     description = "password in unattend.xml"
-    regex = '<Password>\s*<Value>(?P<secret>[!<]+)</Value'
+    regex = r'<Password>\s*<Value>(?P<secret>[!<]+)</Value'
 
     def assess(self):
         return 97
@@ -165,13 +165,13 @@ class UrlPassword(Secret):
 
 class AwsSecrets(Secret):
     description = 'AWS secrets'
-    regex = r'(aws_access_key_id|aws_secret_access_key)\s*=(?P<secret>.*)'
+    regex = r'(aws_access_key_id|aws_secret_access_key)\s*=\s*(?P<secret>..+)'
     likely_extensions = ['.ini']
 
 
 class EmpirumPassword(Secret):
     description = 'Empirum password'
-    regex = r'_PASSWORD_(SETUP|EIS|SYNC)=(?P<secret>.*)'
+    regex = r'_PASSWORD_(SETUP|EIS|SYNC)=(?P<secret>..+)'
     likely_extensions = ['.ini']
 
     def assess(self):
