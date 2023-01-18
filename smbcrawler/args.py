@@ -233,12 +233,19 @@ def output_files_are_writeable(args):
 
     # "*.log" not checked because overwriting it would be unexpected to the
     # user. It's not how log files behave.
-    for filename in [
-        'shares.grep',
-        'paths.grep',
+
+    filenames = [
         'secrets.json',
         'files.json'
-    ]:
+    ]
+
+    if not args.disable_share_output:
+        filenames.append('shares.grep')
+
+    if not args.disable_path_output:
+        filenames.append('paths.grep')
+
+    for filename in filenames:
         if filename:
             path = "%s_%s" % (
                 os.path.join(args.output_dir, args.session_name),
