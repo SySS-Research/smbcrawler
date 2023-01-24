@@ -96,6 +96,7 @@ class PasswordConfig(Secret):
         c = super().assess()
         if (
             'ShowPasswordDialog=' in self.get_line()
+            or 'DisableChangePassword=' in self.get_line()
         ):
             c = 0
         return c
