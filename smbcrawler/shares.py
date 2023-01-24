@@ -133,9 +133,11 @@ class SMBShare(object):
 
         try:
             self.smbClient.deleteDirectory(str(self), dirname)
-        except Exception:
-            log.error("Unable to delete test directory: %s/%s"
-                      % (self, dirname))
+        except Exception as e:
+            log.error(
+                "Unable to delete test directory [%s]: \\\\%s\\%s\\%s"
+                % (str(e), self.smbClient.getRemoteHost(), self, dirname)
+            )
 
     def check_permission_list(self):
         try:
