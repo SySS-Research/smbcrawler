@@ -130,7 +130,7 @@ class PasswordYaml(Secret):
 
 class PasswordXml(Secret):
     description = "'password' element in XML file"
-    regex = '<[a-z]*pass[!>]*>(?P<secret>[!<]+)</[a-z]pass'
+    regex = '<[a-z]*pass[!>]*>(?P<secret>[!<]+)</[a-z]*pass'
     likely_extensions = ['.xml']
 
     def assess(self):
