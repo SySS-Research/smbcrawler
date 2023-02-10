@@ -71,19 +71,19 @@ class Secret(object):
 class NetUser(Secret):
     description = "'net use' command in script"
     regex = 'net use.*/user.*'
-    likely_extensions = ['.ps1', '.bat']
+    likely_extensions = ['.ps1', '.bat', '.cmd']
 
 
 class RunAs(Secret):
     description = "'RunAs' command in script"
     regex = 'runas.*/user'
-    likely_extensions = ['.ps1', '.bat']
+    likely_extensions = ['.ps1', '.bat', '.cmd']
 
 
 class SecureString(Secret):
     description = "'ConvertTo-SecureString' command in script"
     regex = 'ConvertTo-SecureString'
-    likely_extensions = ['.ps1', '.bat']
+    likely_extensions = ['.ps1', '.bat', '.cmd']
 
 
 class PasswordConfig(Secret):
