@@ -180,3 +180,10 @@ class EmpirumPassword(Secret):
         c = super().assess()
         c += 20
         return c
+
+
+class DsmPassword(Secret):
+    description = 'DSM password (Ivanti/Frontrange)'
+    regex = r'k[23456][A-Za-z0-9+/]{16,}=?=?|K1[A-Z0-9;/]{16,}'
+    likely_extensions = ['.ncp']
+    regex_flags = []
