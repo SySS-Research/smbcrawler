@@ -171,7 +171,7 @@ class AwsSecrets(Secret):
 
 
 class EmpirumPassword(Secret):
-    description = 'Empirum password'
+    description = 'Empirum password (Matrix42)'
     regex = r'_PASSWORD_(SETUP|EIS|SYNC)=(?P<secret>..+)'
     likely_extensions = ['.ini']
 
