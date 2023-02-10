@@ -73,7 +73,7 @@ def get_targets(target, inputfilename, timeout):
         targets += parse_targets(t)
 
     if inputfilename:
-        t = []
+        t = None
         try:
             from libnmap.parser import NmapParserException
             t = parse_xml_file(inputfilename)
@@ -81,7 +81,7 @@ def get_targets(target, inputfilename, timeout):
             log.error("Module 'libnmap' not found, treating as a flat file")
         except NmapParserException:
             log.debug("Not an XML file, treating as flat file")
-        if not t:
+        if t is None:
             t = parse_plain_file(inputfilename)
         if t:
             targets += t
