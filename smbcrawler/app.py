@@ -18,6 +18,7 @@ from impacket.smbconnection import SessionError
 log = logging.getLogger(__name__)
 sharegrep_log = logging.getLogger('sharegrep_logger')
 pathgrep_log = logging.getLogger('pathgrep_logger')
+highvaluegrep_log = logging.getLogger('highvaluegrep_logger')
 
 
 def log_exceptions(silence=""):
@@ -336,8 +337,7 @@ class CrawlerThread(threading.Thread):
                 with CrawlerThread.thread_lock:
                     CrawlerThread.targets_finished += 1
         except queue.Empty:
-            log.debug("[%s] Queue empty, quitting thread" %
-                      self._name)
+            log.debug("[%s] Queue empty, quitting thread" % self._name)
             self.is_running = False
             self.done = True
 
@@ -405,10 +405,18 @@ class CrawlerThread(threading.Thread):
         if (self._skip_share or self._skip_host or self.killed):
             return
 
+        if parent:
+            path = '\\\\%s\\%s' % (self.smbClient, share)
+        else:
+            path = '\\\\%s\\%s\\%s' % (self.smbClient, share, parent.get_full_path())
+
         if depth == 0:
-            log.debug("[%s] Depth 0 reached: \\\\%s\\%s\\%s" %
-                      (self._name, self.current_target, share, parent))
+            log.debug("[%s] Depth 0 reached: %s" % (self._name, path))
             return
+
+        if get_regex('highvalue_paths').match(path):
+            log.success("[%s] High value path found: %s" % path)
+            highvaluegrep_log.info(path)
 
         for f in share.get_dir_list(parent):
             if f.get_longname() in ['.', '..']:
@@ -423,12 +431,12 @@ class CrawlerThread(threading.Thread):
                 share.add_path(f)
 
             # output path info
-            log.info('\\\\%s\\%s\\%s [%d]' % (
+            path = '\\\\%s\\%s\\%s' % (
                 self.smbClient,
                 share,
-                f.get_full_path(),
-                f.size,
-            ))
+                f.get_full_path()
+            )
+            log.info('%s [%d]' % (path, f.size))
             pathgrep_log.info(
                 to_grep_line([
                     self.smbClient,

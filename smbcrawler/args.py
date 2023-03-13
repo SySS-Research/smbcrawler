@@ -48,6 +48,13 @@ output_grp.add_argument(
 )
 
 output_grp.add_argument(
+    '-dH', '--disable-highvalue-output',
+    default=False,
+    action='store_true',
+    help="disable the logging of high value paths to a greppable file"
+)
+
+output_grp.add_argument(
     '-dP', '--disable-path-output',
     default=False,
     action='store_true',

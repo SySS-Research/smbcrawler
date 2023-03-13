@@ -96,6 +96,8 @@ LISTS = dict(
          "Contains only binary packages"),
         (r"WinSxS", "Backups of binaries"),
         (r"backup", "Backups of binaries"),
+        (r"ADMIN\$", "C:\\Windows"),
+        (r"C\$", "C:\\"),
     ],
 
     interesting_directories=[
@@ -103,6 +105,18 @@ LISTS = dict(
 
     boring_directories=[
         (r"WinSxS", "Backups of binaries"),
+    ],
+
+    highvalue_paths=[
+        (r'\\ADMIN\$$', "Admin share"),
+        (r'\\C\$$', "C share"),
+        (r'\\config\\sam$', "SAM database"),
+        (r'\.vhd$', "virtual hard disk"),
+        (r'\.vhdx$', "virtual hard disk"),
+        (r'\.vdi$', "virtual hard disk"),
+        (r'\.vmdk$', "virtual hard disk"),
+        (r'\.qcow$', "virtual hard disk"),
+        (r'\.qcow2$', "virtual hard disk"),
     ],
 )
 

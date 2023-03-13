@@ -121,6 +121,12 @@ def init_log(args):
             '_paths.grep',
             '\t'.join(['host', 'share', 'path', 'size']),
         ],
+        [
+            args.disable_highvalue_output,
+            'highvaluegrep_logger',
+            '_highvalue.grep',
+            '',
+        ],
     ]
     for disabled, name, filename, header in grep_loggers:
         if disabled:

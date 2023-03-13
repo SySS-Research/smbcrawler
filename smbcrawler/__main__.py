@@ -27,6 +27,7 @@ def main_secrets(args=None):
         "disable_log_file": True,
         "disable_share_output": True,
         "disable_path_output": True,
+        "disable_highvalue_output": True,
     }.items():
         setattr(parsed_args, k, v)
     init_log(parsed_args)
