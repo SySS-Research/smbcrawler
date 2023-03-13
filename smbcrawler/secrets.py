@@ -187,6 +187,6 @@ class EmpirumPassword(Secret):
 
 class DsmPassword(Secret):
     description = 'DSM password (Ivanti/Frontrange)'
-    regex = r'k[23456][A-Za-z0-9+/]{16,}=?=?|K1[A-Z0-9;/]{16,}'
+    regex = r'[^a-zA-Z0-9]k[23456][A-Za-z0-9+/]{16,}=?=?|K1[A-Z0-9;/]{16,}'
     likely_extensions = ['.ncp']
     regex_flags = []
