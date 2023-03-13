@@ -45,8 +45,10 @@ def parse_xml_file(filename):
     result = []
     for h in nmap_report.hosts:
         for s in h.services:
-            if (s.port in [445, 139] or
-                    s.service in ['netbios-ssn', 'microsoft-ds']):
+            if (
+                s.port in [445, 139] or
+                s.service in ['netbios-ssn', 'microsoft-ds']
+            ) and s.state == 'open':
                 result.append(h.address)
                 break
     return result
