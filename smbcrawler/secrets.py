@@ -79,7 +79,7 @@ class NetUser(Secret):
 
 class RunAs(Secret):
     description = "'RunAs' command in script"
-    regex = 'runas.*/user'
+    regex = r'runas(\.exe)? .*/user'
     likely_extensions = ['.ps1', '.bat', '.cmd']
 
 
