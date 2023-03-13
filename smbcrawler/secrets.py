@@ -25,7 +25,10 @@ class Secret(object):
 
         0 means: nothing found. 100 means: certainly a password.
         """
-        flags = reduce(lambda x, y: x | y, self.regex_flags)
+        if self.regex_flags:
+            flags = reduce(lambda x, y: x | y, self.regex_flags)
+        else:
+            flags = 0
         m = re.search(self.regex, self.line, flags=flags)
         if m:
             result = self.assess()
