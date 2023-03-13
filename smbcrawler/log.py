@@ -123,17 +123,18 @@ def init_log(args):
         ],
     ]
     for disabled, name, filename, header in grep_loggers:
+        if disabled:
+            continue
         logger = logging.getLogger(name)
         logger.propagate = False
         logger.handlers.clear()
-        if not disabled:
-            handler = logging.FileHandler(
-                os.path.join(
-                    args.output_dir,
-                    args.session_name + filename,
-                )
+        handler = logging.FileHandler(
+            os.path.join(
+                args.output_dir,
+                args.session_name + filename,
             )
-            handler.setLevel(logging.INFO)
-            handler.setFormatter(logging.Formatter('%(message)s'))
-            logger.addHandler(handler)
-            logger.info(header)
+        )
+        handler.setLevel(logging.INFO)
+        handler.setFormatter(logging.Formatter('%(message)s'))
+        logger.addHandler(handler)
+        logger.info(header)
