@@ -20,10 +20,12 @@ and 'crawls' (or 'spiders') through those shares. Features:
 Installation
 ------------
 
-Install with `python3 -m pip install .`. Make sure `$HOME/.local/bin` is in
+Install with `python3 -m pip install .` or `pipx install .`. Make sure `$HOME/.local/bin` is in
 your `$PATH`.
 
-Alternatively, install dependencies manually and run with `python3 -m smbcrawler`.
+The `pdftotext` dependency will be built from source during the installation, which requires the
+poppler C++ headers. On Debian-based systems like Kali or Ubuntu, they can be installed with
+`apt install libpoppler-cpp-dev`.
 
 
 Example
