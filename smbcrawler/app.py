@@ -399,7 +399,7 @@ class CrawlerThread(threading.Thread):
             return
 
         if depth == 0:
-            log.debug("[%s] Depth 0 reached: \\\\%s\\%s\\%s" %
+            log.debug("[%s] Maximum depth reached: \\\\%s\\%s\\%s" %
                       (self._name, self.current_target, share, parent))
             return
 
