@@ -447,7 +447,7 @@ class CrawlerThread(threading.Thread):
                 self.process_file(share, f)
 
     @log_exceptions(
-        silence='.*STATUS_ACCESS_DENIED|STATUS_SHARING_VIOLATION.*'
+        silence='.*STATUS_ACCESS_DENIED|STATUS_NOT_SUPPORTED|STATUS_SHARING_VIOLATION.*'
     )
     def process_file(self, share, f):
         if self.app.args.disable_autodownload:
@@ -491,7 +491,7 @@ class CrawlerThread(threading.Thread):
             return False
 
         if not target.port_open(target.port):
-            log.error("[%s] %s - No SMB service found" % (
+            log.info("[%s] %s - No SMB service found" % (
                 self._name,
                 target.host,
             ))
