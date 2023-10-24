@@ -175,7 +175,7 @@ class AwsSecrets(Secret):
 
 class EmpirumPassword(Secret):
     description = 'Empirum password (Matrix42)'
-    regex = r'_PASSWORD_(SETUP|EIS|SYNC)=(?P<secret>..+)'
+    regex = r'PASSWORD_[A-Z0-9_]*(SETUP|EIS|SYNC)=(?P<secret>..+)'
     likely_extensions = ['.ini']
 
     def assess(self):
