@@ -390,7 +390,9 @@ class CrawlerThread(threading.Thread):
         self.crawl_dir(share, depth)
         return None
 
-    @log_exceptions(silence='.*STATUS_ACCESS_DENIED.*')
+    @log_exceptions(
+        silence='.*STATUS_ACCESS_DENIED|STATUS_NOT_SUPPORTED|STATUS_SHARING_VIOLATION.*'
+    )
     def crawl_dir(self, share, depth, parent=None):
         self.check_paused()
         if (self._skip_share or self._skip_host or self.killed):
