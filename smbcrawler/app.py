@@ -180,14 +180,12 @@ class CrawlerApp(object):
             log.error("Missing argument")
             return False
         try:
-            if ',' in n:
-                for N in n.split(','):
-                    self.threads[int(N)].skip_share()
-            self.threads[int(n)].skip_share()
+            for N in n.split(','):
+                self.threads[int(N)].skip_share()
         except (IndexError, ValueError):
             log.error("Invalid argument: %s" % n)
             return False
-        print("Skipped shares: %s, resuming" % n)
+        print("Skipped shares: %s; resuming" % n)
         self.resume()
         return True
 
@@ -196,14 +194,12 @@ class CrawlerApp(object):
             log.error("Missing argument")
             return False
         try:
-            if ',' in n:
-                for N in n.split(','):
-                    self.threads[int(N)].skip_host()
-            self.threads[int(n)].skip_host()
+            for N in n.split(','):
+                self.threads[int(N)].skip_host()
         except (IndexError, ValueError):
             log.error("Invalid argument: %s" % n)
             return False
-        print("Skipped hosts: %s, resuming" % n)
+        print("Skipped hosts: %s; resuming" % n)
         self.resume()
         return True
 
