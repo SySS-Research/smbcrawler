@@ -561,8 +561,8 @@ class CrawlerThread(threading.Thread):
             return []
 
         if as_guest:
-            log.debug("[%s] %s:%s - Guest login succeeded"
-                      % (self._name, target.host, target.port))
+            log.success("[%s] %s:%s - Guest login succeeded"
+                        % (self._name, target.host, target.port))
 
         return shares
 
