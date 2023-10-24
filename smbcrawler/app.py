@@ -118,19 +118,14 @@ class CrawlerApp(object):
 
     def pause(self):
         # Use print because log level might not be high enough
-        print("Pausing threads... be patient. Press CTRL-C to resume.")
+        print("Pausing threads... be patient.")
         CrawlerThread.running.clear()
-        try:
-            while True:
-                time.sleep(1)
-                count = sum(t.is_running for t in self.threads)
-                print("Pausing... %d threads still running" % count)
-                if count == 0:
-                    break
-        except KeyboardInterrupt:
-            print("CTRL-C caught, resuming...")
-            CrawlerThread.running.set()
-            return
+        while True:
+            time.sleep(1)
+            count = sum(t.is_running for t in self.threads)
+            print("Pausing... %d threads still running" % count)
+            if count == 0:
+                break
 
         print("Threads paused.")
         self.print_progress()
