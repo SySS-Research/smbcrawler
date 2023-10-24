@@ -394,16 +394,17 @@ class CrawlerThread(threading.Thread):
         silence='.*STATUS_ACCESS_DENIED|STATUS_NOT_SUPPORTED|STATUS_SHARING_VIOLATION.*'
     )
     def crawl_dir(self, share, depth, parent=None):
-        self.check_paused()
-        if (self._skip_share or self._skip_host or self.killed):
-            return
-
         if depth == 0:
             log.debug("[%s] Maximum depth reached: \\\\%s\\%s\\%s" %
                       (self._name, self.current_target, share, parent))
             return
 
         for f in share.get_dir_list(parent):
+            self.check_paused()
+
+            if (self._skip_share or self._skip_host or self.killed):
+                return
+
             if f.get_longname() in ['.', '..']:
                 continue
 
