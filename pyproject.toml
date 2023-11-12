@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2", "setuptools-git-versioning",]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smbcrawler"
+dynamic = ["version"]
+authors = [
+    {name = "Adrian Vollmer", email = "adrian.vollmer@syss.de"},
+]
+description = 'Search SMB shares for interesting files'
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["pentest", "smb", "shares", "reconnaissance"]
+license = {text = "MIT License"}
+classifiers = [
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    'impacket>=0.9.20',
+    'python-libnmap',
+    'lxml',
+    'pdftotext',
+    'python-magic',
+    'json2html',
+]
+
+[tool.setuptools]
+packages = ["smbcrawler"]
+
+[tool.setuptools-git-versioning]
+enabled = true
+
+[project.urls]
+"Homepage" = 'https://github.com/SySS-Research/smbcrawler'
+"Bug Tracker" = 'https://github.com/SySS-Research/smbcrawler/issues'
+
+[project.scripts]
+smbcrawler = "smbcrawler.__main__:main"
+
+[project.optional-dependencies]
+tests = [
+  'pytest',
+  'pyexpect',
+  'tox',
+]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py,lint
+isolated_build = True
+
+[testenv:py]
+extras = tests
+commands = pytest
+deps = .[tests]
+
+[testenv:lint]
+skip_install = true
+deps = .[tests]
+commands = flake8 tests
+"""
