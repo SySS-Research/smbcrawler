@@ -51,6 +51,10 @@ tests = [
   'tox',
 ]
 
+[tool.pytest.ini_options]
+norecursedirs = tests/helpers
+filterwarnings = ignore::DeprecationWarning
+
 [tool.tox]
 legacy_tox_ini = """
 [tox]
