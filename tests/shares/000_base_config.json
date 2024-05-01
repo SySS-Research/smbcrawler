@@ -1,0 +1,54 @@
+{
+  "samba-container-config": "v0",
+  "configs": {
+    "base": {
+      "shares": [
+        "share"
+      ],
+      "globals": [
+        "noprinting",
+        "default"
+      ],
+      "instance_name": "SAMBA"
+    }
+  },
+  "shares": {
+    "share": {
+      "options": {
+        "path": "/share/base",
+        "valid users": "user1"
+      }
+    }
+  },
+  "users": {
+    "all_entries": [
+      {
+        "name": "user1",
+        "password": "password1"
+      },
+      {
+        "name": "user2",
+        "password": "password2"
+      }
+    ]
+  },
+  "globals": {
+    "noprinting": {
+      "options": {
+        "load printers": "no",
+        "printing": "bsd",
+        "printcap name": "/dev/null",
+        "disable spoolss": "yes"
+      }
+    },
+    "default": {
+      "options": {
+        "security": "user",
+        "server min protocol": "SMB2",
+        "map to guest": "never",
+        "restrict anonymous": "2",
+        "guest ok": "no"
+      }
+    }
+  }
+}
