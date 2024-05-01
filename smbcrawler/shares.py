@@ -12,8 +12,8 @@ log = logging.getLogger(__name__)
 
 class Target(object):
     def __init__(self, host, timeout):
-        if ':' in host:
-            self.host, self.port = host.split(':')
+        if ":" in host:
+            self.host, self.port = host.split(":")
             self.port = int(self.port)
         else:
             self.host = host
@@ -34,14 +34,14 @@ class Target(object):
         return True
 
     def __str__(self):
-        return '%s:%s' % (self.host, self.port)
+        return "%s:%s" % (self.host, self.port)
 
 
 def normalize_pwd(pwd):
     if pwd:
-        smbpwd = ntpath.join(pwd.get_full_path(), '*')
+        smbpwd = ntpath.join(pwd.get_full_path(), "*")
     else:
-        smbpwd = ntpath.join("", '*')
+        smbpwd = ntpath.join("", "*")
         smbpwd = ntpath.normpath(smbpwd)
     return smbpwd
 
@@ -66,10 +66,10 @@ class SMBShare(object):
 
         self.permissions = {
             #  'guest_access': False,
-            'read': False,
-            'write': False,
-            'list_root': False,
-            'guest': False,
+            "read": False,
+            "write": False,
+            "list_root": False,
+            "guest": False,
         }
 
     def __str__(self):
@@ -84,13 +84,13 @@ class SMBShare(object):
 
     def get_permissions(self):
         result = "ACCESS DENIED"
-        if self.permissions['read']:
+        if self.permissions["read"]:
             result = "READ"
-        if self.permissions['list_root']:
+        if self.permissions["list_root"]:
             result = "READ, LIST_ROOT"
-        if self.permissions['write']:
+        if self.permissions["write"]:
             result += ", WRITE"
-        if self.permissions['guest']:
+        if self.permissions["guest"]:
             result += ", GUEST"
         return result
 
@@ -101,9 +101,9 @@ class SMBShare(object):
 
     def check_all_permission(self, guest, check_write_access):
         if guest:
-            self.permissions['guest'] = True
+            self.permissions["guest"] = True
         self.check_permission_read()
-        if self.permissions['read']:
+        if self.permissions["read"]:
             self.check_permission_list()
             if check_write_access:
                 self.check_permission_write()
@@ -113,19 +113,20 @@ class SMBShare(object):
         try:
             tree_id = self.smbClient.connectTree(self.name)
             self.smbClient.disconnectTree(tree_id)
-            self.permissions['read'] = True
+            self.permissions["read"] = True
         except Exception as e:
             log.debug(e)
 
     def check_permission_write(self):
         """Create an empty directory and delete it right after."""
 
-        distribution = (string.ascii_letters + string.digits)
-        dirname = "smbcrawler_DELETEME_" + ''.join(random.choice(distribution)
-                                                   for _ in range(8))
+        distribution = string.ascii_letters + string.digits
+        dirname = "smbcrawler_DELETEME_" + "".join(
+            random.choice(distribution) for _ in range(8)
+        )
         try:
             self.smbClient.createDirectory(str(self), dirname)
-            self.permissions['write'] = True
+            self.permissions["write"] = True
             log.debug("%s is writable" % self)
         except Exception:
             log.debug("%s is readonly" % self, exc_info=False)
@@ -142,18 +143,18 @@ class SMBShare(object):
     def check_permission_list(self):
         try:
             self.get_dir_list(None)
-            self.permissions['list_root'] = True
+            self.permissions["list_root"] = True
             log.debug("%s is listable" % self)
         except Exception:
             log.debug("%s is not listable" % self, exc_info=False)
 
     def effective_depth(self, depth, crawl_printers_and_pipes):
         """Determine depth at which we want to scan this share"""
-        if get_regex('interesting_shares').match(str(self)):
+        if get_regex("interesting_shares").match(str(self)):
             return -1
-        elif get_regex('boring_shares').match(str(self)):
+        elif get_regex("boring_shares").match(str(self)):
             return 0
-        elif (self.is_ipc_pipe or self.is_print_queue):
+        elif self.is_ipc_pipe or self.is_print_queue:
             if crawl_printers_and_pipes:
                 return depth
             else:

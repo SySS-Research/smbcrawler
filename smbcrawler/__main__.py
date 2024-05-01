@@ -3,26 +3,31 @@ import sys
 
 def main(*args):
     from smbcrawler.args import parse_args
+
     if not args:
         args = sys.argv[1:]
     parsed_args = parse_args(args)
 
     from smbcrawler.log import init_log
+
     init_log(parsed_args)
 
-    cmd_args = ' '.join(args)
+    cmd_args = " ".join(args)
     if parsed_args.password:
-        cmd_args = cmd_args.replace(parsed_args.password, '***')
+        cmd_args = cmd_args.replace(parsed_args.password, "***")
 
     from smbcrawler.app import CrawlerApp
+
     CrawlerApp(parsed_args, cmd=cmd_args).run()
 
 
 def main_secrets(args=None):
     from smbcrawler.args_secrets import parse_args
+
     parsed_args = parse_args(args or sys.argv[1:])
 
     from smbcrawler.log import init_log
+
     for k, v in {
         "quiet": 1,
         "verbose": 0,
@@ -34,6 +39,7 @@ def main_secrets(args=None):
     init_log(parsed_args)
 
     from smbcrawler.secretscrawler import run
+
     run(
         parsed_args.paths,
         parsed_args.output,

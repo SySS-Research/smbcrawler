@@ -7,8 +7,13 @@ import threading
 import time
 
 import smbcrawler.monkeypatch  # noqa monkeypatch impacket scripts
-from smbcrawler.io import get_targets, save_file, write_files, write_secrets, \
-        to_grep_line
+from smbcrawler.io import (
+    get_targets,
+    save_file,
+    write_files,
+    write_secrets,
+    to_grep_line,
+)
 from smbcrawler.shares import SMBShare
 from smbcrawler.lists import get_regex
 
@@ -16,8 +21,8 @@ from impacket.smbconnection import SMBConnection
 from impacket.smbconnection import SessionError
 
 log = logging.getLogger(__name__)
-sharegrep_log = logging.getLogger('sharegrep_logger')
-pathgrep_log = logging.getLogger('pathgrep_logger')
+sharegrep_log = logging.getLogger("sharegrep_logger")
+pathgrep_log = logging.getLogger("pathgrep_logger")
 
 
 def log_exceptions(silence=""):
@@ -40,7 +45,9 @@ def log_exceptions(silence=""):
                 if not (silence and re.match(silence, msg)):
                     log.error(msg)
                 log.debug(msg, exc_info=True)
+
         return wrapper
+
     return outer_wrapper
 
 
@@ -51,8 +58,8 @@ class Login(object):
         self.password = password
 
         try:
-            self.lmhash = hash.split(':')[0]
-            self.nthash = hash.split(':')[1]
+            self.lmhash = hash.split(":")[0]
+            self.nthash = hash.split(":")[1]
         except (IndexError, AttributeError):
             self.nthash = ""
             self.lmhash = ""
@@ -99,10 +106,7 @@ class CrawlerApp(object):
             log.exception(e)
             log.critical("Exception caught, trying to exit gracefully...")
         except KeyboardInterrupt:
-            msg = (
-                "CTRL-C caught, trying to kill threads "
-                "and exit gracefully..."
-            )
+            msg = "CTRL-C caught, trying to kill threads " "and exit gracefully..."
             print(msg)
             log.info(msg)
             try:
@@ -140,18 +144,23 @@ class CrawlerApp(object):
         for i, t in enumerate(self.threads):
             if t.done:
                 continue
-            print("\t%d) \\\\%s\\%s" % (
-                i, t.current_target.host, t.current_share or "",
-            ))
+            print(
+                "\t%d) \\\\%s\\%s"
+                % (
+                    i,
+                    t.current_target.host,
+                    t.current_share or "",
+                )
+            )
 
         cmd = ""
         commands = {
-            'h': self.skip_host,
-            's': self.skip_share,
-            'q': self.kill_threads,
+            "h": self.skip_host,
+            "s": self.skip_share,
+            "q": self.kill_threads,
             #  'd': self.show_debug_info,
             # Leave this an undocumented feature
-            'r': self.resume,
+            "r": self.resume,
         }
         while True:
             cmd = input("> ")
@@ -179,7 +188,7 @@ class CrawlerApp(object):
             log.error("Missing argument")
             return False
         try:
-            for N in n.split(','):
+            for N in n.split(","):
                 self.threads[int(N)].skip_share()
         except (IndexError, ValueError):
             log.error("Invalid argument: %s" % n)
@@ -193,7 +202,7 @@ class CrawlerApp(object):
             log.error("Missing argument")
             return False
         try:
-            for N in n.split(','):
+            for N in n.split(","):
                 self.threads[int(N)].skip_host()
         except (IndexError, ValueError):
             log.error("Invalid argument: %s" % n)
@@ -222,16 +231,18 @@ class CrawlerApp(object):
         message = "Processed %d out of %d hosts (%.2f%%)" % (
             scanned,
             targets,
-            100.*scanned/targets,
+            100.0 * scanned / targets,
         )
         print(message)
 
     def report_logon_failure(self, target):
         if not self.credentials_confirmed and not self.args.force:
-            log.critical("%s:%d - Logon failure; "
-                         "aborting to prevent account lockout; "
-                         "consider using the 'force' flag to continue anyway"
-                         % (target.host, target.port))
+            log.critical(
+                "%s:%d - Logon failure; "
+                "aborting to prevent account lockout; "
+                "consider using the 'force' flag to continue anyway"
+                % (target.host, target.port)
+            )
             self.kill_threads()
         else:
             log.warning("%s:%d - Logon failure" % (target.host, target.port))
@@ -265,6 +276,7 @@ class CrawlerApp(object):
 
     def read_key(self):
         import termios
+
         fd = sys.stdin.fileno()
         old = termios.tcgetattr(fd)
         new = termios.tcgetattr(fd)
@@ -303,8 +315,9 @@ class CrawlerThread(threading.Thread):
     # Used for first credential check
     cred_lock = threading.Lock()
 
-    def __init__(self, login, check_write_access=False, depth=0,
-                 crawl_printers_and_pipes=False):
+    def __init__(
+        self, login, check_write_access=False, depth=0, crawl_printers_and_pipes=False
+    ):
         self.login = login
         self.check_write_access = check_write_access
         self.depth = depth
@@ -330,8 +343,7 @@ class CrawlerThread(threading.Thread):
                 with CrawlerThread.thread_lock:
                     CrawlerThread.targets_finished += 1
         except queue.Empty:
-            log.debug("[%s] Queue empty, quitting thread" %
-                      self._name)
+            log.debug("[%s] Queue empty, quitting thread" % self._name)
             self.is_running = False
             self.done = True
 
@@ -344,19 +356,25 @@ class CrawlerThread(threading.Thread):
         self.is_running = True
 
     def skip_share(self):
-        log.info("[%s] Skipping share %s on host %s..." % (
-            self._name,
-            self.current_share,
-            self.current_target,
-        ))
+        log.info(
+            "[%s] Skipping share %s on host %s..."
+            % (
+                self._name,
+                self.current_share,
+                self.current_target,
+            )
+        )
         self._skip_share = True
 
     def skip_host(self):
         """Stop crawling this host"""
-        log.info("[%s] Skipping host %s..." % (
-            self._name,
-            self.current_target,
-        ))
+        log.info(
+            "[%s] Skipping host %s..."
+            % (
+                self._name,
+                self.current_target,
+            )
+        )
         self._skip_host = True
 
     @log_exceptions()
@@ -368,13 +386,16 @@ class CrawlerThread(threading.Thread):
             self.check_write_access,
         )
 
-        log.info("%s:%d - Found share: %s [%s] %s"
-                 % (self.smbClient._remoteHost,
-                    self.smbClient._sess_port,
-                    share,
-                    share.remark,
-                    share.get_permissions(),
-                    ))
+        log.info(
+            "%s:%d - Found share: %s [%s] %s"
+            % (
+                self.smbClient._remoteHost,
+                self.smbClient._sess_port,
+                share,
+                share.remark,
+                share.get_permissions(),
+            )
+        )
         sharegrep_log.info(
             to_grep_line(
                 [
@@ -387,31 +408,33 @@ class CrawlerThread(threading.Thread):
             )
         )
 
-        if depth == 0 or not share.permissions['list_root']:
+        if depth == 0 or not share.permissions["list_root"]:
             return None
 
         self.crawl_dir(share, depth)
         return None
 
     @log_exceptions(
-        silence='.*STATUS_ACCESS_DENIED|STATUS_NOT_SUPPORTED|STATUS_SHARING_VIOLATION.*'
+        silence=".*STATUS_ACCESS_DENIED|STATUS_NOT_SUPPORTED|STATUS_SHARING_VIOLATION.*"
     )
     def crawl_dir(self, share, depth, parent=None):
         if depth == 0:
-            log.debug("[%s] Maximum depth reached: \\\\%s\\%s\\%s" %
-                      (self._name, self.current_target, share, parent))
+            log.debug(
+                "[%s] Maximum depth reached: \\\\%s\\%s\\%s"
+                % (self._name, self.current_target, share, parent)
+            )
             return
 
         for f in share.get_dir_list(parent):
             self.check_paused()
 
-            if (self._skip_share or self._skip_host or self.killed):
+            if self._skip_share or self._skip_host or self.killed:
                 return
 
-            if f.get_longname() in ['.', '..']:
+            if f.get_longname() in [".", ".."]:
                 continue
 
-            if (self._skip_share or self._skip_host or self.killed):
+            if self._skip_share or self._skip_host or self.killed:
                 return
 
             if parent:
@@ -420,31 +443,35 @@ class CrawlerThread(threading.Thread):
                 share.add_path(f)
 
             # output path info
-            log.info('\\\\%s\\%s\\%s [%d]' % (
-                self.smbClient,
-                share,
-                f.get_full_path(),
-                f.size,
-            ))
-            pathgrep_log.info(
-                to_grep_line([
+            log.info(
+                "\\\\%s\\%s\\%s [%d]"
+                % (
                     self.smbClient,
                     share,
                     f.get_full_path(),
                     f.size,
-                ])
+                )
+            )
+            pathgrep_log.info(
+                to_grep_line(
+                    [
+                        self.smbClient,
+                        share,
+                        f.get_full_path(),
+                        f.size,
+                    ]
+                )
             )
 
             if f.is_directory():
                 self.process_directory(share, f, depth)
-            elif (
-                get_regex('interesting_filenames').match(str(f))
-                and not get_regex('boring_filenames').match(str(f))
-            ):
+            elif get_regex("interesting_filenames").match(str(f)) and not get_regex(
+                "boring_filenames"
+            ).match(str(f)):
                 self.process_file(share, f)
 
     @log_exceptions(
-        silence='.*STATUS_ACCESS_DENIED|STATUS_NOT_SUPPORTED|STATUS_SHARING_VIOLATION.*'
+        silence=".*STATUS_ACCESS_DENIED|STATUS_NOT_SUPPORTED|STATUS_SHARING_VIOLATION.*"
     )
     def process_file(self, share, f):
         if self.app.args.disable_autodownload:
@@ -467,12 +494,12 @@ class CrawlerThread(threading.Thread):
 
     @log_exceptions()
     def process_directory(self, share, f, depth):
-        if get_regex('boring_directories').match(str(f)):
+        if get_regex("boring_directories").match(str(f)):
             log.info("[%s] Skip boring directory: %s" % (self._name, str(f)))
         else:
             self.crawl_dir(
                 share,
-                depth-1,
+                depth - 1,
                 f,
             )
 
@@ -488,28 +515,33 @@ class CrawlerThread(threading.Thread):
             return False
 
         if not target.port_open(target.port):
-            log.info("[%s] %s - No SMB service found" % (
-                self._name,
-                target.host,
-            ))
+            log.info(
+                "[%s] %s - No SMB service found"
+                % (
+                    self._name,
+                    target.host,
+                )
+            )
             return False
 
         self.smbClient = SMBConnection(
-            '*SMBSERVER' if target.port == 139 else target.host,
+            "*SMBSERVER" if target.port == 139 else target.host,
             target.host,
             sess_port=target.port,
         )
 
         if not self.smbClient:
-            log.error("[%s] %s:%d - Could not connect" % (
-                self._name,
-                target.host,
-                target.port,
-            ))
+            log.error(
+                "[%s] %s:%d - Could not connect"
+                % (
+                    self._name,
+                    target.host,
+                    target.port,
+                )
+            )
             return False
 
-        log.info("[%s] %s:%s - Connected"
-                 % (self._name, target.host, target.port))
+        log.info("[%s] %s:%s - Connected" % (self._name, target.host, target.port))
 
         # log on
         try:
@@ -519,16 +551,18 @@ class CrawlerThread(threading.Thread):
             self._guest_session = False
             self.smbClient.close()
             self.smbClient = SMBConnection(
-                '*SMBSERVER' if target.port == 139 else target.host,
+                "*SMBSERVER" if target.port == 139 else target.host,
                 target.host,
                 sess_port=target.port,
             )
             try:
                 shares = self.list_shares(target, as_guest=False)
             except SessionError as e:
-                if 'STATUS_ACCESS_DENIED' in str(e):
-                    log.error("[%s] %s:%s - Access denied when listing shares"
-                              % (self._name, target.host, target.port))
+                if "STATUS_ACCESS_DENIED" in str(e):
+                    log.error(
+                        "[%s] %s:%s - Access denied when listing shares"
+                        % (self._name, target.host, target.port)
+                    )
                     return False
                 raise
 
@@ -544,12 +578,8 @@ class CrawlerThread(threading.Thread):
             )
             if depth != self.depth:
                 log.info(
-                    "\\\\%s:%d\\%s: Crawling with non-default depth %d" % (
-                        target.host,
-                        target.port,
-                        share_name,
-                        depth
-                    )
+                    "\\\\%s:%d\\%s: Crawling with non-default depth %d"
+                    % (target.host, target.port, share_name, depth)
                 )
             self.crawl_share(s, depth=depth)
 
@@ -560,15 +590,16 @@ class CrawlerThread(threading.Thread):
     def list_shares(self, target, as_guest=False):
         self.authenticate(target, as_guest=as_guest)
 
-        shares = [SMBShare(self.smbClient, s)
-                  for s in self.smbClient.listShares()]
+        shares = [SMBShare(self.smbClient, s) for s in self.smbClient.listShares()]
 
         if self.killed or self._skip_host:
             return []
 
         if as_guest:
-            log.success("[%s] %s:%s - Guest login succeeded"
-                        % (self._name, target.host, target.port))
+            log.success(
+                "[%s] %s:%s - Guest login succeeded"
+                % (self._name, target.host, target.port)
+            )
 
         return shares
 
@@ -596,14 +627,13 @@ class CrawlerThread(threading.Thread):
         except Exception as e:
             if (
                 isinstance(e, SessionError)
-                and 'STATUS_LOGON_FAILURE' in str(e)
+                and "STATUS_LOGON_FAILURE" in str(e)
                 and not as_guest
             ):
                 self.app.report_logon_failure(target)
                 self._skip_host = True
-            elif (
-                isinstance(e, SessionError)
-                and 'STATUS_LOGON_TYPE_NOT_GRANTED' in str(e)
+            elif isinstance(e, SessionError) and "STATUS_LOGON_TYPE_NOT_GRANTED" in str(
+                e
             ):
                 # We have no permission to this share, no big deal
                 self._skip_host = True

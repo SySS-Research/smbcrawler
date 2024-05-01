@@ -21,8 +21,9 @@ REPORTED = collections.defaultdict(lambda: [])
 
 
 def parse_targets(s):
-    if (re.match(r"^[a-zA-Z0-9-.]+(:[0-9]{1,5})?$", s) or
-            re.match(r"^([0-9]{1,3}\.){3}[0-9]{1,3}(:[0-9]{1,5})?$", s)):
+    if re.match(r"^[a-zA-Z0-9-.]+(:[0-9]{1,5})?$", s) or re.match(
+        r"^([0-9]{1,3}\.){3}[0-9]{1,3}(:[0-9]{1,5})?$", s
+    ):
         # single ip or host name
         return [s]
     elif re.match(r"^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$", s):
@@ -46,9 +47,8 @@ def parse_xml_file(filename):
     for h in nmap_report.hosts:
         for s in h.services:
             if (
-                s.port in [445, 139] or
-                s.service in ['netbios-ssn', 'microsoft-ds']
-            ) and s.state == 'open':
+                s.port in [445, 139] or s.service in ["netbios-ssn", "microsoft-ds"]
+            ) and s.state == "open":
                 result.append(h.address)
                 break
     return result
@@ -60,7 +60,7 @@ def parse_plain_file(filename):
         for line in sys.stdin:
             targets += parse_targets(line)
     else:
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             for line in f:
                 # strip newlines
                 targets += parse_targets(line.strip())
@@ -68,7 +68,7 @@ def parse_plain_file(filename):
 
 
 def get_targets(target, inputfilename, timeout):
-    """"Load targets from file"""
+    """ "Load targets from file"""
 
     targets = []
     for t in target:
@@ -78,6 +78,7 @@ def get_targets(target, inputfilename, timeout):
         t = None
         try:
             from libnmap.parser import NmapParserException
+
             t = parse_xml_file(inputfilename)
         except ImportError:
             log.error("Module 'libnmap' not found, treating as a flat file")
@@ -104,7 +105,7 @@ def save_file(dirname, data, host, share, path):
     # Check if file is already known
     content_hash = get_short_hash(data)
     seen = content_hash in HASHED_FILES
-    URI = '\\'.join(['', '', host, share, path])
+    URI = "\\".join(["", "", host, share, path])
     HASHED_FILES[content_hash].append(URI)
     if seen:
         log.info("File already seen, discarding: %s" % URI)
@@ -125,38 +126,39 @@ def save_file(dirname, data, host, share, path):
 
     find_secrets(data, path, content_hash)
     # Write data to disk
-    with open(path, 'wb') as f:
+    with open(path, "wb") as f:
         f.write(data)
 
 
 def decode_bytes(data, file_type):
     """Decode bytes from all encodings"""
 
-    if 'UTF-8 (with BOM)' in file_type:
-        return data.decode('utf-8-sig', errors='replace')
-    elif 'UTF-16 (with BOM)' in file_type:
-        return data.decode('utf-16', errors='replace')
-    elif 'UTF-16, little-endian' in file_type:
-        return data.decode('utf-16', errors='replace')
-    elif 'UTF-16, big-endian' in file_type:
-        return data.decode('utf-16', errors='replace')
-    elif 'ASCII text' in file_type:
-        return data.decode(errors='replace')
-    return data.decode(errors='replace')
+    if "UTF-8 (with BOM)" in file_type:
+        return data.decode("utf-8-sig", errors="replace")
+    elif "UTF-16 (with BOM)" in file_type:
+        return data.decode("utf-16", errors="replace")
+    elif "UTF-16, little-endian" in file_type:
+        return data.decode("utf-16", errors="replace")
+    elif "UTF-16, big-endian" in file_type:
+        return data.decode("utf-16", errors="replace")
+    elif "ASCII text" in file_type:
+        return data.decode(errors="replace")
+    return data.decode(errors="replace")
 
 
 def convert(data, mime, file_type):
     """Convert bytes to string"""
 
-    if mime.endswith('charset-binary') or file_type.endswith('data'):
-        if mime.startswith('application/pdf'):
+    if mime.endswith("charset-binary") or file_type.endswith("data"):
+        if mime.startswith("application/pdf"):
             import pdftotext
+
             with io.BytesIO(data) as fp:
                 pdf = pdftotext.PDF(fp)
-            return '\n\n'.join(pdf)
+            return "\n\n".join(pdf)
         else:
             # TODO convert docx, xlsx
-            return ''
+            return ""
     else:
         return decode_bytes(data, file_type)
 
@@ -191,12 +193,13 @@ def find_secrets(data, filename, content_hash):
             reported_secret = secret.get_line()
         max_len = 100
         if len(reported_secret) > max_len:
-            reported_secret = reported_secret[:max_len] + '...'
+            reported_secret = reported_secret[:max_len] + "..."
 
         if reported_secret not in REPORTED[content_hash]:
             REPORTED[content_hash].append(reported_secret)
             log.success(
-                "Potential secret [%(hash)s]: %(line)s" % dict(
+                "Potential secret [%(hash)s]: %(line)s"
+                % dict(
                     desc=secret.description,
                     conf=secret.confidence,
                     hash=content_hash,
@@ -204,32 +207,34 @@ def find_secrets(data, filename, content_hash):
                     line=reported_secret,
                 )
             )
-            SECRETS[content_hash].append(dict(
-                description=secret.description,
-                confidence=secret.confidence,
-                secret=secret.get_secret(),
-                full_line=secret.line,
-            ))
+            SECRETS[content_hash].append(
+                dict(
+                    description=secret.description,
+                    confidence=secret.confidence,
+                    secret=secret.get_secret(),
+                    full_line=secret.line,
+                )
+            )
 
 
 def write_secrets(path):
-    with open(path, 'w') as fp:
+    with open(path, "w") as fp:
         # Make copy of dict for thread safety
         json.dump(dict(SECRETS), fp)
 
 
 def write_files(path):
-    with open(path, 'w') as fp:
+    with open(path, "w") as fp:
         # Make copy of dict for thread safety
         json.dump(dict(HASHED_FILES), fp)
 
 
 def sanitize(remark):
     """Remove unwanted characters"""
-    result = ''.join([x for x in remark if ord(x) >= 32])
+    result = "".join([x for x in remark if ord(x) >= 32])
     return result
 
 
 def to_grep_line(values):
-    result = '\t'.join([sanitize(str(x)) for x in values])
+    result = "\t".join([sanitize(str(x)) for x in values])
     return result
