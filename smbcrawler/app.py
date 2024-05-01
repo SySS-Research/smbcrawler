@@ -114,7 +114,6 @@ class CrawlerApp(object):
         print("Writing output...")
         write_files(self.files_filename)
         write_secrets(self.secrets_filename)
-        sys.exit(0)
 
     def pause(self):
         # Use print because log level might not be high enough
@@ -280,13 +279,17 @@ class CrawlerApp(object):
 
     def input_thread(self):
         """Runs in a separate thread and only registers key events"""
+        import io
 
-        while True:
-            key = self.read_key()
-            if key == "p":
-                self.pause()
-            if key == " ":
-                self.print_progress()
+        try:
+            while True:
+                key = self.read_key()
+                if key == "p":
+                    self.pause()
+                if key == " ":
+                    self.print_progress()
+        except io.UnsupportedOperation:
+            log.warning("stdin is pseudofile, cannot read keys")
 
 
 class CrawlerThread(threading.Thread):
