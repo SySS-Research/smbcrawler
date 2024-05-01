@@ -41,8 +41,8 @@ class MySharedFile(smb.SharedFile, object):
     def get_full_path(self):
         if self.parent:
             smbpwd = smbconnection.ntpath.join(
-                self.parent.get_full_path(),
-                self.get_longname())
+                self.parent.get_full_path(), self.get_longname()
+            )
             smbpwd = smbconnection.ntpath.normpath(smbpwd)
             return smbpwd
         return self.get_longname()

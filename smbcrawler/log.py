@@ -12,7 +12,7 @@ reset = "\x1b[0m"
 
 
 logging.SUCCESS = 49  # almost same as critical
-logging.addLevelName(logging.SUCCESS, 'SUCCESS')
+logging.addLevelName(logging.SUCCESS, "SUCCESS")
 
 
 def color_map(_format):
@@ -30,7 +30,7 @@ def color_map(_format):
 class CustomFormatter(logging.Formatter):
     """Logging Formatter to add colors"""
 
-    _format = '%(levelname).1s %(asctime)-15s %(message)s'
+    _format = "%(levelname).1s %(asctime)-15s %(message)s"
 
     FORMATS = color_map(_format)
 
@@ -48,8 +48,7 @@ class CustomFormatter(logging.Formatter):
 
 
 class CustomFormatterDebug(CustomFormatter):
-    _format = '%(levelname).1s %(asctime)-15s ' \
-        '%(filename)s:%(lineno)d %(message)s'
+    _format = "%(levelname).1s %(asctime)-15s " "%(filename)s:%(lineno)d %(message)s"
     FORMATS = color_map(_format)
 
 
@@ -59,7 +58,7 @@ def init_log(args):
         log_level = logging.CRITICAL
     elif raw_log_level == 1:
         log_level = logging.ERROR
-    elif raw_log_level == 2:     # default
+    elif raw_log_level == 2:  # default
         log_level = logging.WARNING
     elif raw_log_level == 3:
         log_level = logging.INFO
@@ -82,7 +81,7 @@ def init_log(args):
         file_handler = logging.FileHandler(
             os.path.join(
                 args.output_dir,
-                args.session_name + '.log',
+                args.session_name + ".log",
             )
         )
         file_handler.setLevel(logging.DEBUG)
@@ -93,33 +92,36 @@ def init_log(args):
         level=logging.DEBUG,
     )
 
-    logger = logging.getLogger('')
+    logger = logging.getLogger("")
     logger.handlers = handlers
 
     # add success level
     def success(self, message, *args, **kwargs):
         self._log(logging.SUCCESS, message, args, **kwargs)
+
     logging.Logger.success = success
 
     # Create grep loggers
     grep_loggers = [
         [
             args.disable_share_output,
-            'sharegrep_logger',
-            '_shares.grep',
-            '\t'.join([
-                'name',
-                'host',
-                'share',
-                'remark',
-                'permissions',
-            ])
+            "sharegrep_logger",
+            "_shares.grep",
+            "\t".join(
+                [
+                    "name",
+                    "host",
+                    "share",
+                    "remark",
+                    "permissions",
+                ]
+            ),
         ],
         [
             args.disable_path_output,
-            'pathgrep_logger',
-            '_paths.grep',
-            '\t'.join(['host', 'share', 'path', 'size']),
+            "pathgrep_logger",
+            "_paths.grep",
+            "\t".join(["host", "share", "path", "size"]),
         ],
     ]
     for disabled, name, filename, header in grep_loggers:
@@ -135,6 +137,6 @@ def init_log(args):
             )
         )
         handler.setLevel(logging.INFO)
-        handler.setFormatter(logging.Formatter('%(message)s'))
+        handler.setFormatter(logging.Formatter("%(message)s"))
         logger.addHandler(handler)
         logger.info(header)

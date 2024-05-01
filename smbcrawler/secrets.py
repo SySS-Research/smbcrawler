@@ -6,7 +6,7 @@ from functools import reduce
 class Secret(object):
     likely_extensions = []
     regex_flags = [re.IGNORECASE]
-    regex = ''
+    regex = ""
 
     def __init__(self, line, mimetype=None, filename=None):
         self.line = line
@@ -42,10 +42,9 @@ class Secret(object):
         if len(self.line) > 512:
             result -= 30
         _, ext = os.path.splitext(self.filename)
-        if self.likely_extensions and \
-           ext.lower() not in self.likely_extensions:
+        if self.likely_extensions and ext.lower() not in self.likely_extensions:
             result -= 20
-        if 'data' in self.mimetype:
+        if "data" in self.mimetype:
             result -= 20
         self.confidentiality = result
         return result
@@ -62,7 +61,7 @@ class Secret(object):
 
     def get_secret(self):
         if self.match_result:
-            return self.match_result.groupdict().get('secret', '')
+            return self.match_result.groupdict().get("secret", "")
         return ""
 
     def get_line(self):
@@ -73,33 +72,33 @@ class Secret(object):
 
 class NetUser(Secret):
     description = "'net use' command in script"
-    regex = 'net use.*/user.*'
-    likely_extensions = ['.ps1', '.bat', '.cmd']
+    regex = "net use.*/user.*"
+    likely_extensions = [".ps1", ".bat", ".cmd"]
 
 
 class RunAs(Secret):
     description = "'RunAs' command in script"
-    regex = r'runas(\.exe)? .*/user'
-    likely_extensions = ['.ps1', '.bat', '.cmd']
+    regex = r"runas(\.exe)? .*/user"
+    likely_extensions = [".ps1", ".bat", ".cmd"]
 
 
 class SecureString(Secret):
     description = "'ConvertTo-SecureString' command in script"
-    regex = 'ConvertTo-SecureString'
-    likely_extensions = ['.ps1', '.bat', '.cmd']
+    regex = "ConvertTo-SecureString"
+    likely_extensions = [".ps1", ".bat", ".cmd"]
 
 
 class PasswordConfig(Secret):
     description = "'password =' in config"
-    regex = '(password|pwd|passwd)[a-z]*\\s*=\\s*(?P<secret>..+)'
-    likely_extensions = ['.ini', '.conf', '.cnf', '.config', '.properties']
+    regex = "(password|pwd|passwd)[a-z]*\\s*=\\s*(?P<secret>..+)"
+    likely_extensions = [".ini", ".conf", ".cnf", ".config", ".properties"]
 
     def assess(self):
         # some common strings that cause false positive
         c = super().assess()
         if (
-            'ShowPasswordDialog=' in self.get_line()
-            or 'DisableChangePassword=' in self.get_line()
+            "ShowPasswordDialog=" in self.get_line()
+            or "DisableChangePassword=" in self.get_line()
         ):
             c = 0
         return c
@@ -108,22 +107,20 @@ class PasswordConfig(Secret):
 class PasswordJson(Secret):
     description = "'password' value in JSON file"
     regex = '"[a-z]*(password|pwd|passwd)[a-z]*":"(?P<secret>..+)"'
-    likely_extensions = ['.json']
+    likely_extensions = [".json"]
 
     def assess(self):
         # some strings in adml files on SYSVOL make it a sure false positive
         c = super().assess()
-        if (
-            'DisableChangePassword=' in self.get_line()
-        ):
+        if "DisableChangePassword=" in self.get_line():
             c = 0
         return c
 
 
 class PasswordYaml(Secret):
     description = "'password' value in YAML file"
-    regex = '\\s*[a-z]*passw[a-z]*:\\s*(?P<secret>..+)'
-    likely_extensions = ['.yaml', '.yml']
+    regex = "\\s*[a-z]*passw[a-z]*:\\s*(?P<secret>..+)"
+    likely_extensions = [".yaml", ".yml"]
 
     def assess(self):
         # high likelihood of false positives
@@ -133,14 +130,13 @@ class PasswordYaml(Secret):
 
 class PasswordXml(Secret):
     description = "'password' element in XML file"
-    regex = '<[a-z]*pass[!>]*>(?P<secret>[!<]+)</[a-z]*pass'
-    likely_extensions = ['.xml']
+    regex = "<[a-z]*pass[!>]*>(?P<secret>[!<]+)</[a-z]*pass"
+    likely_extensions = [".xml"]
 
     def assess(self):
         result = 90
         _, ext = os.path.splitext(self.filename)
-        if self.likely_extensions and \
-           ext.lower() not in self.likely_extensions:
+        if self.likely_extensions and ext.lower() not in self.likely_extensions:
             result -= 20
         # cpassword very likely
         if "<cpassword>" in self.get_line():
@@ -150,33 +146,33 @@ class PasswordXml(Secret):
 
 class PasswordUnattend(Secret):
     description = "password in unattend.xml"
-    regex = r'<Password>\s*<Value>(?P<secret>[!<]+)</Value'
+    regex = r"<Password>\s*<Value>(?P<secret>[!<]+)</Value"
 
     def assess(self):
         return 97
 
 
 class PrivateKey(Secret):
-    description = 'private key'
-    regex = '----- BEGIN[A-Z ]* PRIVATE KEY -----'
-    likely_extensions = ['.pem', '.key']
+    description = "private key"
+    regex = "----- BEGIN[A-Z ]* PRIVATE KEY -----"
+    likely_extensions = [".pem", ".key"]
 
 
 class UrlPassword(Secret):
-    description = 'URL Password'
-    regex = r'[a-z0-9]://(?P<secret>[^:]+:[^@])@[a-z0-9]'
+    description = "URL Password"
+    regex = r"[a-z0-9]://(?P<secret>[^:]+:[^@])@[a-z0-9]"
 
 
 class AwsSecrets(Secret):
-    description = 'AWS secrets'
-    regex = r'(aws_access_key_id|aws_secret_access_key)\s*=\s*(?P<secret>..+)'
-    likely_extensions = ['.ini']
+    description = "AWS secrets"
+    regex = r"(aws_access_key_id|aws_secret_access_key)\s*=\s*(?P<secret>..+)"
+    likely_extensions = [".ini"]
 
 
 class EmpirumPassword(Secret):
-    description = 'Empirum password (Matrix42)'
-    regex = r'PASSWORD_[A-Z0-9_]*(SETUP|EIS|SYNC)=(?P<secret>..+)'
-    likely_extensions = ['.ini']
+    description = "Empirum password (Matrix42)"
+    regex = r"PASSWORD_[A-Z0-9_]*(SETUP|EIS|SYNC)=(?P<secret>..+)"
+    likely_extensions = [".ini"]
 
     def assess(self):
         # high likelihood of false positives
@@ -186,7 +182,7 @@ class EmpirumPassword(Secret):
 
 
 class DsmPassword(Secret):
-    description = 'DSM password (Ivanti/Frontrange)'
-    regex = r'[^a-zA-Z0-9+/](?P<secret>k[123456][A-Za-z0-9+/]{32,}=?=?)[^a-zA-Z0-9+/]'
-    likely_extensions = ['.ncp']
+    description = "DSM password (Ivanti/Frontrange)"
+    regex = r"[^a-zA-Z0-9+/](?P<secret>k[123456][A-Za-z0-9+/]{32,}=?=?)[^a-zA-Z0-9+/]"
+    likely_extensions = [".ncp"]
     regex_flags = [re.IGNORECASE]

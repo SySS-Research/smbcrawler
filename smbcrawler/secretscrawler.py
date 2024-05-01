@@ -10,7 +10,7 @@ from .io import get_short_hash, SECRETS, find_secrets
 log = logging.getLogger(__name__)
 
 
-css = '''
+css = """
 table {
   border: 1px solid #ccc;
   border-collapse: collapse;
@@ -98,9 +98,9 @@ body {
   font-family: "Open Sans", sans-serif;
   line-height: 1.25;
 }
-'''
+"""
 
-html_template = '''
+html_template = """
 <!DOCTYPE html>
 <html>
 <head>
@@ -114,7 +114,7 @@ html_template = '''
 %(table)s
 </body
 </html>
-'''
+"""
 
 
 def run(paths, output, format, recursive=False, as_json=False):
@@ -126,17 +126,17 @@ def run(paths, output, format, recursive=False, as_json=False):
         if p.is_file():
             files.append(p)
         else:
-            pattern = '*'
+            pattern = "*"
             if recursive:
-                pattern = '**/*'
+                pattern = "**/*"
             files.extend(p.glob(pattern))
 
     for f in files:
         if as_json:
-            data = json.load(open(str(f), 'r'))
+            data = json.load(open(str(f), "r"))
             SECRETS.update(data)
             continue
-        data = open(str(f), 'rb').read()
+        data = open(str(f), "rb").read()
         content_hash = get_short_hash(data)
         file_map[content_hash] = f
         try:
@@ -148,17 +148,17 @@ def run(paths, output, format, recursive=False, as_json=False):
 
 
 def create_output(output, format, secrets, file_map):
-    if format == 'html':
+    if format == "html":
         import json2html
+
         table = json2html.json2html.convert(secrets)
         for content_hash, filename in file_map.items():
             filename = urllib.parse.quote(str(filename).encode())
             filename = html.escape(filename)
             table = table.replace(
                 content_hash,
-                '<a href="%s" target="_blank">%s</a>'
-                % (filename, content_hash),
+                '<a href="%s" target="_blank">%s</a>' % (filename, content_hash),
             )
         output.write(html_template % dict(table=table, css=css))
-    elif format == 'json':
+    elif format == "json":
         json.dump(secrets, output, indent=4)
