@@ -48,31 +48,8 @@ smbcrawler = "smbcrawler.__main__:main"
 tests = [
   'pytest',
   'pyexpect',
-  'tox',
 ]
 
 [tool.pytest.ini_options]
-norecursedirs = tests/helpers
-filterwarnings = ignore::DeprecationWarning
-
-[tool.tox]
-legacy_tox_ini = """
-[tox]
-envlist = py37,py39,lint
-
-[testenv]
-basepython =
-    {lint}: {env:TOXPYTHON:python3}
-    py39: {env:TOXPYTHON:python3.9}
-passenv = *
-install_command = pip install {opts} {packages}
-deps =
-    pytest
-usedevelop = false
-commands = pytest -W ignore::DeprecationWarning -v {posargs} tests
-
-[testenv:lint]
-skip_install = true
-deps = flake8
-commands = flake8
-"""
+norecursedirs = "tests/shares"
+filterwarnings = "ignore::DeprecationWarning"
