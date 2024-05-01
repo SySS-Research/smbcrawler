@@ -1,5 +1,3 @@
-test.sh
-
 __pycache__
 *.pyc
 *.egg-info
@@ -11,4 +9,5 @@ venv
 .env
 .venv
 
-.tox
+.nox
+_dev
