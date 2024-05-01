@@ -9,7 +9,7 @@
         "noprinting",
         "default"
       ],
-      "instance_name": "SAMBA"
+      "instance_name": "SAMBA_DEFAULT"
     }
   },
   "shares": {
@@ -48,6 +48,20 @@
         "map to guest": "never",
         "restrict anonymous": "2",
         "guest ok": "no"
+      }
+    },
+    "allow_anoymous_listing": {
+      "options": {
+        "map to guest": "never",
+        "restrict anonymous": "0",
+        "guest ok": "no"
+      }
+    },
+    "allow_anoymous_share_access": {
+      "options": {
+        "map to guest": "bad user",
+        "restrict anonymous": "0",
+        "guest ok": "yes"
       }
     }
   }

@@ -94,17 +94,21 @@ def samba_server_pool():
 
     # Stop and remove the containers
     for container in containers:
-        run_command(f"{engine} stop {container}")
+        run_command(f"{engine} stop {container} -t 0")
 
 
 def spin_up_samba(engine, ip_address, share_dir, config, container_id):
+    assert " " not in config
+    assert " " not in container_id
+    assert " " not in ip_address
+    img = "quay.io/samba.org/samba-server:latest"
     command = (
         f"{engine} run -d --rm "
         f"-p {ip_address}:445:445 "
         f"-v {share_dir}:/share:z "
         f"-e SAMBACC_CONFIG=/share/{config} "
         f"-e SAMBA_CONTAINER_ID={container_id} "
-        f"quay.io/samba.org/samba-server:latest run --setup=init-all smbd"
+        f"{img} run --setup=init-all smbd"
     )
     container_name = run_command(command)
 
@@ -123,7 +127,7 @@ def test_samba(samba_server_pool, tmp_path, caplog):
         "-p",
         "password1",
         "-D",
-        "2",
+        "1",
         *samba_server_pool,
     )
 
