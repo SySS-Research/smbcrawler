@@ -1,5 +1,4 @@
 import sys
-import os
 import logging
 import queue
 import re
@@ -83,18 +82,16 @@ class CrawlerApp(object):
         )
 
         self.credentials_confirmed = False
-        self.autodownload_dir = os.path.join(
-            self.args.output_dir,
-            self.args.session_name + "_autodownload",
-        )
-        self.secrets_filename = os.path.join(
-            self.args.output_dir,
-            self.args.session_name + "_secrets.json",
-        )
-        self.files_filename = os.path.join(
-            self.args.output_dir,
-            self.args.session_name + "_files.json",
-        )
+
+        self.target_queue = queue.Queue()
+        self.targets_finished = 0
+        self.running = threading.Event()
+
+        # Used for modifying class vars
+        self.thread_lock = threading.Lock()
+
+        # Used for first credential check
+        self.cred_lock = threading.Lock()
 
     def run(self):
         log.info("Starting up with these arguments: " + self.cmd)
@@ -121,7 +118,7 @@ class CrawlerApp(object):
     def pause(self):
         # Use print because log level might not be high enough
         print("Pausing threads... be patient.")
-        CrawlerThread.running.clear()
+        self.running.clear()
         while True:
             time.sleep(1)
             count = sum(t.is_running for t in self.threads)
@@ -220,12 +217,12 @@ class CrawlerApp(object):
 
     def resume(self, msg="Resuming..."):
         log.info(msg)
-        CrawlerThread.running.set()
+        self.running.set()
         return True
 
     def print_progress(self):
         message = ""
-        scanned = CrawlerThread.targets_finished
+        scanned = self.targets_finished
         targets = len(self.targets)
         message = "Processed %d out of %d hosts (%.2f%%)" % (
             scanned,
@@ -251,11 +248,11 @@ class CrawlerApp(object):
 
     def _run(self):
         for target in self.targets:
-            CrawlerThread.target_queue.put(target)
-        CrawlerThread.app = self
+            self.target_queue.put(target)
         self.threads = []
         for t in range(self.args.threads):
             thread = CrawlerThread(
+                self,
                 self.login,
                 self.args.timeout,
                 check_write_access=self.args.check_write_access,
@@ -264,7 +261,7 @@ class CrawlerApp(object):
             )
             thread.start()
             self.threads.append(thread)
-        CrawlerThread.running.set()
+        self.running.set()
 
         t = threading.Thread(target=self.input_thread)
         t.setDaemon(True)
@@ -305,19 +302,10 @@ class CrawlerApp(object):
 
 
 class CrawlerThread(threading.Thread):
-    target_queue = queue.Queue()
-    targets_finished = 0
-    running = threading.Event()
-
-    # Used for modifying class vars
-    thread_lock = threading.Lock()
-
-    # Used for first credential check
-    cred_lock = threading.Lock()
-
     def __init__(
-        self, login, timeout, check_write_access=False, depth=0, crawl_printers_and_pipes=False
+        self, app, login, timeout, check_write_access=False, depth=0, crawl_printers_and_pipes=False
     ):
+        self.app = app
         self.login = login
         self.timeout = timeout
         self.check_write_access = check_write_access
@@ -341,8 +329,8 @@ class CrawlerThread(threading.Thread):
             while not self.killed:
                 target = self.target_queue.get(block=False)
                 self.crawl_host(target)
-                with CrawlerThread.thread_lock:
-                    CrawlerThread.targets_finished += 1
+                with self.app.thread_lock:
+                    self.app.targets_finished += 1
         except queue.Empty:
             log.debug("[%s] Queue empty, quitting thread" % self._name)
             self.is_running = False
@@ -353,7 +341,7 @@ class CrawlerThread(threading.Thread):
 
     def check_paused(self):
         self.is_running = False
-        CrawlerThread.running.wait()
+        self.app.running.wait()
         self.is_running = True
 
     def skip_share(self):
@@ -607,7 +595,7 @@ class CrawlerThread(threading.Thread):
     def authenticate(self, target, as_guest=False):
         try:
             if not self.app.credentials_confirmed:
-                CrawlerThread.cred_lock.acquire()
+                self.app.cred_lock.acquire()
             if self.killed:
                 return
             if as_guest:
@@ -641,5 +629,5 @@ class CrawlerThread(threading.Thread):
             else:
                 raise
         finally:
-            if CrawlerThread.cred_lock.locked():
-                CrawlerThread.cred_lock.release()
+            if self.app.cred_lock.locked():
+                self.app.cred_lock.release()
