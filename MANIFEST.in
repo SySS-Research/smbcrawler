@@ -1,5 +1,0 @@
-graft smbcrawler
-prune tests
-prune docs
-prune .*
-exclude .*

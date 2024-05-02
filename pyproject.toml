@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2", "setuptools-git-versioning",]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
 
 [project]
 name = "smbcrawler"
@@ -47,8 +47,13 @@ smbcrawler = "smbcrawler.__main__:main"
 [project.optional-dependencies]
 tests = [
   'pytest',
-  'pyexpect',
 ]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "_version.py"
 
 [tool.pytest.ini_options]
 norecursedirs = "tests/shares"

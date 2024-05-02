@@ -10,5 +10,5 @@ def tests(session):
 @nox.session()
 def lint(session):
     session.install("black")
-    session.run("black", "smbcrawler", "--check", *session.posargs)
+    session.run("black", "src", "--check", *session.posargs)
     session.run("black", "tests", "--check", *session.posargs)

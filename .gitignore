@@ -11,3 +11,4 @@ venv
 
 .nox
 _dev
+_version.py
