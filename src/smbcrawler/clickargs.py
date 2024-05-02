@@ -1,7 +1,10 @@
 import click
 
 
-@click.group()
+help_alias = dict(context_settings=dict(help_option_names=["-h", "--help"]))
+
+
+@click.group(**help_alias)
 @click.option(
     "-C",
     "--crawl-file",
@@ -13,7 +16,7 @@ def cli(crawl_file):
     pass
 
 
-@click.command()
+@click.command(**help_alias)
 @click.option(
     "-u",
     "--user",
@@ -112,7 +115,7 @@ def crawl(
     click.echo("Starting the crawler ...")
 
 
-@click.command()
+@click.command(**help_alias)
 def export():
     """Export results to other file formats"""
     click.echo("Exporting ...")
