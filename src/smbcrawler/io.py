@@ -67,8 +67,8 @@ def parse_plain_file(filename):
     return targets
 
 
-def get_targets(target, inputfilename, timeout):
-    """ "Load targets from file"""
+def get_targets(target, inputfilename):
+    """Load targets from file"""
 
     targets = []
     for t in target:
@@ -89,7 +89,7 @@ def get_targets(target, inputfilename, timeout):
         if t:
             targets += t
 
-    result = [Target(t, timeout) for t in targets]
+    result = [Target(t) for t in targets]
     log.info("Loaded %s hosts" % len(result))
     return result
 

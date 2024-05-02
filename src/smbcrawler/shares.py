@@ -11,18 +11,17 @@ log = logging.getLogger(__name__)
 
 
 class Target(object):
-    def __init__(self, host, timeout):
+    def __init__(self, host):
         if ":" in host:
             self.host, self.port = host.split(":")
             self.port = int(self.port)
         else:
             self.host = host
             self.port = 445
-        self.timeout = timeout
 
-    def port_open(self, port):
+    def is_port_open(self, port, timeout):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(self.timeout)
+        s.settimeout(timeout)
         try:
             s.connect((self.host, port))
             s.close()

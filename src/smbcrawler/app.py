@@ -73,7 +73,6 @@ class CrawlerApp(object):
         self.targets = get_targets(
             self.args.target,
             self.args.inputfilename,
-            self.args.timeout,
         )
 
         self.login = Login(
@@ -258,6 +257,7 @@ class CrawlerApp(object):
         for t in range(self.args.threads):
             thread = CrawlerThread(
                 self.login,
+                self.args.timeout,
                 check_write_access=self.args.check_write_access,
                 depth=self.args.depth,
                 crawl_printers_and_pipes=self.args.crawl_printers_and_pipes,
@@ -316,9 +316,10 @@ class CrawlerThread(threading.Thread):
     cred_lock = threading.Lock()
 
     def __init__(
-        self, login, check_write_access=False, depth=0, crawl_printers_and_pipes=False
+        self, login, timeout, check_write_access=False, depth=0, crawl_printers_and_pipes=False
     ):
         self.login = login
+        self.timeout = timeout
         self.check_write_access = check_write_access
         self.depth = depth
         self.crawl_printers_and_pipes = crawl_printers_and_pipes
@@ -514,7 +515,7 @@ class CrawlerThread(threading.Thread):
         if self.killed:
             return False
 
-        if not target.port_open(target.port):
+        if not target.is_port_open(target.port, self.timeout):
             log.info(
                 "[%s] %s - No SMB service found"
                 % (
