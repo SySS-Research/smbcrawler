@@ -1,7 +1,12 @@
 import sys
 
 
-def main(*args):
+def main(*args, **kwargs):
+    from smbcrawler.clickargs import cli
+    cli(*args, **kwargs)
+
+
+def main_(*args):
     from smbcrawler.args import parse_args
 
     if not args:

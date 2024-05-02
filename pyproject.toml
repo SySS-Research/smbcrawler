@@ -29,6 +29,7 @@ dependencies = [
     'pdftotext',
     'python-magic',
     'json2html',
+    'click',
 ]
 
 [tool.setuptools]
