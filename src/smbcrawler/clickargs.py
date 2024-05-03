@@ -84,6 +84,13 @@ def cli(crawl_file):
     " root directory. If you know a better method, let me know.",
 )
 @click.option(
+    "-A",
+    "--disable-autodownload",
+    is_flag=True,
+    default=False,
+    help="Don't download any files",
+)
+@click.option(
     "-i",
     "--input",
     help="input from list of hosts/networks (use - for stdin);"
@@ -104,6 +111,7 @@ def crawl(
     threads,
     depth,
     check_write_access,
+    disable_autodownload,
     input,
     target,
 ):

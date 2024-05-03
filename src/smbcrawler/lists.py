@@ -130,4 +130,5 @@ def init_list(override, append):
 
 
 def get_regex(name):
+    return re.compile("")
     return REGEXES[name]

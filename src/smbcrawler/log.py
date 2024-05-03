@@ -1,5 +1,6 @@
 import logging
-import os
+import queue
+import threading
 
 
 grey = "\x1b[38m"
@@ -52,48 +53,65 @@ class CustomFormatterDebug(CustomFormatter):
     FORMATS = color_map(_format)
 
 
-def init_log(args):
-    raw_log_level = 2 + (args.verbose or 0) - (args.quiet or 0)
-    if raw_log_level <= 0:
-        log_level = logging.CRITICAL
-    elif raw_log_level == 1:
-        log_level = logging.ERROR
-    elif raw_log_level == 2:  # default
-        log_level = logging.WARNING
-    elif raw_log_level == 3:
-        log_level = logging.INFO
-    else:
-        log_level = logging.DEBUG
+class DBHandler(logging.Handler):
+    """
+    Logging handler for a database
+    """
 
-    stream_handler = logging.StreamHandler()
-    stream_handler.setLevel(log_level)
+    def __init__(self, db_queue):
+        super().__init__()
+        self.db_queue = db_queue
 
-    # create formatter and add it to the stream handler
-    if log_level == logging.DEBUG:
-        formatter = CustomFormatterDebug()
-    else:
-        formatter = CustomFormatter()
-    stream_handler.setFormatter(formatter)
-
-    handlers = [stream_handler]
-
-    if not args.disable_log_file:
-        file_handler = logging.FileHandler(
-            os.path.join(
-                args.output_dir,
-                args.session_name + ".log",
-            )
+    def emit(self, record):
+        data = dict(
+            message=record.msg,
+            level=record.levelname,
+            thread_id=record.thread,
+            line_no=record.lineno,
+            module=record.module,
+            func_name=record.funcName,
         )
-        file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(CustomFormatterDebug(color=False))
-        handlers.append(file_handler)
+        self.db_queue.write("LogItem", data)
 
-    logging.basicConfig(
-        level=logging.DEBUG,
-    )
 
-    logger = logging.getLogger("")
-    logger.handlers = handlers
+class FIFOHandler(logging.Handler):
+    def __init__(self, path):
+        super().__init__()
+        self.path = path
+        self.log_queue = queue.Queue()
+        self.thread = threading.Thread(target=self.process_queue)
+        self.thread.daemon = True
+        self.thread.start()
+
+    def process_queue(self):
+        # Open the FIFO and keep it open
+        with open(self.path, 'w') as fifo:
+            while True:
+                record = self.log_queue.get()
+                if record is None:
+                    # None is used as a signal to stop the thread
+                    break
+                msg = self.format(record)
+                fifo.write(msg + '\n')
+                fifo.flush()
+
+    def emit(self, record):
+        try:
+            self.log_queue.put(record)
+        except Exception:
+            self.handleError(record)
+
+    def close(self):
+        super().close()
+        self.log_queue.put(None)  # Signal to stop the thread
+        self.thread.join()
+
+
+def init_logger(db_queue, fifo_pipe, id_=None):
+    logging.basicConfig(level=logging.DEBUG)
+
+    logger = logging.getLogger("smbcrawler.logger_%s" % id_)
+    logger.handlers = []
 
     # add success level
     def success(self, message, *args, **kwargs):
@@ -101,42 +119,15 @@ def init_log(args):
 
     logging.Logger.success = success
 
-    # Create grep loggers
-    grep_loggers = [
-        [
-            args.disable_share_output,
-            "sharegrep_logger",
-            "_shares.grep",
-            "\t".join(
-                [
-                    "name",
-                    "host",
-                    "share",
-                    "remark",
-                    "permissions",
-                ]
-            ),
-        ],
-        [
-            args.disable_path_output,
-            "pathgrep_logger",
-            "_paths.grep",
-            "\t".join(["host", "share", "path", "size"]),
-        ],
-    ]
-    for disabled, name, filename, header in grep_loggers:
-        if disabled:
-            continue
-        logger = logging.getLogger(name)
-        logger.propagate = False
-        logger.handlers.clear()
-        handler = logging.FileHandler(
-            os.path.join(
-                args.output_dir,
-                args.session_name + filename,
-            )
-        )
-        handler.setLevel(logging.INFO)
-        handler.setFormatter(logging.Formatter("%(message)s"))
-        logger.addHandler(handler)
-        logger.info(header)
+    try:
+        fifo_handler = logging.FIFOHandler(fifo_pipe)
+        fifo_handler.setLevel("DEBUG")
+        fifo_handler.setFormatter(CustomFormatterDebug())
+        logger.handlers.append(fifo_handler)
+    except Exception as e:
+        print("Couldn't create fifo pipe: %s" % e)
+
+    db_handler = DBHandler(db_queue)
+    logger.handlers.append(db_handler)
+
+    return logger

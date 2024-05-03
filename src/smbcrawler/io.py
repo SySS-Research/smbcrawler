@@ -67,12 +67,12 @@ def parse_plain_file(filename):
     return targets
 
 
-def get_targets(target, inputfilename):
+def get_targets(targets, inputfilename):
     """Load targets from file"""
 
-    targets = []
-    for t in target:
-        targets += parse_targets(t)
+    _targets = []
+    for t in targets:
+        _targets += parse_targets(t)
 
     if inputfilename:
         t = None
@@ -87,9 +87,9 @@ def get_targets(target, inputfilename):
         if t is None:
             t = parse_plain_file(inputfilename)
         if t:
-            targets += t
+            _targets += t
 
-    result = [Target(t) for t in targets]
+    result = [Target(t) for t in _targets]
     log.info("Loaded %s hosts" % len(result))
     return result
 

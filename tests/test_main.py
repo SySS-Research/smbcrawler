@@ -115,21 +115,25 @@ def spin_up_samba(engine, ip_address, share_dir, config, container_id):
     return container_name
 
 
-def test_samba(samba_server_pool, tmp_path, caplog):
-    from smbcrawler.__main__ import main
+def test_samba(samba_server_pool, tmp_path, caplog, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    from smbcrawler.app import CrawlerApp, Login
 
     caplog.set_level("DEBUG")
-    main(
-        "-o",
-        str(tmp_path),
-        "-u",
+
+    login = Login(
         "user1",
-        "-p",
+        "",
         "password1",
-        "-D",
-        "1",
-        *samba_server_pool,
     )
+
+    app = CrawlerApp(
+        login,
+        targets=samba_server_pool,
+    )
+
+    app.run()
 
     assert os.path.isfile(tmp_path / "smbcrawler_files.json")
     assert os.path.isfile(tmp_path / "smbcrawler_paths.grep")

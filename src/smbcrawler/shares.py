@@ -19,17 +19,17 @@ class Target(object):
             self.host = host
             self.port = 445
 
-    def is_port_open(self, port, timeout):
+    def is_port_open(self, timeout):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(timeout)
         try:
-            s.connect((self.host, port))
+            s.connect((self.host, self.port))
             s.close()
         except Exception as e:
-            log.debug("%s:%d - %s" % (self.host, port, e))
+            log.debug("%s:%d - %s" % (self.host, self.port, e))
             s.close()
             return False
-        log.info("%s:%d - Port open" % (self.host, port))
+        log.info("%s:%d - Port open" % (self.host, self.port))
         return True
 
     def __str__(self):
