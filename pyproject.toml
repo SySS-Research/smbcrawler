@@ -28,6 +28,7 @@ dependencies = [
     'lxml',
     'pdftotext',
     'python-magic',
+    'peewee',
     'json2html',
     'click',
 ]
