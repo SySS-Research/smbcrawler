@@ -18,10 +18,10 @@ class EventReporter(object):
 
     def close(self):
         self.db_queue.close()
-        try:
-            os.unlink(self.fifo_pipe)
-        except Exception:
-            pass
+        for handler in self.log.handlers:
+            if hasattr(handler, "close"):
+                handler.close()
+
         try:
             os.rmdir(self._tmpdir)
         except Exception:

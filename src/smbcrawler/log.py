@@ -1,4 +1,5 @@
 import logging
+import os
 import queue
 import threading
 
@@ -105,6 +106,10 @@ class FIFOHandler(logging.Handler):
         super().close()
         self.log_queue.put(None)  # Signal to stop the thread
         self.thread.join()
+        try:
+            os.unlink(self.path)
+        except Exception:
+            pass
 
 
 def init_logger(db_queue, fifo_pipe, id_=None):
@@ -119,13 +124,14 @@ def init_logger(db_queue, fifo_pipe, id_=None):
 
     logging.Logger.success = success
 
-    try:
-        fifo_handler = logging.FIFOHandler(fifo_pipe)
-        fifo_handler.setLevel("DEBUG")
-        fifo_handler.setFormatter(CustomFormatterDebug())
-        logger.handlers.append(fifo_handler)
-    except Exception as e:
-        print("Couldn't create fifo pipe: %s" % e)
+    #  try:
+    #      fifo_handler = FIFOHandler(fifo_pipe)
+    #      fifo_handler.setLevel("DEBUG")
+    #      fifo_handler.setFormatter(CustomFormatterDebug())
+    #      logger.handlers.append(fifo_handler)
+    #  except Exception as e:
+    #      print("Couldn't create fifo pipe: %s" % e)
+    # TODO not working. revisit later
 
     db_handler = DBHandler(db_queue)
     logger.handlers.append(db_handler)

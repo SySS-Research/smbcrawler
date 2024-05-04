@@ -124,10 +124,17 @@ def crawl(
 
 
 @click.command(**help_alias)
+def showlog():
+    """Show the log file"""
+    click.echo("Log file ...")
+
+
+@click.command(**help_alias)
 def export():
     """Export results to other file formats"""
     click.echo("Exporting ...")
 
 
 cli.add_command(crawl)
+cli.add_command(showlog)
 cli.add_command(export)
