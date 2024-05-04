@@ -4,7 +4,7 @@ nox.options.default_venv_backend = "uv|virtualenv"
 
 @nox.session()
 def tests(session):
-    session.install(".[tests]")
+    session.install("-e", ".[tests]")
     session.run("pytest", *session.posargs)
 
 
