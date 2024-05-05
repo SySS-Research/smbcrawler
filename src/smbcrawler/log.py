@@ -70,7 +70,7 @@ class DBHandler(logging.Handler):
             thread_id=record.thread,
             line_no=record.lineno,
             module=record.module,
-            func_name=record.funcName,
+            exc_info=record.exc_info,
         )
         self.db_queue.write("LogItem", data)
 
@@ -134,6 +134,7 @@ def init_logger(db_queue, fifo_pipe, id_=None):
     # TODO not working. revisit later
 
     db_handler = DBHandler(db_queue)
+    db_handler.setLevel("DEBUG")
     logger.handlers.append(db_handler)
 
     return logger

@@ -1,8 +1,10 @@
-import peewee
+import functools
 import datetime
 from collections import namedtuple
 import queue
 import threading
+
+import peewee
 
 from smbcrawler.args import __version__
 
@@ -18,25 +20,27 @@ def init_db(path):
 
     class Config(BaseModel):
         smbcrawler_version = peewee.CharField()
-        created = peewee.DateTimeField()
+        created = peewee.DateTimeField(default=datetime.datetime.now)
         cmd = peewee.CharField()
 
     class Target(BaseModel):
         name = peewee.CharField(unique=True, index=True)
-
-    class Host(BaseModel):
-        name = peewee.CharField(unique=True, index=True)
-        port = peewee.IntegerField(default=445)
+        port_open = peewee.BooleanField()
+        instance_name = peewee.CharField(index=True, null=True)
+        listable_authenticated = peewee.BooleanField(null=True)
+        listable_unauthenticated = peewee.BooleanField(null=True)
 
     class Share(BaseModel):
-        host = peewee.ForeignKeyField(Host, backref="shares")
+        target = peewee.ForeignKeyField(Target, backref="shares")
         name = peewee.CharField(index=True)
         remark = peewee.CharField(default=None, null=True)
 
-        auth_access = peewee.BooleanField()
-        guest_access = peewee.BooleanField()
-        write_access = peewee.BooleanField()
-        read_level = peewee.IntegerField(default=-1, null=True)
+        # These are allowed to be null becaues they can be unknown at certain
+        # points in time
+        auth_access = peewee.BooleanField(null=True)
+        guest_access = peewee.BooleanField(null=True)
+        write_access = peewee.BooleanField(null=True)
+        read_level = peewee.IntegerField(null=True)
         maxed_out = peewee.BooleanField(null=True)
 
     class FileContents(BaseModel):
@@ -45,6 +49,7 @@ def init_db(path):
 
     class Path(BaseModel):
         name = peewee.CharField(index=True)
+        parent = peewee.ForeignKeyField("self", null=True, backref="children")
         share = peewee.ForeignKeyField(Share, backref="paths")
         size = peewee.IntegerField()
         content = peewee.ForeignKeyField(FileContents, backref="paths", null=True)
@@ -61,7 +66,7 @@ def init_db(path):
         )
         path = peewee.ForeignKeyField(Path, backref="events", null=True)
         share = peewee.ForeignKeyField(Share, backref="events", null=True)
-        host = peewee.ForeignKeyField(Host, backref="events", null=True)
+        target = peewee.ForeignKeyField(Target, backref="events", null=True)
 
     class Finding(BaseModel):
         certainty = peewee.CharField(
@@ -93,7 +98,7 @@ def init_db(path):
         thread_id = peewee.IntegerField()
         line_no = peewee.IntegerField()
         module = peewee.CharField()
-        func_name = peewee.CharField()
+        exc_info = peewee.CharField(null=True)
 
     models = BaseModel.__subclasses__()
 
@@ -106,16 +111,16 @@ def init_db(path):
 
     db_instance = DbInstance(database_instance, models)
 
-    insert_rows(
+    process_rows(
         db_instance,
         [
             (
                 "Config",
                 {
                     "smbcrawler_version": __version__,
-                    "created": datetime.datetime.now(),
                     "cmd": "TODO",
                 },
+                None,
             )
         ],
     )
@@ -123,28 +128,39 @@ def init_db(path):
     return db_instance
 
 
+@functools.cache
+def memoized_get(model, *args, **kwargs):
+    return model.get(**args, **kwargs)
+
+
 def replace_foreign_keys(models, row):
     """Replace strings that represent a foreign relationship with the
     respective object"""
 
-    if row[0] == "event":
-        m = models["Host"]
-        host = row[1]["host"]
-        if host:
-            row[1]["host"] = m.get(m.name == host)
+    table = row[0]
+    data = row[1]
+
+    if table == "event":
+        m = models["Target"]
+        target = data["name"]
+        if target:
+            #  data["name"] = m.get(m.name == target)
+            data["name"] = memoized_get(m, m.name == target)
 
         m = models["Share"]
-        share = row[1]["share"]
-        if host and share:
-            row[1]["share"] = m.get(m.host == host & m.name == share)
+        share = data["share"]
+        if target and share:
+            #  data["share"] = m.get(m.target == target & m.name == share)
+            data["share"] = memoized_get(m, m.target == target & m.name == share)
 
         m = models["Path"]
-        path = row[1]["path"]
-        if host and share and path:
-            row[1]["path"] = m.get(m.host == host & m.share == share & m.name == path)
+        path = data["path"]
+        if target and share and path:
+            #  data["path"] = m.get(m.target == target & m.share == share & m.name == path)
+            data["path"] = memoized_get(m, m.target == target & m.share == share & m.name == path)
 
 
-def insert_rows(db_instance, rows):
+def process_rows(db_instance, rows):
     database = db_instance.database
     models = db_instance.models
 
@@ -157,10 +173,42 @@ def insert_rows(db_instance, rows):
         for row in rows_sorted:
             model = models[row[0]]
             data = row[1]
+            filter_ = row[2]
+            # If filter_ is not none, use it to query an object and update it.
+            # Else, insert new object.
 
             replace_foreign_keys(models, row)
 
-            model.create(**data)
+            if filter_:
+                query = [getattr(model, k) == v for k, v in filter_.items()]
+                model.update(data).where(*query).execute()
+            else:
+                if isinstance(data, dict):
+                    model.create(**data)
+                elif isinstance(data, list):
+                    # This is special case where we add the path tree. Prolly
+                    # should do this better.
+                    if model.__name__ == "Path":
+                        insert_paths(models, data[0], data[1], data[2])
+
+
+def insert_paths(models, target, share, paths):
+    if not paths:
+        return
+    Share = models["Share"]
+    share = Share.get(Share.name == str(share), Share.target == str(target))
+
+    def recursive_insert(parent, paths):
+        for p in paths:
+            path_object = models["Path"].create(
+                name=p.get_shortname(),
+                parent=parent,
+                share=share.name,
+                size=p.size
+            )
+            recursive_insert(path_object, p.paths)
+
+    recursive_insert(None, paths)
 
 
 class QueuedDBWriter:
@@ -176,8 +224,8 @@ class QueuedDBWriter:
         self.thread = threading.Thread(target=self._consumer)
         self.thread.start()
 
-    def write(self, table, data):
-        self.queue.put((table, data))
+    def write(self, table, data, filter_=None):
+        self.queue.put((table, data, filter_))
 
     def _consumer(self):
         while not self.finished.is_set() or not self.queue.empty():
@@ -197,14 +245,11 @@ class QueuedDBWriter:
             self._commit()
 
     def _commit(self):
-        insert_rows(self.db_instance, self._batch)
+        process_rows(self.db_instance, self._batch)
         self._batch = []
 
     def close(self, force=False):
-        try:
-            self._commit()
-        finally:
-            if not self.finished.is_set():
-                self.finished.set()
-                self.queue.put_nowait(self.DONE)
-                self.thread.join()
+        if not self.finished.is_set():
+            self.finished.set()
+            self.queue.put_nowait(self.DONE)
+            self.thread.join()

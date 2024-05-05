@@ -2,12 +2,15 @@ import logging
 import threading
 import queue
 import re
+import sys
 
 from smbcrawler.shares import SMBShare
 from smbcrawler.lists import get_regex
 
 from impacket.smbconnection import SMBConnection
 from impacket.smbconnection import SessionError
+
+PYTEST_ENV = "pytest" in sys.modules
 
 log = logging.getLogger(__name__)
 
@@ -24,6 +27,8 @@ def log_exceptions(silence=""):
             try:
                 return func(*args, **kwargs)
             except Exception as e:
+                if PYTEST_ENV:
+                    raise
                 msg = "[%s@%s] %s" % (
                     e.__class__.__name__,
                     func.__name__,
@@ -112,25 +117,19 @@ class CrawlerThread(threading.Thread):
             self.smbClient,
             self.current_target,
             share,
-            share.remark,
-            share.get_permissions(),
         )
 
-        if depth == 0 or not share.permissions["list_root"]:
-            return None
+        if depth != 0 and share.permissions["list_root"]:
+            self.crawl_dir(share, depth)
 
-        self.crawl_dir(share, depth)
-        return None
+        self.app.event_reporter.share_finished(self.current_target, share)
 
     @log_exceptions(
         silence=".*STATUS_ACCESS_DENIED|STATUS_NOT_SUPPORTED|STATUS_SHARING_VIOLATION.*"
     )
     def crawl_dir(self, share, depth, parent=None):
         if depth == 0:
-            log.debug(
-                "[%s] Maximum depth reached: \\\\%s\\%s\\%s"
-                % (self._name, self.current_target, share, parent)
-            )
+            self.app.event_reporter.depth_limit_reached(self.current_target, share)
             return
 
         for f in share.get_dir_list(parent):
@@ -149,10 +148,6 @@ class CrawlerThread(threading.Thread):
                 parent.add_path(f)
             else:
                 share.add_path(f)
-
-            self.app.event_reporter.process_path(
-                self.smbClient, str(share), f.get_full_path(), f.size
-            )
 
             if f.is_directory():
                 self.process_directory(share, f, depth)
@@ -187,18 +182,14 @@ class CrawlerThread(threading.Thread):
 
     @log_exceptions()
     def process_directory(self, share, f, depth):
-        if get_regex("boring_directories").match(str(f)):
+        #  if get_regex("boring_directories").match(str(f)): TODO
+        if False:
             self.app.event_reporter.skip_directory(str(f))
         else:
-            self.crawl_dir(
-                share,
-                depth - 1,
-                f,
-            )
+            self.crawl_dir(share, depth - 1, parent=f)
 
     @log_exceptions()
     def crawl_host(self, target):
-        self.app.event_reporter.process_host(target)
 
         self.current_share = None
         self.current_target = target
@@ -208,13 +199,7 @@ class CrawlerThread(threading.Thread):
             return False
 
         if not target.is_port_open(self.timeout):
-            log.info(
-                "[%s] %s - No SMB service found"
-                % (
-                    self._name,
-                    target.host,
-                )
-            )
+            self.app.event_reporter.process_target(target, port_open=False)
             return False
 
         self.smbClient = SMBConnection(
@@ -224,22 +209,16 @@ class CrawlerThread(threading.Thread):
         )
 
         if not self.smbClient:
-            log.error(
-                "[%s] %s:%d - Could not connect"
-                % (
-                    self._name,
-                    target.host,
-                    target.port,
-                )
-            )
+            self.app.event_reporter.connection_error(target)
             return False
 
-        log.info("[%s] %s:%s - Connected" % (self._name, target.host, target.port))
+        self.app.event_reporter.process_target(target, port_open=True)
 
         # log on
         try:
             shares = self.list_shares(target, as_guest=True)
             self._guest_session = True
+            self.app.event_reporter.listable_as_guest(target)
         except Exception:
             self._guest_session = False
             self.smbClient.close()
@@ -250,12 +229,10 @@ class CrawlerThread(threading.Thread):
             )
             try:
                 shares = self.list_shares(target, as_guest=False)
+                self.app.event_reporter.listable_as_user(target)
             except SessionError as e:
                 if "STATUS_ACCESS_DENIED" in str(e):
-                    log.error(
-                        "[%s] %s:%s - Access denied when listing shares"
-                        % (self._name, target.host, target.port)
-                    )
+                    self.app.event_reporter.list_access_denied(target)
                     return False
                 raise
 
@@ -270,9 +247,8 @@ class CrawlerThread(threading.Thread):
                 self.crawl_printers_and_pipes,
             )
             if depth != self.depth:
-                log.info(
-                    "\\\\%s:%d\\%s: Crawling with non-default depth %d"
-                    % (target.host, target.port, share_name, depth)
+                self.app.event_reporter.identified_interesting_share(
+                    self.current_target, share_name
                 )
             self.crawl_share(s, depth=depth)
 
@@ -283,16 +259,13 @@ class CrawlerThread(threading.Thread):
     def list_shares(self, target, as_guest=False):
         self.authenticate(target, as_guest=as_guest)
 
-        shares = [SMBShare(self.smbClient, s) for s in self.smbClient.listShares()]
+        shares = [
+            SMBShare(self.smbClient, s, self.app.event_reporter)
+            for s in self.smbClient.listShares()
+        ]
 
         if self.killed or self._skip_host:
             return []
-
-        if as_guest:
-            log.success(
-                "[%s] %s:%s - Guest login succeeded"
-                % (self._name, target.host, target.port)
-            )
 
         return shares
 
@@ -317,17 +290,11 @@ class CrawlerThread(threading.Thread):
             )
             if not as_guest:
                 self.app.confirm_credentials()
-        except Exception as e:
-            if (
-                isinstance(e, SessionError)
-                and "STATUS_LOGON_FAILURE" in str(e)
-                and not as_guest
-            ):
+        except SessionError as e:
+            if "STATUS_LOGON_FAILURE" in str(e) and not as_guest:
                 self.app.report_logon_failure(target)
                 self._skip_host = True
-            elif isinstance(e, SessionError) and "STATUS_LOGON_TYPE_NOT_GRANTED" in str(
-                e
-            ):
+            elif "STATUS_LOGON_TYPE_NOT_GRANTED" in str(e):
                 # We have no permission to this share, no big deal
                 self._skip_host = True
             else:

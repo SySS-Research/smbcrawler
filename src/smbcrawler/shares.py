@@ -46,7 +46,7 @@ def normalize_pwd(pwd):
 
 
 class SMBShare(object):
-    def __init__(self, smbClient, share):
+    def __init__(self, smbClient, share, event_reporter):
         self.smbClient = smbClient
         self.name = share["shi1_netname"][:-1]
         self.remark = share["shi1_remark"][:-1]
@@ -71,6 +71,8 @@ class SMBShare(object):
             "guest": False,
         }
 
+        event_reporter = event_reporter
+
     def __str__(self):
         return self.name
 
@@ -80,18 +82,6 @@ class SMBShare(object):
     def add_path(self, path):
         path.parent = None
         self.paths.append(path)
-
-    def get_permissions(self):
-        result = "ACCESS DENIED"
-        if self.permissions["read"]:
-            result = "READ"
-        if self.permissions["list_root"]:
-            result = "READ, LIST_ROOT"
-        if self.permissions["write"]:
-            result += ", WRITE"
-        if self.permissions["guest"]:
-            result += ", GUEST"
-        return result
 
     def get_dir_list(self, pwd):
         smbpwd = normalize_pwd(pwd)
@@ -133,10 +123,9 @@ class SMBShare(object):
 
         try:
             self.smbClient.deleteDirectory(str(self), dirname)
-        except Exception as e:
-            log.error(
-                "Unable to delete test directory [%s]: \\\\%s\\%s\\%s"
-                % (str(e), self.smbClient.getRemoteHost(), self, dirname)
+        except Exception as exc:
+            self.event_reporter.unable_to_delete_test_directory(
+                self.current_target, self.current_share, dirname, exc
             )
 
     def check_permission_list(self):

@@ -10,7 +10,7 @@ authors = [
 ]
 description = 'Search SMB shares for interesting files'
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 keywords = ["pentest", "smb", "shares", "reconnaissance"]
 license = {text = "MIT License"}
 classifiers = [
@@ -49,6 +49,7 @@ smbcrawler = "smbcrawler.__main__:main"
 [project.optional-dependencies]
 tests = [
   'pytest',
+  'pdbpp',
 ]
 
 [tool.hatch.version]

@@ -54,12 +54,6 @@ class CrawlerApp(object):
         )
 
         self.login = login
-        #  self.login = Login(
-        #      self.args.user,
-        #      self.args.domain,
-        #      password=self.args.password,
-        #      hash=self.args.hash,
-        #  )
         self.max_threads = threads
         self.timeout = timeout
         self.depth = depth
