@@ -184,6 +184,7 @@ def process_rows(db_instance, rows):
                 elif isinstance(data, list):
                     # This is special case where we add the path tree. Prolly
                     # should do this better.
+                    # TODO Idea: The queue should contain callables, i.e. "tasks"
                     if model.__name__ == "Path":
                         insert_paths(models, data[0], data[1], data[2])
 
