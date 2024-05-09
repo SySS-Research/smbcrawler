@@ -274,7 +274,7 @@ def spin_up_samba(engine, ip_address, share_dir, config, container_id):
     scope="session",
     params=[
         {"label": "base", "login": login1, "targets": None, "kwargs": {}},
-        {"label": "full", "login": login1, "targets": None, "kwargs": {"depth": -1}},
+        {"label": "full", "login": login1, "targets": None, "kwargs": {"depth": -1, "check_write_access": True}},
         {"label": "limited", "login": login1, "targets": None, "kwargs": {"depth": 4}},
     ],
 )
