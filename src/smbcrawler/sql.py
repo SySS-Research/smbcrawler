@@ -83,10 +83,14 @@ def init_db(path):
         secret = peewee.CharField()
 
     class ReadableHighValueShare(Finding):
-        share = peewee.ForeignKeyField(Share, backref="finding_readable_high_value_shares")
+        share = peewee.ForeignKeyField(
+            Share, backref="finding_readable_high_value_shares"
+        )
 
     class WritableHighValueShare(Finding):
-        share = peewee.ForeignKeyField(Share, backref="finding_writeable_high_value_shares")
+        share = peewee.ForeignKeyField(
+            Share, backref="finding_writeable_high_value_shares"
+        )
 
     class GuestAccess(Finding):
         share = peewee.ForeignKeyField(Share, backref="finding_guest_access")
@@ -111,18 +115,11 @@ def init_db(path):
 
     db_instance = DbInstance(database_instance, models)
 
-    process_rows(
-        db_instance,
-        [
-            (
-                "Config",
-                {
-                    "smbcrawler_version": __version__,
-                    "cmd": "TODO",
-                },
-                None,
-            )
-        ],
+    Config.create(
+        dict(
+            smbcrawler_version=__version__,
+            cmd="TODO",
+        )
     )
 
     return db_instance
@@ -144,20 +141,19 @@ def replace_foreign_keys(models, row):
         m = models["Target"]
         target = data["name"]
         if target:
-            #  data["name"] = m.get(m.name == target)
             data["name"] = memoized_get(m, m.name == target)
 
         m = models["Share"]
         share = data["share"]
         if target and share:
-            #  data["share"] = m.get(m.target == target & m.name == share)
             data["share"] = memoized_get(m, m.target == target & m.name == share)
 
         m = models["Path"]
         path = data["path"]
         if target and share and path:
-            #  data["path"] = m.get(m.target == target & m.share == share & m.name == path)
-            data["path"] = memoized_get(m, m.target == target & m.share == share & m.name == path)
+            data["path"] = memoized_get(
+                m, m.target == target & m.share == share & m.name == path
+            )
 
 
 def process_rows(db_instance, rows):
@@ -201,10 +197,7 @@ def insert_paths(models, target, share, paths):
     def recursive_insert(parent, paths):
         for p in paths:
             path_object = models["Path"].create(
-                name=p.get_shortname(),
-                parent=parent,
-                share=share.name,
-                size=p.size
+                name=p.get_shortname(), parent=parent, share=share.name, size=p.size
             )
             recursive_insert(path_object, p.paths)
 
