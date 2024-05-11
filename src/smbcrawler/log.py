@@ -59,6 +59,8 @@ class DBHandler(logging.Handler):
     Logging handler for a database
     """
 
+    from smbcrawler.sql import DbInsert
+
     def __init__(self, db_queue):
         super().__init__()
         self.db_queue = db_queue
@@ -72,7 +74,7 @@ class DBHandler(logging.Handler):
             module=record.module,
             exc_info=record.exc_info,
         )
-        self.db_queue.write("LogItem", data)
+        self.db_queue.write(self.DbInsert("LogItem", data))
 
 
 class FIFOHandler(logging.Handler):
@@ -86,14 +88,14 @@ class FIFOHandler(logging.Handler):
 
     def process_queue(self):
         # Open the FIFO and keep it open
-        with open(self.path, 'w') as fifo:
+        with open(self.path, "w") as fifo:
             while True:
                 record = self.log_queue.get()
                 if record is None:
                     # None is used as a signal to stop the thread
                     break
                 msg = self.format(record)
-                fifo.write(msg + '\n')
+                fifo.write(msg + "\n")
                 fifo.flush()
 
     def emit(self, record):

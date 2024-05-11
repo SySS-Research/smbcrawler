@@ -9,6 +9,7 @@ from smbcrawler.io import get_targets
 from smbcrawler.sql import init_db
 from smbcrawler.crawl import CrawlerThread
 from smbcrawler.reporter import EventReporter
+from smbcrawler.profiles import collect_profiles
 
 
 log = logging.getLogger(__name__)
@@ -62,6 +63,8 @@ class CrawlerApp(object):
         self.disable_autodownload = disable_autodownload
         self.force = force
 
+        self.profile_collection = collect_profiles()
+
         self.credentials_confirmed = False
 
         self.target_queue = queue.Queue()
@@ -76,7 +79,7 @@ class CrawlerApp(object):
 
         # Instantiate DB
         self.db_instance = init_db(crawl_file)
-        self.event_reporter = EventReporter(self.db_instance)
+        self.event_reporter = EventReporter(self.db_instance, self.profile_collection)
 
     def run(self):
         log.info("Starting up with these arguments: " + self.cmd)

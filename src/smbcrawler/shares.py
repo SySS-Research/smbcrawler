@@ -3,7 +3,7 @@ import string
 import random
 import logging
 
-from smbcrawler.lists import get_regex
+from smbcrawler.profiles import find_matching_profile
 
 from impacket.smbconnection import ntpath
 
@@ -46,7 +46,7 @@ def normalize_pwd(pwd):
 
 
 class SMBShare(object):
-    def __init__(self, smbClient, share, event_reporter):
+    def __init__(self, smbClient, share, app):
         self.smbClient = smbClient
         self.name = share["shi1_netname"][:-1]
         self.remark = share["shi1_remark"][:-1]
@@ -71,7 +71,8 @@ class SMBShare(object):
             "guest": False,
         }
 
-        event_reporter = event_reporter
+        self.event_reporter = app.event_reporter
+        self.profile_collection = app.profile_collection
 
     def __str__(self):
         return self.name
@@ -138,11 +139,12 @@ class SMBShare(object):
 
     def effective_depth(self, depth, crawl_printers_and_pipes):
         """Determine depth at which we want to scan this share"""
-        if get_regex("interesting_shares").match(str(self)):
-            return -1
-        elif get_regex("boring_shares").match(str(self)):
-            return 0
-        elif self.is_ipc_pipe or self.is_print_queue:
+
+        profile = find_matching_profile(self.profile_collection, "shares", self.name)
+
+        depth = profile["crawl_depth"] or depth
+
+        if self.is_ipc_pipe or self.is_print_queue:
             if crawl_printers_and_pipes:
                 return depth
             else:

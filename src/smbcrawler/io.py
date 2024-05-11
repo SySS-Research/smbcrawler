@@ -1,23 +1,16 @@
-import os
 import io
 import re
 import ipaddress
 import sys
 import hashlib
-import collections
 import logging
-import json
 
 import magic
 
 from smbcrawler.shares import Target
-from smbcrawler.secrets import Secret
+from smbcrawler.profiles import Secret
 
 log = logging.getLogger(__name__)
-
-HASHED_FILES = collections.defaultdict(lambda: [])
-SECRETS = collections.defaultdict(lambda: [])
-REPORTED = collections.defaultdict(lambda: [])
 
 
 def parse_targets(s):
@@ -94,40 +87,10 @@ def get_targets(targets, inputfilename):
     return result
 
 
-def get_short_hash(data):
+def get_hash(data):
     hash_object = hashlib.sha256(data)
-    # 4 bytes should be enough
-    content_hash = hash_object.hexdigest()[:8]
+    content_hash = hash_object.hexdigest()
     return content_hash
-
-
-def save_file(dirname, data, host, share, path):
-    # Check if file is already known
-    content_hash = get_short_hash(data)
-    seen = content_hash in HASHED_FILES
-    URI = "\\".join(["", "", host, share, path])
-    HASHED_FILES[content_hash].append(URI)
-    if seen:
-        log.info("File already seen, discarding: %s" % URI)
-        return
-
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
-
-    filename = "%s:\\\\%s\\%s\\%s" % (content_hash, host, share, path)
-    path = os.path.join(dirname, filename)
-
-    # Make sure not to overwrite files, append a number
-    if os.path.exists(path):
-        count = 1
-        while os.path.isfile("%s.%d" % (path, count)):
-            count += 1
-        path = "%s.%d" % (path, count)
-
-    find_secrets(data, path, content_hash)
-    # Write data to disk
-    with open(path, "wb") as f:
-        f.write(data)
 
 
 def decode_bytes(data, file_type):
@@ -163,78 +126,49 @@ def convert(data, mime, file_type):
         return decode_bytes(data, file_type)
 
 
-def find_secrets(data, filename, content_hash):
-    """Extract secrets from byes"""
+def find_secrets(data, filename, content_hash, secret_profiles):
+    """Extract secrets from bytes"""
 
     mime = magic.from_buffer(data, mime=True)
     file_type = magic.from_buffer(data)
+
     try:
         data = convert(data, mime, file_type)
     except Exception:
         return
 
+    result = []
+
     for line in data.splitlines():
         if not line:
             continue
         secret = None
-        # find secret with max confidence
-        for s in Secret.__subclasses__():
-            s = s(line, mimetype=mime, filename=filename)
-            c = s.get_confidence()
-            if (not secret and c > 0) or (secret and c > secret.confidence):
-                secret = s
+
+        # find secret
+        for s in secret_profiles:
+            s = Secret(s)
+            if s.secret:
+                secret = s.secret
                 break
 
         if not secret:
             continue
 
         reported_secret = secret.get_secret()
+
         if not reported_secret:
             reported_secret = secret.get_line()
+
         max_len = 100
         if len(reported_secret) > max_len:
             reported_secret = reported_secret[:max_len] + "..."
 
-        if reported_secret not in REPORTED[content_hash]:
-            REPORTED[content_hash].append(reported_secret)
-            log.success(
-                "Potential secret [%(hash)s]: %(line)s"
-                % dict(
-                    desc=secret.description,
-                    conf=secret.confidence,
-                    hash=content_hash,
-                    filename=secret.filename,
-                    line=reported_secret,
-                )
-            )
-            SECRETS[content_hash].append(
-                dict(
-                    description=secret.description,
-                    confidence=secret.confidence,
-                    secret=secret.get_secret(),
-                    full_line=secret.line,
-                )
-            )
+        result.append(s)
 
-
-def write_secrets(path):
-    with open(path, "w") as fp:
-        # Make copy of dict for thread safety
-        json.dump(dict(SECRETS), fp)
-
-
-def write_files(path):
-    with open(path, "w") as fp:
-        # Make copy of dict for thread safety
-        json.dump(dict(HASHED_FILES), fp)
+    return result
 
 
 def sanitize(remark):
     """Remove unwanted characters"""
     result = "".join([x for x in remark if ord(x) >= 32])
-    return result
-
-
-def to_grep_line(values):
-    result = "\t".join([sanitize(str(x)) for x in values])
     return result

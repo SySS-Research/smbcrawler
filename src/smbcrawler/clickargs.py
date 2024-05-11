@@ -1,10 +1,13 @@
 import click
 
+from smbcrawler.version import __version__
+
 
 help_alias = dict(context_settings=dict(help_option_names=["-h", "--help"]))
 
 
 @click.group(**help_alias)
+@click.version_option(__version__)
 @click.option(
     "-C",
     "--crawl-file",

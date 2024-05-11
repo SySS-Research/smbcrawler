@@ -5,7 +5,7 @@ import re
 import sys
 
 from smbcrawler.shares import SMBShare
-from smbcrawler.lists import get_regex
+from smbcrawler.profiles import find_matching_profile
 
 from impacket.smbconnection import SMBConnection
 from impacket.smbconnection import SessionError
@@ -151,46 +151,51 @@ class CrawlerThread(threading.Thread):
 
             if f.is_directory():
                 self.process_directory(share, f, depth)
-            elif get_regex("interesting_filenames").match(str(f)) and not get_regex(
-                "boring_filenames"
-            ).match(str(f)):
+            else:
                 self.process_file(share, f)
 
     @log_exceptions(
         silence=".*STATUS_ACCESS_DENIED|STATUS_NOT_SUPPORTED|STATUS_SHARING_VIOLATION.*"
     )
     def process_file(self, share, f):
+        profile = find_matching_profile(self.app.profile_collection, "files", f)
+
+        if profile["high_value"]:
+            self.app.event_reporter.found_high_value_file(self.current_target, share, f)
+
+        if not profile["download"]:
+            return
+
         if self.app.disable_autodownload:
             return
 
-        def auto_download(data):
-            pass
-            # TODO
-            #  save_file(
-            #      self.app.autodownload_dir,
-            #      data,
-            #      str(self.smbClient),
-            #      str(share),
-            #      f.get_full_path(),
-            #  )
+        def download(data):
+            self.app.event_reporter.downloading_file(
+                self.current_target,
+                share,
+                f.get_full_path(),
+                data,
+            )
 
         self.smbClient.getFile(
             str(share),
             f.get_full_path(),
-            auto_download,
+            download,
         )
 
     @log_exceptions()
     def process_directory(self, share, f, depth):
-        #  if get_regex("boring_directories").match(str(f)): TODO
-        if False:
-            self.app.event_reporter.skip_directory(str(f))
-        else:
-            self.crawl_dir(share, depth - 1, parent=f)
+        profile = find_matching_profile(
+            self.app.profile_collection, "directories", self.name
+        )
+        if profile["crawl_depth"]:
+            self.app.event_reporter.non_default_depth(str(f))
+            depth = profile["depth"]
+
+        self.crawl_dir(share, depth - 1, parent=f)
 
     @log_exceptions()
     def crawl_host(self, target):
-
         self.current_share = None
         self.current_target = target
         self._skip_host = False
@@ -260,7 +265,11 @@ class CrawlerThread(threading.Thread):
         self.authenticate(target, as_guest=as_guest)
 
         shares = [
-            SMBShare(self.smbClient, s, self.app.event_reporter)
+            SMBShare(
+                self.smbClient,
+                s,
+                self.app,
+            )
             for s in self.smbClient.listShares()
         ]
 

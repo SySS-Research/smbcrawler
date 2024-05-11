@@ -1,14 +1,45 @@
 import functools
 import datetime
-from collections import namedtuple
+import dataclasses
 import queue
 import threading
+import typing
 
 import peewee
 
-from smbcrawler.args import __version__
+from smbcrawler.version import __version__
 
-DbInstance = namedtuple("DbInstance", "database models")
+
+@dataclasses.dataclass
+class DbInstance:
+    database: peewee.SqliteDatabase
+    models: typing.Dict[str, peewee.Model]
+    path: str
+
+
+@dataclasses.dataclass
+class DbAction:
+    pass
+
+
+@dataclasses.dataclass
+class DbInsert(DbAction):
+    model: str
+    data: dict
+
+
+@dataclasses.dataclass
+class DbUpdate(DbAction):
+    model: str
+    data: dict
+    filter_: dict
+
+
+@dataclasses.dataclass
+class DbLinkPaths(DbAction):
+    target: str
+    share: str
+    paths: list
 
 
 def init_db(path):
@@ -44,7 +75,8 @@ def init_db(path):
         maxed_out = peewee.BooleanField(null=True)
 
     class FileContents(BaseModel):
-        content = peewee.BlobField(unique=True, index=True)
+        content = peewee.BlobField(unique=True)
+        content_hash = peewee.BlobField(unique=True, index=True)
         clean_content = peewee.TextField(null=True)
 
     class Path(BaseModel):
@@ -113,13 +145,11 @@ def init_db(path):
 
     # TODO check for present row in Config. offer to resume scan.
 
-    db_instance = DbInstance(database_instance, models)
+    db_instance = DbInstance(database_instance, models, path)
 
     Config.create(
-        dict(
-            smbcrawler_version=__version__,
-            cmd="TODO",
-        )
+        smbcrawler_version=__version__,
+        cmd="TODO",
     )
 
     return db_instance
@@ -130,15 +160,14 @@ def memoized_get(model, *args, **kwargs):
     return model.get(**args, **kwargs)
 
 
-def replace_foreign_keys(models, row):
+def replace_foreign_keys(models, db_action: DbAction):
     """Replace strings that represent a foreign relationship with the
     respective object"""
 
-    table = row[0]
-    data = row[1]
+    m = models[db_action.model]
+    data = db_action.data
 
-    if table == "event":
-        m = models["Target"]
+    if db_action.model == "event":
         target = data["name"]
         if target:
             data["name"] = memoized_get(m, m.name == target)
@@ -156,37 +185,34 @@ def replace_foreign_keys(models, row):
             )
 
 
-def process_rows(db_instance, rows):
+def process_db_actions(db_instance, db_actions):
     database = db_instance.database
     models = db_instance.models
 
     # Ensure parent objects exist when inserting objects with foreign
     # relationships
     order = list(db_instance.models.keys())
-    rows_sorted = sorted(rows, key=lambda item: order.index(item[0]))
+    db_actions_sorted = sorted(
+        db_actions, key=lambda item: order.index(getattr(item, "model", "LogItem"))
+    )
 
     with database.atomic():
-        for row in rows_sorted:
-            model = models[row[0]]
-            data = row[1]
-            filter_ = row[2]
+        for db_action in db_actions_sorted:
             # If filter_ is not none, use it to query an object and update it.
             # Else, insert new object.
 
-            replace_foreign_keys(models, row)
-
-            if filter_:
-                query = [getattr(model, k) == v for k, v in filter_.items()]
-                model.update(data).where(*query).execute()
-            else:
-                if isinstance(data, dict):
-                    model.create(**data)
-                elif isinstance(data, list):
-                    # This is special case where we add the path tree. Prolly
-                    # should do this better.
-                    # TODO Idea: The queue should contain callables, i.e. "tasks"
-                    if model.__name__ == "Path":
-                        insert_paths(models, data[0], data[1], data[2])
+            if isinstance(db_action, DbInsert):
+                replace_foreign_keys(models, db_action)
+                models[db_action.model].create(**db_action.data)
+            elif isinstance(db_action, DbUpdate):
+                replace_foreign_keys(models, db_action)
+                query = [
+                    getattr(models[db_action.model], k) == v
+                    for k, v in db_action.filter_.items()
+                ]
+                models[db_action.model].update(db_action.data).where(*query).execute()
+            elif isinstance(db_action, DbLinkPaths):
+                insert_paths(models, db_action.target, db_action.share, db_action.paths)
 
 
 def insert_paths(models, target, share, paths):
@@ -218,8 +244,8 @@ class QueuedDBWriter:
         self.thread = threading.Thread(target=self._consumer)
         self.thread.start()
 
-    def write(self, table, data, filter_=None):
-        self.queue.put((table, data, filter_))
+    def write(self, db_action: DbAction):
+        self.queue.put(db_action)
 
     def _consumer(self):
         while not self.finished.is_set() or not self.queue.empty():
@@ -239,7 +265,7 @@ class QueuedDBWriter:
             self._commit()
 
     def _commit(self):
-        process_rows(self.db_instance, self._batch)
+        process_db_actions(self.db_instance, self._batch)
         self._batch = []
 
     def close(self, force=False):

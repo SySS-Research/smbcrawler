@@ -1,8 +1,11 @@
 import os
 import tempfile
 
-from smbcrawler.sql import QueuedDBWriter
+import peewee
+
+from smbcrawler.sql import QueuedDBWriter, DbLinkPaths, DbInsert, DbUpdate
 from smbcrawler.log import init_logger
+from smbcrawler.io import get_hash, convert, find_secrets
 
 
 class EventReporter(object):
@@ -12,7 +15,9 @@ class EventReporter(object):
     here.
     """
 
-    def __init__(self, db_instance):
+    def __init__(self, db_instance, profile_collection):
+        self.profile_collection = profile_collection
+        self.db_instance = db_instance
         self.db_queue = QueuedDBWriter(db_instance)
         self.fifo_pipe = None
         self.mkfifo()
@@ -45,7 +50,14 @@ class EventReporter(object):
 
     def process_target(self, target, port_open=False, instance_name=None):
         self.log.debug("Processing target: %s" % target)
-        self.db_queue.write("Target", dict(name=str(target), instance_name=instance_name, port_open=port_open))
+        self.db_queue.write(
+            DbInsert(
+                "Target",
+                dict(
+                    name=str(target), instance_name=instance_name, port_open=port_open
+                ),
+            )
+        )
         if port_open:
             self.log.info("%s - Connected" % target)
         else:
@@ -53,50 +65,49 @@ class EventReporter(object):
 
     def process_share(self, smbclient, target, share):
         self.db_queue.write(
-            "Share",
-            dict(
-                target=str(target),
-                name=str(share),
-                remark=share.remark,
-                auth_access=share.permissions["read"],
-                guest_access=share.permissions["guest"],
-                write_access=share.permissions["write"],
-                read_level=0 if share.permissions["list_root"] else None,
-                #  maxed_out=False,
-            ),
+            DbInsert(
+                "Share",
+                dict(
+                    target=str(target),
+                    name=str(share),
+                    remark=share.remark,
+                    auth_access=share.permissions["read"],
+                    guest_access=share.permissions["guest"],
+                    write_access=share.permissions["write"],
+                    read_level=0 if share.permissions["list_root"] else None,
+                    #  maxed_out=False,
+                ),
+            )
         )
-        self.log.info(
-            "%s - Found share: %s [%s]" % (target, share, share.remark)
-        )
+        self.log.info("%s - Found share: %s [%s]" % (target, share, share.remark))
 
     def share_finished(self, target, share):
         self.log.info("%s - Share finished: %s" % (target, share))
-        self.db_queue.write(
-            "Path",
-            [target, share, share.paths],
-        )
+        self.db_queue.write(DbLinkPaths(target, share, share.paths))
 
     def process_path(self, target, share, path, size):
         self.db_queue.write(
-            "Path", dict(target=target, share=share, name=path, size=size)
+            DbInsert("Path", dict(target=target, share=share, name=path, size=size))
         )
 
     def depth_limit_reached(self, target, share):
-        self.log.info(
-            " Maximum depth reached: \\\\%s\\%s" % (self.current_target, share)
-        )
+        self.log.info("Maximum depth reached: \\\\%s\\%s" % (target, share))
         self.db_queue.write(
-            "Share",
-            dict(target=str(target), name=share, maxed_out=False),
-            filter_={"name": str(target), "share": share},
+            DbUpdate(
+                "Share",
+                dict(target=str(target), name=share, maxed_out=False),
+                filter_={"target": str(target), "name": share},
+            )
         )
 
     def list_access_denied(self, target):
         self.log.error("%s - Access denied when listing shares" % target)
         self.db_queue.write(
-            "Target",
-            dict(name=str(target), listable_authenticated=False),
-            filter_={"name": str(target)},
+            DbUpdate(
+                "Target",
+                dict(name=str(target), listable_authenticated=False),
+                filter_={"name": str(target)},
+            )
         )
 
     def connection_error(self, target):
@@ -105,17 +116,21 @@ class EventReporter(object):
     def listable_as_user(self, target):
         self.log.success("%s - Can list shares as user" % target)
         self.db_queue.write(
-            "Target",
-            dict(listable_authenticated=True),
-            filter_={"name": str(target)},
+            DbUpdate(
+                "Target",
+                dict(listable_authenticated=True),
+                filter_={"name": str(target)},
+            )
         )
 
     def listable_as_guest(self, target):
         self.log.success("%s - Can list shares as guest" % target)
         self.db_queue.write(
-            "Target",
-            dict(listable_unauthenticated=True),
-            filter_={"name": str(target)},
+            DbUpdate(
+                "Target",
+                dict(listable_unauthenticated=True),
+                filter_={"name": str(target)},
+            )
         )
 
     def found_guest_access(self, target, share):
@@ -124,7 +139,7 @@ class EventReporter(object):
     def found_write_access(self, target, share):
         pass
 
-    def found_secret(self, target, share, path):
+    def found_secret(self, target, share, path, secret):
         pass
 
     def found_high_value_file(self, target, share, path):
@@ -142,18 +157,52 @@ class EventReporter(object):
     def is_boring_share(self, target, share):
         pass
 
-    def downloading_file(self, target, share, path):
-        pass
+    def downloading_file(self, target, share, path, data):
+        # Check if file is already known
+        content_hash = get_hash(data)
+
+        try:
+            row = self.db_instance.models["FileContents"].get(content_hash=content_hash)
+        except peewee.DoesNotExist:
+            clean_content = convert(data)
+            row = self.db_instance.models["FileContents"].create(
+                content_hash=content_hash,
+                content=data,
+                clean_content=clean_content,
+            )
+            secrets = find_secrets(
+                data, path, content_hash, self.profile_collection["secrets"]
+            )
+            for s in secrets:
+                self.db_queue.write(
+                    DbInsert(
+                        "Secret",
+                        {
+                            "content": row,
+                            "secret": s.secret,
+                            "line": s.line,
+                        },
+                    )
+                )
+
+        # Write data to disk
+        dirname = self.db_instance.path + ".d"
+        os.makedirs(dirname, exist_ok=True)
+        path = os.path.join(dirname, content_hash)
+        with open(path, "wb") as f:
+            f.write(data)
 
     def skip_share(self, target, share):
         self.db_queue.write(
-            "Event",
-            {
-                "message": "Skipping this share",
-                "type": "info",
-                "share": self.current_share,
-                "target": self.current_target,
-            },
+            DbInsert(
+                "Event",
+                {
+                    "message": "Skipping this share",
+                    "type": "info",
+                    "share": self.current_share,
+                    "target": self.current_target,
+                },
+            )
         )
 
         self.log.info(
