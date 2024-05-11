@@ -1,4 +1,5 @@
 import nox
+
 nox.options.default_venv_backend = "uv|virtualenv"
 
 
@@ -11,8 +12,8 @@ def tests(session):
 @nox.session()
 def format(session):
     session.install("black")
-    session.run("black", "src", "--check", *session.posargs)
-    session.run("black", "tests", "--check", *session.posargs)
+    session.run("ruff", "format", "--check", "src", *session.posargs)
+    session.run("ruff", "format", "--check", "tests", *session.posargs)
 
 
 @nox.session()
