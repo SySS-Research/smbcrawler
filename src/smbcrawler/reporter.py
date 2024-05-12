@@ -2,6 +2,7 @@ import os
 import tempfile
 
 import peewee
+import magic
 
 from smbcrawler.sql import QueuedDBWriter, DbLinkPaths, DbInsert, DbUpdate
 from smbcrawler.log import init_logger
@@ -158,32 +159,30 @@ class EventReporter(object):
         pass
 
     def downloading_file(self, target, share, path, data):
-        # Check if file is already known
         content_hash = get_hash(data)
 
         try:
             row = self.db_instance.models["FileContents"].get(content_hash=content_hash)
         except peewee.DoesNotExist:
-            clean_content = convert(data)
+            mime = magic.from_buffer(data, mime=True)
+            file_type = magic.from_buffer(data)
+
+            clean_content = convert(data, mime, file_type)
+            secrets = find_secrets(
+                clean_content, path, content_hash, self.profile_collection["secrets"]
+            )
+
+            if clean_content.encode() == data:
+                clean_content = None
+
             row = self.db_instance.models["FileContents"].create(
                 content_hash=content_hash,
                 content=data,
                 clean_content=clean_content,
             )
-            secrets = find_secrets(
-                data, path, content_hash, self.profile_collection["secrets"]
-            )
+
             for s in secrets:
-                self.db_queue.write(
-                    DbInsert(
-                        "Secret",
-                        {
-                            "content": row,
-                            "secret": s.secret,
-                            "line": s.line,
-                        },
-                    )
-                )
+                self.db_queue.write(DbInsert("Secret", {"content": row, **s}))
 
         # Write data to disk
         dirname = self.db_instance.path + ".d"

@@ -142,7 +142,8 @@ class SMBShare(object):
 
         profile = find_matching_profile(self.profile_collection, "shares", self.name)
 
-        depth = profile["crawl_depth"] or depth
+        if profile:
+            depth = profile.get("crawl_depth", depth)
 
         if self.is_ipc_pipe or self.is_print_queue:
             if crawl_printers_and_pipes:

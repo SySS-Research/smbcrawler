@@ -5,10 +5,7 @@ import sys
 import hashlib
 import logging
 
-import magic
-
 from smbcrawler.shares import Target
-from smbcrawler.profiles import Secret
 
 log = logging.getLogger(__name__)
 
@@ -126,44 +123,20 @@ def convert(data, mime, file_type):
         return decode_bytes(data, file_type)
 
 
-def find_secrets(data, filename, content_hash, secret_profiles):
-    """Extract secrets from bytes"""
-
-    mime = magic.from_buffer(data, mime=True)
-    file_type = magic.from_buffer(data)
-
-    try:
-        data = convert(data, mime, file_type)
-    except Exception:
-        return
-
+def find_secrets(content, filename, content_hash, secret_profiles):
+    """Extract secrets from content"""
     result = []
 
-    for line in data.splitlines():
+    for line in content.splitlines():
         if not line:
             continue
-        secret = None
 
         # find secret
-        for s in secret_profiles:
-            s = Secret(s)
+        for s in secret_profiles.values():
+            s.match(line)
             if s.secret:
-                secret = s.secret
+                result.append({"secret": s.secret, "line": line})
                 break
-
-        if not secret:
-            continue
-
-        reported_secret = secret.get_secret()
-
-        if not reported_secret:
-            reported_secret = secret.get_line()
-
-        max_len = 100
-        if len(reported_secret) > max_len:
-            reported_secret = reported_secret[:max_len] + "..."
-
-        result.append(s)
 
     return result
 

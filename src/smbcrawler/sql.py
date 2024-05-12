@@ -42,6 +42,14 @@ class DbLinkPaths(DbAction):
     paths: list
 
 
+def get_subclasses(cls):
+    result = cls.__subclasses__()
+    for each in result:
+        result.extend(get_subclasses(each))
+
+    return result
+
+
 def init_db(path):
     database_instance = peewee.SqliteDatabase(path)
 
@@ -101,13 +109,14 @@ def init_db(path):
         target = peewee.ForeignKeyField(Target, backref="events", null=True)
 
     class Finding(BaseModel):
-        certainty = peewee.CharField(
-            choices={
-                "certain": "Certain",
-                "firm": "Firm",
-                "tentative": "Tentative",
-            },
-        )
+        pass
+        #  certainty = peewee.CharField(
+        #      choices={
+        #          "certain": "Certain",
+        #          "firm": "Firm",
+        #          "tentative": "Tentative",
+        #      },
+        #  )
 
     class Secret(Finding):
         content = peewee.ForeignKeyField(FileContents, backref="finding_secrets")
@@ -136,7 +145,7 @@ def init_db(path):
         module = peewee.CharField()
         exc_info = peewee.CharField(null=True)
 
-    models = BaseModel.__subclasses__()
+    models = get_subclasses(BaseModel)
 
     with database_instance:
         database_instance.create_tables(models)

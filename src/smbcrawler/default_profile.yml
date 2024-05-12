@@ -215,7 +215,7 @@ directories:
 secrets:
   PasswordNaturalLanguage:
     comment: "A password in several languages"
-    regex: "(Password|Passwort|Kennwort|Wachtwoord|Adgangskode|L(ö|o|oe)senord|Salasana|Hasło|Parola|şifre|jelszó|Mot de passe|Senha|Пароль|密码|पासवर्ड|Contrase(ñ|n)a):\s*\b(?P<secret>.{3,24})\b"
+    regex: '(Password|Passwort|Kennwort|Wachtwoord|Adgangskode|L(ö|o|oe)senord|Salasana|Hasło|Parola|şifre|jelszó|Mot de passe|Senha|Пароль|密码|पासवर्ड|Contrase(ñ|n)a):\s*\b(?P<secret>.{3,24})\b'
     regex_flags:
       - IGNORECASE
   NetUser:
@@ -260,7 +260,7 @@ secrets:
       - MULTILINE
   PasswordGPP:
     comment: "password in GPP"
-    regex: 'cpassword="(?P<secret>[A-Za-z0-9/+]+)"'
+    regex: 'cpassword="(?P<secret>[A-Za-z0-9/+=]+)"'
   PrivateKey:
     comment: "private key"
     regex: "----- BEGIN[A-Z ]* PRIVATE KEY -----"
@@ -275,4 +275,4 @@ secrets:
     regex: 'PASSWORD_[A-Z0-9_]*(SETUP|EIS|SYNC)=(?P<secret>..+)'
   DsmPassword:
     comment: "DSM password (Ivanti/Frontrange/Heat)"
-    regex: '[^a-zA-Z0-9+/](?P<secret>k[123456][A-Za-z0-9+/]{32,}=?=?)[^a-zA-Z0-9+/]'
+    regex: '[^a-zA-Z0-9+/](?P<secret>k[123456][A-Za-z0-9+/=]{32,}=?=?)[^a-zA-Z0-9+/]'

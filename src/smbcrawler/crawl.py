@@ -158,15 +158,17 @@ class CrawlerThread(threading.Thread):
         silence=".*STATUS_ACCESS_DENIED|STATUS_NOT_SUPPORTED|STATUS_SHARING_VIOLATION.*"
     )
     def process_file(self, share, f):
-        profile = find_matching_profile(self.app.profile_collection, "files", f)
+        profile = find_matching_profile(
+            self.app.profile_collection, "files", f.get_full_path()
+        )
 
-        if profile["high_value"]:
-            self.app.event_reporter.found_high_value_file(self.current_target, share, f)
-
-        if not profile["download"]:
+        if not profile:
             return
 
-        if self.app.disable_autodownload:
+        if profile.get("high_value") is True:
+            self.app.event_reporter.found_high_value_file(self.current_target, share, f)
+
+        if profile.get("download") is False or self.app.disable_autodownload:
             return
 
         def download(data):
@@ -188,7 +190,7 @@ class CrawlerThread(threading.Thread):
         profile = find_matching_profile(
             self.app.profile_collection, "directories", self.name
         )
-        if profile["crawl_depth"]:
+        if profile and profile["crawl_depth"]:
             self.app.event_reporter.non_default_depth(str(f))
             depth = profile["depth"]
 

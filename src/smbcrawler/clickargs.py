@@ -123,7 +123,24 @@ def crawl(
     A target can be a host name, a single IP address, or an IP range in CIDR
     notation. An optional port can be specified in the usual form.
     """
+    from smbcrawler.app import CrawlerApp, Login
+
     click.echo("Starting the crawler ...")
+    app = CrawlerApp(
+        Login(user, domain, password, hash),
+        targets=target,
+        crawl_file="smbcrawler.crwl",
+        threads=threads,
+        timeout=timeout,
+        depth=depth,
+        check_write_access=check_write_access,
+        crawl_printers_and_pipes=False,
+        disable_autodownload=disable_autodownload,
+        force=force,
+        inputfilename=input,
+        cmd=None,
+    )
+    app.run()
 
 
 @click.command(**help_alias)

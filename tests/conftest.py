@@ -14,6 +14,15 @@ from smbcrawler.app import CrawlerApp, Login
 login1 = Login("user1", "WORKGROUP", "password1")
 login2 = Login("user2", "WORKGROUP", "password2")
 
+SECRETS = {
+    "logon.bat": "net use X: \\\\fs.contoso.local\\share /user:admin secretpassword",
+    "groups.xml": 'cpassword="eBlgSIVExs+BO8LOGVI6M5EXkfrpBOxfxIOvvHoNSm4="',
+    "SAM": "",
+    "domain_controller.vdx": "",
+    "default.ini": "password=iloveyou",
+    "unattend.xml": "       <Password><Value>secret</Value></Password>",
+}
+
 
 @pytest.fixture(scope="session")
 def smb_configs():
@@ -28,6 +37,7 @@ def smb_configs():
         "small": {"options": {"path": "/share/small", "valid users": "user1"}},
         "big": {"options": {"path": "/share/big", "valid users": "user1"}},
         "superbig": {"options": {"path": "/share/superbig", "valid users": "user1"}},
+        "admin$": {"options": {"path": "/share/big", "valid users": "user1"}},
     }
 
     users = {
@@ -148,28 +158,67 @@ def container_engine():
 
 
 def create_random_file_structure(
-    base_path, max_num_dirs, max_num_files, max_depth, current_depth=0
+    base_path, max_num_dirs, max_num_files, max_depth, secrets, current_depth=0
 ):
     if current_depth > max_depth:
         return
     # Decide randomly how many directories to create in this level
-    num_dirs = random.randint(0, max_num_dirs)
+    num_dirs = random.randint(1, max_num_dirs)
     num_files = random.randint(0, max_num_files)
 
     for _ in range(num_dirs):
-        dir_name = "".join(random.choices(string.ascii_letters, k=10))
+        dir_name = f"level_{current_depth}_"
+        dir_name += "".join(random.choices(string.ascii_letters, k=10))
         new_dir_path = os.path.join(base_path, dir_name)
         os.makedirs(new_dir_path, exist_ok=True)
         create_random_file_structure(
-            new_dir_path, max_num_dirs, max_num_files, max_depth, current_depth + 1
+            new_dir_path,
+            max_num_dirs,
+            max_num_files,
+            max_depth,
+            secrets,
+            current_depth + 1,
         )
 
     for _ in range(num_files):
-        file_name = "".join(random.choices(string.ascii_letters + string.digits, k=10))
+        file_name = f"level_{current_depth}_"
+        file_name += "".join(random.choices(string.ascii_letters + string.digits, k=10))
+        file_name += ".bin"
+
         file_path = os.path.join(base_path, file_name)
         file_size = random.randint(0, 64)
-        with open(file_path, "wb") as f:
-            f.write(os.urandom(file_size))
+        with open(file_path, "wb") as fp:
+            fp.write(os.urandom(file_size))
+
+        # Create a secret
+        if random.choice(range(20)) == 0:
+            s = random.choice(list(secrets.keys()))
+            file_path = os.path.join(base_path, s)
+
+            with open(file_path, "w") as fp:
+                for i in range(random.choice(range(10))):
+                    line = (
+                        "".join(
+                            random.choices(
+                                " " + string.ascii_letters + string.digits, k=10
+                            )
+                        )
+                        + "\n"
+                    )
+                    fp.writelines(line)
+
+                fp.writelines([secrets[s] + "\n"])
+
+                for i in range(random.choice(range(10))):
+                    line = (
+                        "".join(
+                            random.choices(
+                                " " + string.ascii_letters + string.digits, k=10
+                            )
+                        )
+                        + "\n"
+                    )
+                    fp.writelines(line)
 
 
 def is_responsive(ip_address, port):
@@ -208,8 +257,9 @@ def samba_server_pool(smb_configs, tmp_path_factory, container_engine):
         os.mkdir(tmp_path / share)
     open(tmp_path / "small" / "hello-world.txt", "w").write("Hello!\n")
     # This generates about 5MB worth of data in 794 files and 517 directories.
-    create_random_file_structure(tmp_path / "big", 3, 5, 3)
-    create_random_file_structure(tmp_path / "superbig", 5, 8, 5)
+    # It also sprinkles some files with secrets in there
+    create_random_file_structure(tmp_path / "big", 3, 5, 3, SECRETS)
+    create_random_file_structure(tmp_path / "superbig", 5, 8, 5, SECRETS)
 
     ip_range = "127.1.0."
 
@@ -239,6 +289,7 @@ def samba_server_pool(smb_configs, tmp_path_factory, container_engine):
     wait_until_services_ready(list(ip_addresses.values()), 445)
 
     yield ip_addresses
+    breakpoint()
 
     # Stop and remove the containers
     for container in containers:
