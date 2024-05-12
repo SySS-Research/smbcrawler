@@ -302,7 +302,6 @@ def samba_server_pool(smb_configs, tmp_path_factory, container_engine):
         wait_until_services_ready(list(ip_addresses.values()), 445)
 
         yield ip_addresses
-        breakpoint()
 
     finally:
         # Stop and remove the containers
