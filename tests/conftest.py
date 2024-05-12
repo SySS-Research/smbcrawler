@@ -67,15 +67,23 @@ def smb_configs():
         },
         "allow_anonymous_listing": {
             "options": {
-                "map to guest": "never",
+                "security": "user",
+                "server min protocol": "SMB2",
+                "map to guest": "bad user",
                 "restrict anonymous": "0",
-                "guest ok": "no",
+                "guest ok": "yes",
+                "force user": "nobody",
+                "guest account": "nobody",
             }
         },
         "allow_anonymous_share_access": {
             "options": {
+                "security": "user",
+                "server min protocol": "SMB2",
                 "map to guest": "bad user",
                 "restrict anonymous": "0",
+                "force user": "user1",
+                "guest account": "user1",
                 "guest ok": "yes",
             }
         },
@@ -98,12 +106,12 @@ def smb_configs():
         },
         "anonymous_listing": {
             "shares": ["small"],
-            "globals": ["noprinting", "default", "allow_anonymous_listing"],
+            "globals": ["noprinting", "allow_anonymous_listing"],
             "instance_name": "SAMBA_ANON_LIST",
         },
         "anonymous_read": {
             "shares": ["small"],
-            "globals": ["noprinting", "default", "allow_anonymous_share_access"],
+            "globals": ["noprinting", "allow_anonymous_share_access"],
             "instance_name": "SAMBA_ANON_READ",
         },
         "no_access": {
@@ -270,33 +278,39 @@ def samba_server_pool(smb_configs, tmp_path_factory, container_engine):
     config_file = tmp_path / "config.json"
     json.dump(smb_configs, open(config_file, "w"))
 
-    fp = open(config_file, "r")
-    for container_id, config in json.load(fp)["configs"].items():
-        instances = config.get("instances", 1)
-        config_file_base = Path(config_file).name
+    try:
+        fp = open(config_file, "r")
+        for container_id, config in json.load(fp)["configs"].items():
+            instances = config.get("instances", 1)
+            config_file_base = Path(config_file).name
 
-        for i in range(instances):
-            assert ip_address_counter < 255
-            ip_address = ip_range + str(ip_address_counter)
-            container_name = spin_up_samba(
-                container_engine, ip_address, tmp_path, config_file_base, container_id
-            )
+            for i in range(instances):
+                assert ip_address_counter < 255
+                ip_address = ip_range + str(ip_address_counter)
+                container_name = spin_up_samba(
+                    container_engine,
+                    ip_address,
+                    tmp_path,
+                    config_file_base,
+                    container_id,
+                )
 
-            ip_addresses[container_id] = ip_address
-            containers.append(container_name)
-            ip_address_counter += 1
+                ip_addresses[container_id] = ip_address
+                containers.append(container_name)
+                ip_address_counter += 1
 
-    wait_until_services_ready(list(ip_addresses.values()), 445)
+        wait_until_services_ready(list(ip_addresses.values()), 445)
 
-    yield ip_addresses
-    breakpoint()
+        yield ip_addresses
+        breakpoint()
 
-    # Stop and remove the containers
-    for container in containers:
-        try:
-            run_command(f"{container_engine} stop {container} -t 0")
-        except Exception:
-            pass
+    finally:
+        # Stop and remove the containers
+        for container in containers:
+            try:
+                run_command(f"{container_engine} stop {container} -t 0")
+            except Exception:
+                pass
 
 
 def spin_up_samba(engine, ip_address, share_dir, config, container_id):

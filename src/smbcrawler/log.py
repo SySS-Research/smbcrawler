@@ -55,11 +55,11 @@ class SMBFormatter(ColoredFormatter):
         share = getattr(record, "share", None)
         path = getattr(record, "path", None)
         if target:
-            target = f"\\\\{target}\\"
+            target = f"\\\\{target}"
             if share:
-                target += f"{share}\\"
+                target += f"\\{share}"
                 if path:
-                    target += f"{path}"
+                    target += f"\\{path}"
             record.msg = f"[{target}] {record.msg}"
         return super().format(record)
 

@@ -92,9 +92,6 @@ class EventReporter(object):
         if share.permissions["write"]:
             self.found_write_access(target, share)
 
-        if share.permissions["guest"]:
-            self.found_guest_access(target, share)
-
     def share_finished(self, target, share):
         log.info("Share finished: %s", extra=dict(target=target, share=share))
         self.db_queue.write(DbLinkPaths(target, share, share.paths))

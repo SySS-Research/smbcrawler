@@ -104,7 +104,7 @@ class CrawlerThread(threading.Thread):
         self.app.event_reporter.skip_host(self.current_target)
         self._skip_host = True
 
-    @log_exceptions()
+    @log_exceptions(silence=".*STATUS_CONNECTION_REFUSED|STATUS_ACCESS_DENIED.*")
     def crawl_share(self, share, depth=0):
         self._skip_share = False
 
@@ -269,6 +269,7 @@ class CrawlerThread(threading.Thread):
         shares = [
             SMBShare(
                 self.smbClient,
+                self.current_target,
                 s,
                 self.app,
             )
@@ -287,8 +288,8 @@ class CrawlerThread(threading.Thread):
             if self.killed:
                 return
             if as_guest:
-                username = ""
-                password = ""
+                username = " "
+                password = " "
             else:
                 username = self.login.username or ""
                 password = self.login.password or ""

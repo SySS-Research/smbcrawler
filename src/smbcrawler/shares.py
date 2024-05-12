@@ -6,6 +6,7 @@ import logging
 from smbcrawler.profiles import find_matching_profile
 
 from impacket.smbconnection import ntpath
+import impacket
 
 log = logging.getLogger(__name__)
 
@@ -46,9 +47,11 @@ def normalize_pwd(pwd):
 
 
 class SMBShare(object):
-    def __init__(self, smbClient, share, app):
+    def __init__(self, smbClient, target, share, app):
         self.smbClient = smbClient
+        self.target = target
         self.name = share["shi1_netname"][:-1]
+        self.share = self.name
         self.remark = share["shi1_remark"][:-1]
         self.is_print_queue = share["shi1_type"] % 0x80000000 == 1
         self.is_device = share["shi1_type"] % 0x80000000 == 2
@@ -104,8 +107,8 @@ class SMBShare(object):
             tree_id = self.smbClient.connectTree(self.name)
             self.smbClient.disconnectTree(tree_id)
             self.permissions["read"] = True
-        except Exception as e:
-            log.debug(e, exc_info=True)
+        except impacket.smbconnection.SessionError as exc:
+            log.debug(exc, exc_info=True)
 
     def check_permission_write(self):
         """Create an empty directory and delete it right after."""
@@ -118,13 +121,13 @@ class SMBShare(object):
             self.smbClient.createDirectory(str(self), dirname)
             self.permissions["write"] = True
             log.debug("%s is writable" % self)
-        except Exception:
+        except impacket.smb3.SessionError:
             log.debug("%s is readonly" % self, exc_info=False)
             return
 
         try:
             self.smbClient.deleteDirectory(str(self), dirname)
-        except Exception as exc:
+        except impacket.smb3.SessionError as exc:
             self.event_reporter.unable_to_delete_test_directory(
                 self.current_target, self.current_share, dirname, exc
             )
@@ -133,9 +136,11 @@ class SMBShare(object):
         try:
             self.get_dir_list(None)
             self.permissions["list_root"] = True
+            if self.permissions["guest"]:
+                self.event_reporter.found_guest_access(self.target, self.share)
             log.debug("%s is listable" % self)
-        except Exception:
-            log.debug("%s is not listable" % self, exc_info=False)
+        except impacket.smbconnection.SessionError:
+            log.debug("%s is not listable" % self, exc_info=True)
 
     def effective_depth(self, depth, crawl_printers_and_pipes):
         """Determine depth at which we want to scan this share"""
