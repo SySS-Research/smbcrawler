@@ -3,6 +3,7 @@ import re
 import os
 import pathlib
 import glob
+import logging
 import typing
 from functools import reduce
 
@@ -10,6 +11,7 @@ import xdg.BaseDirectory
 import yaml
 
 SCRIPT_PATH = pathlib.Path(__file__).parent.resolve()
+log = logging.getLogger(__name__)
 
 
 class Secret(object):
@@ -26,7 +28,7 @@ class Secret(object):
             self.regex_flags = [getattr(re, flag) for flag in regex_flags]
         except AttributeError:
             self.regex_flags = []
-            print("Invalid flags: %s" % self.regex_flags)
+            log.error("Invalid flags: %s" % self.regex_flags)
         self.false_positives = false_positives
 
         self.secret = None

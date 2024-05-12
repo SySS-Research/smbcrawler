@@ -124,8 +124,10 @@ def crawl(
     notation. An optional port can be specified in the usual form.
     """
     from smbcrawler.app import CrawlerApp, Login
+    from smbcrawler.log import init_logger
 
     click.echo("Starting the crawler ...")
+    init_logger()
     app = CrawlerApp(
         Login(user, domain, password, hash),
         targets=target,

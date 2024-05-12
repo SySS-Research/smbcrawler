@@ -83,7 +83,7 @@ class CrawlerThread(threading.Thread):
                 with self.app.thread_lock:
                     self.app.targets_finished += 1
         except queue.Empty:
-            log.debug("[%s] Queue empty, quitting thread" % self._name)
+            log.debug("Queue empty, quitting thread")
             self.is_running = False
             self.done = True
 
@@ -254,7 +254,7 @@ class CrawlerThread(threading.Thread):
                 self.crawl_printers_and_pipes,
             )
             if depth != self.depth:
-                self.app.event_reporter.identified_interesting_share(
+                self.app.event_reporter.non_default_depth(
                     self.current_target, share_name
                 )
             self.crawl_share(s, depth=depth)

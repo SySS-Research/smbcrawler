@@ -26,10 +26,10 @@ class Target(object):
             s.connect((self.host, self.port))
             s.close()
         except Exception as e:
-            log.debug("%s:%d - %s" % (self.host, self.port, e))
+            log.debug(str(e), extra=dict(target=self))
             s.close()
             return False
-        log.info("%s:%d - Port open" % (self.host, self.port))
+        log.info("Port open", extra=dict(target=self))
         return True
 
     def __str__(self):
@@ -105,7 +105,7 @@ class SMBShare(object):
             self.smbClient.disconnectTree(tree_id)
             self.permissions["read"] = True
         except Exception as e:
-            log.debug(e)
+            log.debug(e, exc_info=True)
 
     def check_permission_write(self):
         """Create an empty directory and delete it right after."""

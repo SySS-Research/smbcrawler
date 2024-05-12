@@ -29,7 +29,7 @@ def color_map(_format):
     return FORMATS
 
 
-class CustomFormatter(logging.Formatter):
+class ColoredFormatter(logging.Formatter):
     """Logging Formatter to add colors"""
 
     _format = "%(levelname).1s %(asctime)-15s %(message)s"
@@ -49,7 +49,22 @@ class CustomFormatter(logging.Formatter):
         super().__init__()
 
 
-class CustomFormatterDebug(CustomFormatter):
+class SMBFormatter(ColoredFormatter):
+    def format(self, record):
+        target = getattr(record, "target", None)
+        share = getattr(record, "share", None)
+        path = getattr(record, "path", None)
+        if target:
+            target = f"\\\\{target}\\"
+            if share:
+                target += f"{share}\\"
+                if path:
+                    target += f"{path}"
+            record.msg = f"[{target}] {record.msg}"
+        return super().format(record)
+
+
+class ColoredFormatterDebug(ColoredFormatter):
     _format = "%(levelname).1s %(asctime)-15s " "%(filename)s:%(lineno)d %(message)s"
     FORMATS = color_map(_format)
 
@@ -73,6 +88,8 @@ class DBHandler(logging.Handler):
             line_no=record.lineno,
             module=record.module,
             exc_info=record.exc_info,
+            target=getattr(record, "target", None),
+            share=getattr(record, "share", None),
         )
         self.db_queue.write(self.DbInsert("LogItem", data))
 
@@ -95,6 +112,7 @@ class FIFOHandler(logging.Handler):
                     # None is used as a signal to stop the thread
                     break
                 msg = self.format(record)
+                # TODO include thread id in format
                 fifo.write(msg + "\n")
                 fifo.flush()
 
@@ -114,11 +132,18 @@ class FIFOHandler(logging.Handler):
             pass
 
 
-def init_logger(db_queue, fifo_pipe, id_=None):
-    logging.basicConfig(level=logging.DEBUG)
+def init_db_logger(db_queue):
+    logger = logging.getLogger("smbcrawler")
+    db_handler = DBHandler(db_queue)
+    db_handler.setLevel(logging.INFO)
+    logger.handlers.append(db_handler)
 
-    logger = logging.getLogger("smbcrawler.logger_%s" % id_)
+
+def init_logger():
+    #  root_logger = logging.getLogger()
+    logger = logging.getLogger("smbcrawler")
     logger.handlers = []
+    logger.setLevel(logging.DEBUG)
 
     # add success level
     def success(self, message, *args, **kwargs):
@@ -126,17 +151,15 @@ def init_logger(db_queue, fifo_pipe, id_=None):
 
     logging.Logger.success = success
 
-    #  try:
-    #      fifo_handler = FIFOHandler(fifo_pipe)
-    #      fifo_handler.setLevel("DEBUG")
-    #      fifo_handler.setFormatter(CustomFormatterDebug())
-    #      logger.handlers.append(fifo_handler)
-    #  except Exception as e:
-    #      print("Couldn't create fifo pipe: %s" % e)
     # TODO not working. revisit later
+    #  fifo_handler = FIFOHandler(fifo_pipe)
+    #  fifo_handler.setLevel(logging.DEBUG)
+    #  fifo_handler.setFormatter(ColoredFormatterDebug())
+    #  logger.handlers.append(fifo_handler)
 
-    db_handler = DBHandler(db_queue)
-    db_handler.setLevel("DEBUG")
-    logger.handlers.append(db_handler)
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.WARNING)
+    console_handler.setFormatter(SMBFormatter())
+    logger.handlers.append(console_handler)
 
     return logger

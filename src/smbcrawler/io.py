@@ -11,6 +11,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_targets(s):
+    # TODO ipv6
     if re.match(r"^[a-zA-Z0-9-.]+(:[0-9]{1,5})?$", s) or re.match(
         r"^([0-9]{1,3}\.){3}[0-9]{1,3}(:[0-9]{1,5})?$", s
     ):

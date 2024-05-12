@@ -87,19 +87,16 @@ class CrawlerApp(object):
         try:
             self._run()
         except Exception as e:
-            log.exception(e)
+            log.debug(e, exc_info=True)
             log.critical("Exception caught, trying to exit gracefully...")
         except KeyboardInterrupt:
-            msg = "CTRL-C caught, trying to kill threads and exit gracefully..."
-            print(msg)
-            log.info(msg)
+            log.info("CTRL-C caught, trying to kill threads and exit gracefully...")
             try:
                 self.kill_threads()
             except (Exception, KeyboardInterrupt) as e:
-                log.error("Exception during thread killing")
                 log.debug(e, exc_info=True)
-        log.info("Writing output...")
-        print("Writing output...")
+                log.error("Exception during thread killing")
+        print("Finishing ...")
         self.event_reporter.close()
 
     def pause(self):
@@ -141,7 +138,6 @@ class CrawlerApp(object):
             "h": self.skip_host,
             "s": self.skip_share,
             "q": self.kill_threads,
-            #  'd': self.show_debug_info,
             # Leave this an undocumented feature
             "r": self.resume,
         }
@@ -160,12 +156,6 @@ class CrawlerApp(object):
             else:
                 print("Unkown command: %s" % cmd)
 
-    def show_debug_info(self, n=None):
-        if not n:
-            log.error("Missing argument")
-            return False
-        print(self.threads[int(n)].__dict__)
-
     def skip_share(self, n=None):
         if not n:
             log.error("Missing argument")
@@ -176,7 +166,7 @@ class CrawlerApp(object):
         except (IndexError, ValueError):
             log.error("Invalid argument: %s" % n)
             return False
-        print("Skipped shares: %s; resuming" % n)
+        print("Skipping shares: %s; resuming" % n)
         self.resume()
         return True
 
@@ -204,6 +194,7 @@ class CrawlerApp(object):
 
     def resume(self, msg="Resuming..."):
         log.info(msg)
+        print(msg)
         self.running.set()
         return True
 
@@ -221,14 +212,13 @@ class CrawlerApp(object):
     def report_logon_failure(self, target):
         if not self.credentials_confirmed and not self.force:
             log.critical(
-                "%s:%d - Logon failure; "
+                "[%s] Logon failure; "
                 "aborting to prevent account lockout; "
-                "consider using the 'force' flag to continue anyway"
-                % (target.host, target.port)
+                "consider using the 'force' flag to continue anyway" % target
             )
             self.kill_threads()
         else:
-            log.warning("%s:%d - Logon failure" % (target.host, target.port))
+            log.warning("[%s] Logon failure" % target)
 
     def confirm_credentials(self):
         self.credentials_confirmed = True

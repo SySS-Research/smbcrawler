@@ -4,6 +4,7 @@ import dataclasses
 import queue
 import threading
 import typing
+import sys
 
 import peewee
 
@@ -94,20 +95,6 @@ def init_db(path):
         size = peewee.IntegerField()
         content = peewee.ForeignKeyField(FileContents, backref="paths", null=True)
 
-    class Event(BaseModel):
-        timestamp = peewee.DateTimeField(default=datetime.datetime.now)
-        message = peewee.CharField()
-        event_type = peewee.CharField(
-            choices={
-                "error": "Error",
-                "info": "info",
-                "warning": "warning",
-            },
-        )
-        path = peewee.ForeignKeyField(Path, backref="events", null=True)
-        share = peewee.ForeignKeyField(Share, backref="events", null=True)
-        target = peewee.ForeignKeyField(Target, backref="events", null=True)
-
     class Finding(BaseModel):
         pass
         #  certainty = peewee.CharField(
@@ -152,9 +139,13 @@ def init_db(path):
 
     models = {m.__name__: m for m in models}
 
-    # TODO check for present row in Config. offer to resume scan.
-
     db_instance = DbInstance(database_instance, models, path)
+
+    is_empty = Config.select().count() == 0
+    if not is_empty:
+        print("DB is not empty; choose another filename. Aborting.")
+        sys.exit(1)
+        # TODO offer to resume scan.
 
     Config.create(
         smbcrawler_version=__version__,
