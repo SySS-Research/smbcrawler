@@ -183,13 +183,6 @@ def replace_foreign_keys(models, db_action: DbAction):
         if target and share:
             data["share"] = memoized_get(m, m.target == target & m.name == share)
 
-        m = models["Path"]
-        path = data["path"]
-        if target and share and path:
-            data["path"] = memoized_get(
-                m, m.target == target & m.share == share & m.name == path
-            )
-
 
 def process_db_actions(db_instance, db_actions):
     database = db_instance.database
