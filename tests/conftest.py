@@ -7,6 +7,7 @@ import string
 import subprocess
 
 import pytest
+from sqlite_to_json import sqliteToJson
 
 from smbcrawler.app import CrawlerApp, Login
 
@@ -374,8 +375,11 @@ def crawl_result(request, samba_server_pool, tmp_path_factory):
     app.run()
 
     assert os.path.isfile(crawl_file)
+    data = sqliteToJson(crawl_file)
+
     yield {
         "crawl_file": crawl_file,
+        "data": data,
         "param": request.param,
     }
 
