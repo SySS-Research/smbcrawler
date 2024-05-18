@@ -213,7 +213,13 @@ def process_db_actions(db_instance, db_actions):
                     getattr(models[db_action.model], k) == v
                     for k, v in db_action.filter_.items()
                 ]
-                models[db_action.model].update(db_action.data).where(*query).execute()
+                updated_rows = (
+                    models[db_action.model]
+                    .update(db_action.data)
+                    .where(*query)
+                    .execute()
+                )
+                assert updated_rows
             elif isinstance(db_action, DbLinkPaths):
                 insert_paths(models, db_action.target, db_action.share, db_action.paths)
 
