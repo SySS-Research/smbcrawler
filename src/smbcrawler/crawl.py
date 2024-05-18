@@ -27,8 +27,6 @@ def log_exceptions(silence=""):
             try:
                 return func(*args, **kwargs)
             except Exception as e:
-                if PYTEST_ENV:
-                    raise
                 msg = "[%s@%s] %s" % (
                     e.__class__.__name__,
                     func.__name__,
