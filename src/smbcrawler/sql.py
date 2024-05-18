@@ -131,6 +131,9 @@ def init_db(path):
         line_no = peewee.IntegerField()
         module = peewee.CharField()
         exc_info = peewee.CharField(null=True)
+        target = peewee.ForeignKeyField(Target, backref="logitems", null=True)
+        share = peewee.ForeignKeyField(Share, backref="logitems", null=True)
+        path = peewee.ForeignKeyField(Path, backref="logitems", null=True)
 
     models = get_subclasses(BaseModel)
 
@@ -167,7 +170,7 @@ def replace_foreign_keys(models, db_action: DbAction):
     m = models[db_action.model]
     data = db_action.data
 
-    if db_action.model == "event":
+    if db_action.model in ["event", "logitem"]:
         target = data["name"]
         if target:
             data["name"] = memoized_get(m, m.name == target)

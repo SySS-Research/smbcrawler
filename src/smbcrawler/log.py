@@ -88,8 +88,9 @@ class DBHandler(logging.Handler):
             line_no=record.lineno,
             module=record.module,
             exc_info=record.exc_info,
-            target=getattr(record, "target", None),
-            share=getattr(record, "share", None),
+            target=str(getattr(record, "target", None)),
+            share=str(getattr(record, "share", None)),
+            path=str(getattr(record, "path", None)),
         )
         self.db_queue.write(self.DbInsert("LogItem", data))
 
