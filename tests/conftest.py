@@ -353,12 +353,9 @@ def spin_up_samba(engine, ip_address, share_dir, config, container_id):
 def crawl_result(request, samba_server_pool, tmp_path_factory):
     tmp_path = tmp_path_factory.mktemp("output")
 
-    # This line is needed if we want to test the logs for accuracy, as pytest
-    # messes with the lovlevel of the root logger
-    #  caplog.set_level("DEBUG")
-    import logging
+    from smbcrawler.log import init_logger
 
-    logging.basicConfig(level=logging.DEBUG)
+    init_logger()
 
     login = request.param["login"]
     targets = request.param["targets"] or list(samba_server_pool.values())
