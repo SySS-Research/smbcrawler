@@ -74,6 +74,7 @@ def init_db(path):
         target = peewee.ForeignKeyField(Target, backref="shares")
         name = peewee.CharField(index=True)
         remark = peewee.CharField(default=None, null=True)
+        high_value = peewee.BooleanField(default=False)
 
         # These are allowed to be null becaues they can be unknown at certain
         # points in time
@@ -91,9 +92,11 @@ def init_db(path):
     class Path(BaseModel):
         name = peewee.CharField(index=True)
         parent = peewee.ForeignKeyField("self", null=True, backref="children")
+        target = peewee.ForeignKeyField(Target, backref="paths")
         share = peewee.ForeignKeyField(Share, backref="paths")
         size = peewee.IntegerField()
         content = peewee.ForeignKeyField(FileContents, backref="paths", null=True)
+        high_value = peewee.BooleanField(default=False)
 
     class Finding(BaseModel):
         pass
@@ -233,7 +236,12 @@ def insert_paths(models, target, share, paths):
     def recursive_insert(parent, paths):
         for p in paths:
             path_object = models["Path"].create(
-                name=p.get_shortname(), parent=parent, share=share.name, size=p.size
+                name=p.get_shortname(),
+                parent=parent,
+                share=share.name,
+                target=str(target),
+                size=p.size,
+                high_value=p.high_value,
             )
             recursive_insert(path_object, p.paths)
 

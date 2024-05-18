@@ -146,16 +146,20 @@ class CrawlerThread(threading.Thread):
     )
     def process_file(self, share, f):
         profile = find_matching_profile(
-            self.app.profile_collection, "files", f.get_full_path()
+            self.app.profile_collection, "files", f.get_longname()
         )
 
         if not profile:
             return
 
-        if profile.get("high_value") is True:
-            self.app.event_reporter.found_high_value_file(self.current_target, share, f)
+        if profile.get("high_value"):
+            self.app.event_reporter.found_high_value_file(
+                self.current_target, share, f.get_full_path()
+            )
+            f.high_value = True
 
-        if profile.get("download") is False or self.app.disable_autodownload:
+        # Download by default
+        if profile.get("download", True) is False or self.app.disable_autodownload:
             return
 
         def download(data):
@@ -245,6 +249,15 @@ class CrawlerThread(threading.Thread):
             )
 
             share_name = self.smbClient.add_share(share)
+
+            profile = find_matching_profile(
+                self.app.profile_collection, "shares", share_name
+            )
+            if profile and profile["high_value"]:
+                self.app.event_reporter.found_high_value_share(
+                    self.current_target, share_name
+                )
+
             self.current_share = share_name
             depth = share.effective_depth(
                 self.depth,

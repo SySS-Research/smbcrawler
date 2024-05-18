@@ -27,8 +27,8 @@ class Secret(object):
         try:
             self.regex_flags = [getattr(re, flag) for flag in regex_flags]
         except AttributeError:
-            self.regex_flags = []
             log.error("Invalid flags: %s" % self.regex_flags)
+            self.regex_flags = []
         self.false_positives = false_positives
 
         self.secret = None
@@ -125,5 +125,14 @@ def collect_profiles(extra_dir: typing.Optional[str] = None) -> ProfileCollectio
 
 def find_matching_profile(profile_collection: ProfileCollection, type: str, name: str):
     for label, item in reversed(profile_collection[type].items()):
-        if re.match(item["regex"], name):
+        try:
+            regex_flags = [getattr(re, flag) for flag in item.get("regex_flags", [])]
+        except AttributeError:
+            log.error("Invalid flags: %s" % regex_flags)
+            regex_flags = []
+        if regex_flags:
+            flags = reduce(lambda x, y: x | y, regex_flags)
+        else:
+            flags = 0
+        if re.match(item["regex"], name, flags=flags):
             return item

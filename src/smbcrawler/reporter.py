@@ -184,10 +184,19 @@ class EventReporter(object):
         self.db_queue.write(DbInsert("Secret", {"content": content, **secret}))
 
     def found_high_value_file(self, target, share, path):
-        log.success("Found high value file", extra=dict(target=target, share=share))
+        log.success(
+            "Found high value file", extra=dict(target=target, share=share, path=path)
+        )
 
     def found_high_value_share(self, target, share):
-        pass
+        log.success("Found high value share", extra=dict(target=target, share=share))
+        self.db_queue.write(
+            DbUpdate(
+                "Share",
+                dict(high_value=True),
+                filter_=dict(target=str(target), name=str(share)),
+            )
+        )
 
     def logon_failure(self, target):
         pass

@@ -38,7 +38,7 @@ def smb_configs():
         "small": {"options": {"path": "/share/small", "valid users": "user1"}},
         "big": {"options": {"path": "/share/big", "valid users": "user1"}},
         "superbig": {"options": {"path": "/share/superbig", "valid users": "user1"}},
-        "admin$": {"options": {"path": "/share/big", "valid users": "user1"}},
+        "Admin$": {"options": {"path": "/share/big", "valid users": "user1"}},
     }
 
     users = {
@@ -101,7 +101,7 @@ def smb_configs():
 
     configs = {
         "base": {
-            "shares": ["secret", "small"],
+            "shares": ["secret", "small", "Admin$"],
             "globals": ["noprinting", "default"],
             "instance_name": "SAMBA_BASE",
         },

@@ -202,6 +202,8 @@ shares:
     crawl_depth: 0
   admin:
     regex: 'C\$|Admin\$'
+    regex_flags:
+      - IGNORECASE
     comment: "Admin shares"
     crawl_depth: 0
     high_value: true

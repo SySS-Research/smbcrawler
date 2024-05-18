@@ -27,6 +27,7 @@ class MySharedFile(smb.SharedFile, object):
         self.paths = []
         self.parent = None
         self.size = self._SharedFile__filesize
+        self.high_value = False
 
     def __str__(self):
         return self.get_longname()
