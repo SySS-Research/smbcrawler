@@ -4,7 +4,6 @@ import pytest
 @pytest.mark.parametrize("filter_crawl_result", [{"label": "base"}], indirect=True)
 def test_base_guest_access(filter_crawl_result):
     data = filter_crawl_result["data"]
-    breakpoint()
 
     for share in data["share"]:
         if share["target_id"] == "127.1.0.2:445" and share["name"] == "small":
