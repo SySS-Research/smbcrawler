@@ -11,7 +11,7 @@ def tests(session):
 
 @nox.session()
 def format(session):
-    session.install("black")
+    session.install("ruff")
     session.run("ruff", "format", "--check", "src", *session.posargs)
     session.run("ruff", "format", "--check", "tests", *session.posargs)
 
