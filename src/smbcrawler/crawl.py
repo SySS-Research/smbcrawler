@@ -106,17 +106,6 @@ class CrawlerThread(threading.Thread):
     def crawl_share(self, share, depth=0):
         self._skip_share = False
 
-        share.check_all_permission(
-            self._guest_session,
-            self.check_write_access,
-        )
-
-        self.app.event_reporter.process_share(
-            self.smbClient,
-            self.current_target,
-            share,
-        )
-
         if depth != 0 and share.permissions["list_root"]:
             self.crawl_dir(share, depth)
 
@@ -241,13 +230,23 @@ class CrawlerThread(threading.Thread):
                     return False
                 raise
 
-        for s in shares:
+        for share in shares:
             self.check_paused()
             if self.killed or self._skip_host:
                 break
-            share_name = self.smbClient.add_share(s)
+
+            self.app.event_reporter.found_share(
+                self.current_target,
+                share,
+            )
+            share.check_all_permission(
+                self._guest_session,
+                self.check_write_access,
+            )
+
+            share_name = self.smbClient.add_share(share)
             self.current_share = share_name
-            depth = s.effective_depth(
+            depth = share.effective_depth(
                 self.depth,
                 self.crawl_printers_and_pipes,
             )
@@ -255,7 +254,7 @@ class CrawlerThread(threading.Thread):
                 self.app.event_reporter.non_default_depth(
                     self.current_target, share_name
                 )
-            self.crawl_share(s, depth=depth)
+            self.crawl_share(share, depth=depth)
 
         self.smbClient.close()
 

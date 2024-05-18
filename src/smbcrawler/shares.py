@@ -98,8 +98,9 @@ class SMBShare(object):
         self.check_permission_read()
         if self.permissions["read"]:
             self.check_permission_list()
-            if check_write_access:
-                self.check_permission_write()
+        if check_write_access:
+            self.check_permission_write()
+        self.event_reporter.update_share_permissions(self.target, self)
 
     def check_permission_read(self):
         # check read access by connecting tree
@@ -136,8 +137,6 @@ class SMBShare(object):
         try:
             self.get_dir_list(None)
             self.permissions["list_root"] = True
-            if self.permissions["guest"]:
-                self.event_reporter.found_guest_access(self.target, self.share)
             log.debug("%s is listable" % self)
         except impacket.smbconnection.SessionError:
             log.debug("%s is not listable" % self, exc_info=True)

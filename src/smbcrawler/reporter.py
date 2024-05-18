@@ -68,7 +68,7 @@ class EventReporter(object):
         else:
             log.info("No SMB service found", extra=dict(target=target))
 
-    def process_share(self, smbclient, target, share):
+    def found_share(self, target, share):
         self.db_queue.write(
             DbInsert(
                 "Share",
@@ -76,10 +76,6 @@ class EventReporter(object):
                     target=str(target),
                     name=str(share),
                     remark=share.remark,
-                    auth_access=share.permissions["read"],
-                    guest_access=share.permissions["guest"],
-                    write_access=share.permissions["write"],
-                    read_level=0 if share.permissions["list_root"] else None,
                     #  maxed_out=False,
                 ),
             )
@@ -143,14 +139,28 @@ class EventReporter(object):
             )
         )
 
-    def found_guest_access(self, target, share):
-        log.success(
-            "Found share with listable root directory as guest",
-            extra=dict(
-                target=target,
-                share=share,
-            ),
+    def update_share_permissions(self, target, share):
+        guest_access = share.permissions["guest"] and share.permissions["list_root"]
+        self.db_queue.write(
+            DbUpdate(
+                "Share",
+                dict(
+                    guest_access=guest_access,
+                    auth_access=share.permissions["read"],
+                    write_access=share.permissions["write"],
+                    read_level=0 if share.permissions["list_root"] else None,
+                ),
+                filter_=dict(target=str(target), name=str(share)),
+            )
         )
+        if guest_access:
+            log.success(
+                "Found share with listable root directory as guest",
+                extra=dict(
+                    target=target,
+                    share=share,
+                ),
+            )
 
     def found_write_access(self, target, share):
         log.success(
