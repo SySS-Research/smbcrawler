@@ -224,7 +224,7 @@ class CrawlerThread(threading.Thread):
             shares = self.list_shares(target, as_guest=True)
             self._guest_session = True
             self.app.event_reporter.listable_as_guest(target)
-        except Exception:
+        except SessionError:
             self._guest_session = False
             self.smbClient.close()
             self.smbClient = SMBConnection(
