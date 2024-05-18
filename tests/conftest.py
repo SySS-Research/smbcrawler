@@ -188,6 +188,7 @@ def create_random_file_structure(
             current_depth + 1,
         )
 
+    secret_counter = 0
     for _ in range(num_files):
         file_name = f"level_{current_depth}_"
         file_name += "".join(random.choices(string.ascii_letters + string.digits, k=10))
@@ -200,7 +201,9 @@ def create_random_file_structure(
 
         # Create a secret
         if random.choice(range(20)) == 0:
-            s = random.choice(list(secrets.keys()))
+            keys = list(secrets.keys())
+            s = keys[secret_counter & len(keys)]
+            secret_counter += 1
             file_path = os.path.join(base_path, s)
 
             with open(file_path, "w") as fp:
