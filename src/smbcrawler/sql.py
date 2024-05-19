@@ -98,33 +98,10 @@ def init_db(path):
         content = peewee.ForeignKeyField(FileContents, backref="paths", null=True)
         high_value = peewee.BooleanField(default=False)
 
-    class Finding(BaseModel):
-        pass
-        #  certainty = peewee.CharField(
-        #      choices={
-        #          "certain": "Certain",
-        #          "firm": "Firm",
-        #          "tentative": "Tentative",
-        #      },
-        #  )
-
-    class Secret(Finding):
+    class Secret(BaseModel):
         content = peewee.ForeignKeyField(FileContents, backref="finding_secrets")
         line = peewee.CharField()
         secret = peewee.CharField()
-
-    class ReadableHighValueShare(Finding):
-        share = peewee.ForeignKeyField(
-            Share, backref="finding_readable_high_value_shares"
-        )
-
-    class WritableHighValueShare(Finding):
-        share = peewee.ForeignKeyField(
-            Share, backref="finding_writeable_high_value_shares"
-        )
-
-    class GuestAccess(Finding):
-        share = peewee.ForeignKeyField(Share, backref="finding_guest_access")
 
     class LogItem(BaseModel):
         timestamp = peewee.DateTimeField(default=datetime.datetime.now)
