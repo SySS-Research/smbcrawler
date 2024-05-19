@@ -30,6 +30,7 @@ class Login(object):
     def __str__(self):
         return f"{self.domain}/{self.username}:{self.password or self.hash}"
 
+
 class CrawlerApp(object):
     """This object manages threads and interactive user input"""
 
@@ -47,7 +48,7 @@ class CrawlerApp(object):
         profile_collection=None,
         force=False,
         inputfilename=None,
-        cmd=None,
+        cmd="",
     ):
         self.cmd = cmd
         self.crawl_file = crawl_file
