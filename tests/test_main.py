@@ -23,7 +23,8 @@ def test_base_guest_access(filter_crawl_result):
 
 @pytest.mark.parametrize("filter_crawl_result", [{"label": "full"}], indirect=True)
 def test_full(filter_crawl_result):
-    pass
+    data = filter_crawl_result["data"]
+    assert data
 
 
 @pytest.fixture

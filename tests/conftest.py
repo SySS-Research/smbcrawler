@@ -19,7 +19,7 @@ SECRETS = {
     "logon.bat": "net use X: \\\\fs.contoso.local\\share /user:admin secretpassword",
     "groups.xml": 'cpassword="eBlgSIVExs+BO8LOGVI6M5EXkfrpBOxfxIOvvHoNSm4="',
     "SAM": "",
-    "domain_controller.vdx": "",
+    "domain_controller.vhdx": "",
     "default.ini": "password=iloveyou",
     "unattend.xml": "       <Password><Value>secret</Value></Password>",
 }
@@ -39,6 +39,8 @@ def smb_configs():
         "big": {"options": {"path": "/share/big", "valid users": "user1"}},
         "superbig": {"options": {"path": "/share/superbig", "valid users": "user1"}},
         "Admin$": {"options": {"path": "/share/big", "valid users": "user1"}},
+        "print$": {"options": {"path": "/share/small", "valid users": "user1"}},
+        "wsus": {"options": {"path": "/share/small", "valid users": "user1"}},
     }
 
     users = {
