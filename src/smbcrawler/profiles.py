@@ -81,6 +81,19 @@ class ProfileCollection(object):
     def get(self, k, default):
         return getattr(self, k, default)
 
+    def as_dict(self):
+        data = {}
+        for k in self.keys():
+            data[k] = self[k]
+        return data
+
+    def __str__(self):
+        result = yaml.dump(self.as_dict())
+        return result
+
+    def __repr__(self):
+        return str(self)
+
 
 def deep_update(d, u):
     """Update nested dicts"""
