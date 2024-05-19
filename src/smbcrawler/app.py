@@ -19,13 +19,7 @@ class Login(object):
         self.username = username
         self.domain = domain
         self.password = password
-
-        try:
-            self.lmhash = hash.split(":")[0]
-            self.nthash = hash.split(":")[1]
-        except (IndexError, AttributeError):
-            self.nthash = ""
-            self.lmhash = ""
+        self.hash = hash
 
     def __str__(self):
         return f"{self.domain}/{self.username}:{self.password or self.hash}"

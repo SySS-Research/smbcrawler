@@ -307,8 +307,7 @@ class CrawlerThread(threading.Thread):
                 username,
                 password,
                 domain=self.login.domain,
-                lmhash=self.login.lmhash,
-                nthash=self.login.nthash,
+                nthash=self.login.hash,
             )
             if not as_guest:
                 self.app.confirm_credentials()

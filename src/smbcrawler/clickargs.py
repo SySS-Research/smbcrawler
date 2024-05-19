@@ -6,6 +6,14 @@ from smbcrawler.version import __version__
 help_alias = dict(context_settings=dict(help_option_names=["-h", "--help"]))
 
 
+def deactivate_password_prompt(ctx, param, value):
+    if value:
+        for p in ctx.command.params:
+            if p.name == "password":
+                p.prompt = None
+    return value
+
+
 @click.group(**help_alias)
 @click.version_option(__version__)
 @click.option(
@@ -24,6 +32,7 @@ def cli(crawl_file):
 @click.option(
     "-u",
     "--user",
+    default=" ",
     help="User name, if omitted we'll try a null session",
 )
 @click.option(
@@ -39,12 +48,13 @@ def cli(crawl_file):
     default="",
     prompt=True,
     hide_input=True,
-    help="Password [omit for a password prompt]",
+    help="Password, if omitted you'll be prompted]",
 )
 @click.option(
     "-H",
     "--hash",
     help="NT hash, can be used instead of a password",
+    callback=deactivate_password_prompt,
 )
 @click.option(
     "-f",

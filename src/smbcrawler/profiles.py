@@ -36,23 +36,31 @@ class Secret(object):
 
     def match(self, line):
         self.line = line
+
         if self.regex_flags:
             flags = reduce(lambda x, y: x | y, self.regex_flags)
         else:
             flags = 0
+
         match = re.match(f".*{self.regex}.*", line, flags=flags)
+
         if match:
             self.secret = match.groupdict().get("secret", self.line)
         else:
             self.secret = None
 
+        if self.secret in self.false_positives:
+            self.secret = None
+
 
 class WellKnownThing(typing.TypedDict):
     regex: str
+    regex_flags: typing.Optional[list[str]]
     comment: typing.Optional[str]
     high_value: typing.Optional[bool]
     download: typing.Optional[bool]
     depth: typing.Optional[bool]
+    crawl_depth: typing.Optional[int]
 
 
 class ProfileCollection(object):
