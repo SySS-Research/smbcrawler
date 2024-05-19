@@ -35,7 +35,7 @@ class CrawlerApp(object):
 
     def __init__(
         self,
-        login,
+        login=None,
         targets=[],
         crawl_file="smbcrawler.crwl",
         threads=1,
@@ -57,7 +57,10 @@ class CrawlerApp(object):
             inputfilename,
         )
 
-        self.login = login
+        if login:
+            self.login = login
+        else:
+            self.login = Login(" ", "", "")  # guest
         self.max_threads = threads
         self.timeout = timeout
         self.depth = depth
