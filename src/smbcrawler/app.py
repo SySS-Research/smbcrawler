@@ -27,6 +27,8 @@ class Login(object):
             self.nthash = ""
             self.lmhash = ""
 
+    def __str__(self):
+        return f"{self.domain}/{self.username}:{self.password or self.hash}"
 
 class CrawlerApp(object):
     """This object manages threads and interactive user input"""
@@ -76,6 +78,11 @@ class CrawlerApp(object):
 
         # Used for first credential check
         self.cred_lock = threading.Lock()
+
+    def dry_run(self):
+        print("* Effective profile collection:\n%s" % self.profile_collection)
+        print("* Targets:\n" + "\n".join(" - %s" % t for t in self.targets))
+        print("* Credentials:\n - %s" % self.login)
 
         # Instantiate DB
         self.db_instance = init_db(crawl_file)

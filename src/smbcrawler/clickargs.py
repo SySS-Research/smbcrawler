@@ -112,6 +112,12 @@ def cli(crawl_file):
     help="Update single values of the effective profile collection using yamlpath. Example: `shares.admin.crawl_depth=5`. Can be supplied multiple times.",
 )
 @click.option(
+    "-n",
+    "--dry-run",
+    is_flag=True,
+    help="Show the effective profile collection, credentials and other details, but do nothing else",
+)
+@click.option(
     "-i",
     "--input",
     help="input from list of hosts/networks (use - for stdin);"
@@ -136,6 +142,7 @@ def crawl(
     extra_profile_directory,
     extra_profile_file,
     update_profile,
+    dry_run,
     input,
     target,
 ):
@@ -169,7 +176,11 @@ def crawl(
         inputfilename=input,
         cmd=None,
     )
-    app.run()
+
+    if dry_run:
+        app.dry_run()
+    else:
+        app.run()
 
 
 @click.command(**help_alias)
