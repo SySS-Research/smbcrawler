@@ -13,7 +13,7 @@ help_alias = dict(context_settings=dict(help_option_names=["-h", "--help"]))
     "--crawl-file",
     default="output.crwl",
     show_default=True,
-    help="path to output file",
+    help="Path to output file",
 )
 def cli(crawl_file):
     pass
@@ -24,14 +24,14 @@ def cli(crawl_file):
 @click.option(
     "-u",
     "--user",
-    help="user name, if omitted we'll try a null session",
+    help="User name, if omitted we'll try a null session",
 )
 @click.option(
     "-d",
     "--domain",
     default=".",
     show_default=True,
-    help="the user's domain",
+    help="The user's domain",
 )
 @click.option(
     "-p",
@@ -39,19 +39,19 @@ def cli(crawl_file):
     default="",
     prompt=True,
     hide_input=True,
-    help="password [omit for a password prompt]",
+    help="Password [omit for a password prompt]",
 )
 @click.option(
     "-H",
     "--hash",
-    help="NTLM hash, can be used instead of a password",
+    help="NT hash, can be used instead of a password",
 )
 @click.option(
     "-f",
     "--force",
     default=False,
     is_flag=True,
-    help="always keep going after STATUS_LOGON_FAILURE occurs",
+    help="Always keep going after STATUS_LOGON_FAILURE occurs",
 )
 @click.option(
     "-T",
@@ -75,7 +75,7 @@ def cli(crawl_file):
     default=1,
     type=int,
     show_default=True,
-    help="crawling depth; 0 lists only share names and no directories or "
+    help="Crawling depth; 0 lists only share names and no directories or "
     "files, -1 lists everything",
 )
 @click.option(
@@ -159,7 +159,6 @@ def crawl(
     from smbcrawler.log import init_logger
     from smbcrawler.profiles import collect_profiles
 
-    click.echo("Starting the crawler ...")
     init_logger()
     profile_collection = collect_profiles(
         extra_profile_directory, extra_profile_file, update_profile
@@ -173,7 +172,6 @@ def crawl(
         timeout=timeout,
         depth=depth,
         check_write_access=check_write_access,
-        crawl_printers_and_pipes=False,
         disable_autodownload=disable_autodownload,
         profile_collection=profile_collection,
         force=force,
