@@ -361,7 +361,7 @@ def crawl_result(request, samba_server_pool, tmp_path_factory):
     targets = request.param["targets"] or list(samba_server_pool.values())
     kwargs = request.param["kwargs"]
 
-    crawl_file = tmp_path / "smbcrawler.crwl"
+    crawl_file = tmp_path / "output.crwl"
     assert not os.path.isfile(crawl_file)
 
     app = CrawlerApp(
