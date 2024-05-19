@@ -216,9 +216,7 @@ class EventReporter(object):
             file_type = magic.from_buffer(data)
 
             clean_content = convert(data, mime, file_type)
-            secrets = find_secrets(
-                clean_content, path, content_hash, self.profile_collection["secrets"]
-            )
+            secrets = find_secrets(clean_content, self.profile_collection["secrets"])
 
             if clean_content.encode() == data:
                 clean_content = None

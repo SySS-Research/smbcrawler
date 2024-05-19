@@ -124,7 +124,7 @@ def convert(data, mime, file_type):
         return decode_bytes(data, file_type)
 
 
-def find_secrets(content, filename, content_hash, secret_profiles):
+def find_secrets(content, secret_profiles):
     """Extract secrets from content"""
     result = []
 
