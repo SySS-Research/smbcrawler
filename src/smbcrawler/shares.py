@@ -76,6 +76,7 @@ class SMBShare(object):
 
         self.event_reporter = app.event_reporter
         self.profile_collection = app.profile_collection
+        self.current_path = None
 
     def __str__(self):
         return self.name
@@ -86,6 +87,7 @@ class SMBShare(object):
     def add_path(self, path):
         path.parent = None
         self.paths.append(path)
+        self.current_path = path
 
     def get_dir_list(self, pwd):
         smbpwd = normalize_pwd(pwd)

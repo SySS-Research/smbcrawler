@@ -258,7 +258,7 @@ class CrawlerThread(threading.Thread):
                     self.current_target, share_name
                 )
 
-            self.current_share = share_name
+            self.current_share = share
             depth = share.effective_depth(
                 self.depth,
                 self.crawl_printers_and_pipes,

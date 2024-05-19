@@ -89,6 +89,9 @@ class CrawlerApp(object):
         self.event_reporter = EventReporter(self.db_instance, self.profile_collection)
 
         log.info("Starting up with these arguments: " + self.cmd)
+        log.info(
+            "Hit <space> for progress, <s> for a status update, and <p> for pause to skip shares or hosts"
+        )
 
         try:
             self._run()
@@ -102,7 +105,7 @@ class CrawlerApp(object):
             except (Exception, KeyboardInterrupt) as e:
                 log.debug(e, exc_info=True)
                 log.error("Exception during thread killing")
-        print("Finishing ...")
+        log.info("Finishing ...")
         self.event_reporter.close()
 
     def pause(self):
@@ -204,6 +207,18 @@ class CrawlerApp(object):
         self.running.set()
         return True
 
+    def print_status(self):
+        message = "Current threads:\n"
+        for i, t in enumerate(self.threads):
+            message += f"{i}) \\\\{t.current_target}\\"
+            if t.current_share:
+                message += f"{t.current_share}\\"
+                if t.current_share.current_path:
+                    message += str(t.current_share.current_path)
+            message += "\n"
+
+        print(message)
+
     def print_progress(self):
         message = ""
         scanned = self.targets_finished
@@ -278,7 +293,9 @@ class CrawlerApp(object):
                 key = self.read_key()
                 if key == "p":
                     self.pause()
-                if key == " ":
+                elif key == "s":
+                    self.print_status()
+                elif key == " ":
                     self.print_progress()
         except io.UnsupportedOperation:
             log.warning("stdin is pseudofile, cannot read keys")
