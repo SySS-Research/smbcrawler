@@ -153,6 +153,8 @@ def crawl(
     A target can be a host name, a single IP address, or an IP range in CIDR
     notation. An optional port can be specified in the usual form.
     """
+    import shlex
+    import sys
     from smbcrawler.app import CrawlerApp, Login
     from smbcrawler.log import init_logger
     from smbcrawler.profiles import collect_profiles
@@ -176,7 +178,7 @@ def crawl(
         profile_collection=profile_collection,
         force=force,
         inputfilename=input,
-        cmd=None,
+        cmd=" ".join(shlex.quote(arg) for arg in sys.argv),
     )
 
     if dry_run:
