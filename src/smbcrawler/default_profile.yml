@@ -190,14 +190,20 @@ files:
 shares:
   printers:
     regex: 'print\$'
+    regex_flags:
+      - IGNORECASE
     comment: "Probably only contains drivers"
     crawl_depth: 0
   software_repos:
     regex: 'wsus.*|sccm.*|sms.*|msscvm.*|.*reminst.*'
+    regex_flags:
+      - IGNORECASE
     comment: "Contains only binary packages"
     crawl_depth: 0
   binary_backups:
     regex: 'WinSxS|backup'
+    regex_flags:
+      - IGNORECASE
     comment: "Backups of binaries"
     crawl_depth: 0
   admin:
