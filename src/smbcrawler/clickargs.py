@@ -52,7 +52,7 @@ def cli(crawl_file):
 )
 @click.option(
     "-H",
-    "--hash",
+    "--nthash",
     help="NT hash, can be used instead of a password",
     callback=deactivate_password_prompt,
 )
@@ -144,7 +144,7 @@ def crawl(
     user,
     domain,
     password,
-    hash,
+    nthash,
     force,
     timeout,
     threads,
@@ -175,7 +175,7 @@ def crawl(
     )
 
     app = CrawlerApp(
-        Login(user, domain, password, hash),
+        Login(user, domain, password, nthash),
         targets=target,
         crawl_file=ctx.parent.params["crawl_file"],
         threads=threads,
@@ -186,7 +186,10 @@ def crawl(
         profile_collection=profile_collection,
         force=force,
         inputfilename=input,
-        cmd=" ".join(shlex.quote(arg) for arg in sys.argv),
+        cmd=" ".join(
+            shlex.quote(arg if arg not in [password, nthash] else "***")
+            for arg in sys.argv
+        ),
     )
 
     if dry_run:

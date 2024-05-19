@@ -199,7 +199,7 @@ class EventReporter(object):
         )
 
     def logon_failure(self, target):
-        pass
+        log.info("Logon failure", extra=dict(target=target))
 
     def non_default_depth(self, target, share):
         log.info(
@@ -215,7 +215,15 @@ class EventReporter(object):
             mime = magic.from_buffer(data, mime=True)
             file_type = magic.from_buffer(data)
 
-            clean_content = convert(data, mime, file_type)
+            try:
+                clean_content = convert(data, mime, file_type)
+            except Exception:
+                log.debug(
+                    "Unable to parse",
+                    exc_info=True,
+                    extra=dict(target=target, share=share, path=path),
+                )
+                clean_content = None
             secrets = find_secrets(clean_content, self.profile_collection["secrets"])
 
             if clean_content.encode() == data:
@@ -241,8 +249,8 @@ class EventReporter(object):
         log.info(
             "Skipping share ...",
             extra=dict(
-                share=self.current_share,
-                target=self.current_target,
+                share=str(share),
+                target=str(target),
             ),
         )
 
@@ -258,5 +266,4 @@ class EventReporter(object):
         log.error(
             "Unable to delete test directory",
             extra=dict(target=target, share=share, path=path),
-            exc_info=exc,
         )
