@@ -49,7 +49,8 @@ class CrawlerApp(object):
         inputfilename=None,
         cmd=None,
     ):
-        self.cmd = cmd or ""
+        self.cmd = cmd
+        self.crawl_file = crawl_file
 
         self.targets = get_targets(
             targets,
@@ -84,11 +85,11 @@ class CrawlerApp(object):
         print("* Targets:\n" + "\n".join(" - %s" % t for t in self.targets))
         print("* Credentials:\n - %s" % self.login)
 
+    def run(self):
         # Instantiate DB
-        self.db_instance = init_db(crawl_file)
+        self.db_instance = init_db(self.crawl_file)
         self.event_reporter = EventReporter(self.db_instance, self.profile_collection)
 
-    def run(self):
         log.info("Starting up with these arguments: " + self.cmd)
 
         try:

@@ -20,6 +20,7 @@ def cli(crawl_file):
 
 
 @click.command(**help_alias)
+@click.pass_context
 @click.option(
     "-u",
     "--user",
@@ -129,6 +130,7 @@ def cli(crawl_file):
     nargs=-1,
 )
 def crawl(
+    ctx,
     user,
     domain,
     password,
@@ -164,7 +166,7 @@ def crawl(
     app = CrawlerApp(
         Login(user, domain, password, hash),
         targets=target,
-        crawl_file="smbcrawler.crwl",
+        crawl_file=ctx.parent.params["crawl_file"],
         threads=threads,
         timeout=timeout,
         depth=depth,
