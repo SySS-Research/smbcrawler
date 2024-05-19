@@ -105,15 +105,19 @@ def deep_update(d, u):
     return d
 
 
-def collect_profiles(extra_dir: typing.Optional[str] = None) -> ProfileCollection:
+def collect_profiles(
+    extra_dirs: list[str] = [],
+    extra_files: list[str] = [],
+    update_queries: list[str] = [],
+) -> ProfileCollection:
     """Search directories for profile files"""
     dirs = [
         xdg.BaseDirectory.save_config_path("smbcrawler"),
         os.getcwd(),
     ]
 
-    if extra_dir:
-        dirs.append(extra_dir)
+    for d in extra_dirs:
+        dirs.append(d)
 
     files = [
         SCRIPT_PATH / "default_profile.yml",
@@ -122,6 +126,8 @@ def collect_profiles(extra_dir: typing.Optional[str] = None) -> ProfileCollectio
     for d in dirs:
         for f in glob.glob(str(pathlib.Path(d) / "*.yml")):
             files.append(os.path.join(d, f))
+
+    files.extend(extra_files)
 
     result = {}
     for f in files:
@@ -133,7 +139,38 @@ def collect_profiles(extra_dir: typing.Optional[str] = None) -> ProfileCollectio
         else:
             result = deep_update(result, data)
 
+    for q in update_queries:
+        path, value = q.split("=")
+        update_nested_dict(result, path, value)
+
     return ProfileCollection(result)
+
+
+def parse_acces_path(path):
+    # Regular expression to match keys, including those in quotes
+    key_regex = re.compile(r'(?:\[["\'](.*?)["\']\])|([^.]+)')
+
+    keys = []
+    for match in key_regex.finditer(path):
+        if match.group(1):
+            # If the key is in quotes, handle escaped quotes
+            keys.append(
+                match.group(1)
+                .replace('\\"', '"')
+                .replace("\\'", "'")
+                .replace("\\\\", "\\")
+            )
+        else:
+            keys.append(match.group(2))
+    return keys
+
+
+def update_nested_dict(nested_dict, path, value):
+    keys = parse_acces_path(path)
+    d = nested_dict
+    for key in keys[:-1]:
+        d = d.setdefault(key, {})
+    d[keys[-1]] = value
 
 
 def find_matching_profile(profile_collection: ProfileCollection, type: str, name: str):

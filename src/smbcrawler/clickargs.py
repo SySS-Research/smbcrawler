@@ -94,6 +94,24 @@ def cli(crawl_file):
     help="Don't download any files",
 )
 @click.option(
+    "-Y",
+    "--extra-profile-directory",
+    multiple=True,
+    help="Path to a directory containing extra profiles in the form of *.yml files. Can be supplied multiple times.",
+)
+@click.option(
+    "-F",
+    "--extra-profile-file",
+    multiple=True,
+    help="Path to a file containing extra profiles. Can be supplied multiple times.",
+)
+@click.option(
+    "-U",
+    "--update-profile",
+    multiple=True,
+    help="Update single values of the effective profile collection using yamlpath. Example: `shares.admin.crawl_depth=5`. Can be supplied multiple times.",
+)
+@click.option(
     "-i",
     "--input",
     help="input from list of hosts/networks (use - for stdin);"
@@ -115,6 +133,9 @@ def crawl(
     depth,
     check_write_access,
     disable_autodownload,
+    extra_profile_directory,
+    extra_profile_file,
+    update_profile,
     input,
     target,
 ):
@@ -125,9 +146,14 @@ def crawl(
     """
     from smbcrawler.app import CrawlerApp, Login
     from smbcrawler.log import init_logger
+    from smbcrawler.profiles import collect_profiles
 
     click.echo("Starting the crawler ...")
     init_logger()
+    profile_collection = collect_profiles(
+        extra_profile_directory, extra_profile_file, update_profile
+    )
+
     app = CrawlerApp(
         Login(user, domain, password, hash),
         targets=target,
@@ -138,6 +164,7 @@ def crawl(
         check_write_access=check_write_access,
         crawl_printers_and_pipes=False,
         disable_autodownload=disable_autodownload,
+        profile_collection=profile_collection,
         force=force,
         inputfilename=input,
         cmd=None,

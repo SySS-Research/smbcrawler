@@ -9,7 +9,6 @@ from smbcrawler.io import get_targets
 from smbcrawler.sql import init_db
 from smbcrawler.crawl import CrawlerThread
 from smbcrawler.reporter import EventReporter
-from smbcrawler.profiles import collect_profiles
 
 
 log = logging.getLogger(__name__)
@@ -43,6 +42,7 @@ class CrawlerApp(object):
         check_write_access=False,
         crawl_printers_and_pipes=False,
         disable_autodownload=False,
+        profile_collection=None,
         force=False,
         inputfilename=None,
         cmd=None,
@@ -63,7 +63,7 @@ class CrawlerApp(object):
         self.disable_autodownload = disable_autodownload
         self.force = force
 
-        self.profile_collection = collect_profiles()
+        self.profile_collection = profile_collection
 
         self.credentials_confirmed = False
 
