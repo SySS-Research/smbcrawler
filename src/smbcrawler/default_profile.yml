@@ -242,7 +242,7 @@ secrets:
       - IGNORECASE
   PasswordJson:
     comment: "'password' value in JSON file"
-    regex: '"[a-z]*(password|pwd|passwd)[a-z]*":"(?P<secret>..+)"'
+    regex: '"[a-z]*(password|pwd|passwd)[a-z]*":\s*"(?P<secret>..+)"'
     regex_flags:
       - IGNORECASE
   PasswordYaml:
@@ -252,12 +252,12 @@ secrets:
       - IGNORECASE
   PasswordXml:
     comment: "'password' element in XML file"
-    regex: "<[a-z]*pass[!>]*>(?P<secret>[!<]+)</[a-z]*pass"
+    regex: "<[a-z]*pass[^>]*>(?P<secret>[^<]+)</[a-z]*pass"
     regex_flags:
       - IGNORECASE
   PasswordUnattend:
     comment: "password in unattend.xml"
-    regex: '<Password>\s*<Value>(?P<secret>[!<]+)</Value'
+    regex: '<Password>\s*<Value>(?P<secret>[^<]+)</Value'
     regex_flags:
       - MULTILINE
   PasswordGPP:
@@ -268,7 +268,7 @@ secrets:
     regex: "----- BEGIN[A-Z ]* PRIVATE KEY -----"
   UrlPassword:
     comment: "URL Password"
-    regex: '[a-z0-9]://(?P<secret>[^:]+:[^@])@[a-z0-9]'
+    regex: '[A-Za-z0-9+.-]+://(?P<secret>[^:]+:[^@]+)@[A-Za-z0-9.-]+'
   AwsSecrets:
     comment: "AWS secrets"
     regex: '(aws_access_key_id|aws_secret_access_key)\s*=\s*(?P<secret>..+)'
@@ -277,4 +277,4 @@ secrets:
     regex: 'PASSWORD_[A-Z0-9_]*(SETUP|EIS|SYNC)=(?P<secret>..+)'
   DsmPassword:
     comment: "DSM password (Ivanti/Frontrange/Heat)"
-    regex: '[^a-zA-Z0-9+/](?P<secret>k[123456][A-Za-z0-9+/=]{32,}=?=?)[^a-zA-Z0-9+/]'
+    regex: '\b(?P<secret>k[123456][A-Za-z0-9+/=]{32,})\b'
