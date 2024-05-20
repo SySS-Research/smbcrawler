@@ -205,11 +205,28 @@ def showlog():
 
 
 @click.command(**help_alias)
-def export():
+@click.pass_context
+@click.option(
+    "-f",
+    "--format",
+    type=click.Choice(["html", "json", "yaml"]),
+    default="html",
+    show_default=True,
+    help="Output format",
+)
+@click.option(
+    "-s",
+    "--section",
+    type=click.Choice(["summary", "targets", "shares", "secrets", "secrets_unique"]),
+    help="Only output this section of the report",
+)
+@click.argument("outputfile", type=click.File("w"), default="-")
+def report(ctx, format, section, outputfile):
     """Export results to other file formats"""
-    click.echo("Exporting ...")
+    from smbcrawler.reporting import generate
+
+    generate(ctx.parent.params["crawl_file"], format, outputfile, section=section)
 
 
-cli.add_command(crawl)
-cli.add_command(showlog)
-cli.add_command(export)
+for command in [crawl, showlog, report]:
+    cli.add_command(command)
