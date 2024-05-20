@@ -140,7 +140,7 @@ def init_db_logger(db_queue):
     logger.handlers.append(db_handler)
 
 
-def init_logger():
+def init_logger(debug=False):
     #  root_logger = logging.getLogger()
     logger = logging.getLogger("smbcrawler")
     logger.handlers = []
@@ -159,7 +159,7 @@ def init_logger():
     #  logger.handlers.append(fifo_handler)
 
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.WARNING)
+    console_handler.setLevel(logging.DEBUG if debug else logging.WARNING)
     console_handler.setFormatter(SMBFormatter())
     logger.handlers.append(console_handler)
 
