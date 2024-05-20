@@ -61,6 +61,7 @@ class SMBFormatter(ColoredFormatter):
                 if path:
                     target += f"\\{path}"
             record.msg = f"[{target}] {record.msg}"
+            # TODO try not to modify record, as this affects other handlers
         return super().format(record)
 
 
