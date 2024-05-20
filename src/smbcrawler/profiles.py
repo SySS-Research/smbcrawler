@@ -23,12 +23,20 @@ class Secret(object):
         false_positives: list[str] = [],
     ) -> None:
         self.comment = comment
-        self.regex = regex
+
         try:
             self.regex_flags = [getattr(re, flag) for flag in regex_flags]
         except AttributeError:
             log.error("Invalid flags: %s" % self.regex_flags)
             self.regex_flags = []
+
+        if self.regex_flags:
+            flags = reduce(lambda x, y: x | y, self.regex_flags)
+        else:
+            flags = 0
+
+        self.regex = re.compile(".*" + regex + ".*", flags=flags)
+
         self.false_positives = false_positives
 
         self.secret = None
@@ -37,12 +45,7 @@ class Secret(object):
     def match(self, line):
         self.line = line
 
-        if self.regex_flags:
-            flags = reduce(lambda x, y: x | y, self.regex_flags)
-        else:
-            flags = 0
-
-        match = re.match(f".*{self.regex}.*", line, flags=flags)
+        match = self.regex.match(line)
 
         if match:
             self.secret = match.groupdict().get("secret", self.line)
