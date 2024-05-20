@@ -91,6 +91,20 @@ def get_hash(data):
     return content_hash
 
 
+def get_hash_of_file(path):
+    BUF_SIZE = 65536  # lets read stuff in 64kb chunks!
+
+    sha = hashlib.sha256()
+
+    with open(path, "rb") as f:
+        while True:
+            data = f.read(BUF_SIZE)
+            if not data:
+                break
+            sha.update(data)
+    return sha.hexdigest()
+
+
 def decode_bytes(data, file_type):
     """Decode bytes from all encodings"""
 
@@ -129,7 +143,7 @@ def find_secrets(content, secret_profiles):
     result = []
 
     for line in content.splitlines():
-        if not line:
+        if not line or len(line) > 1024:
             continue
 
         # find secret

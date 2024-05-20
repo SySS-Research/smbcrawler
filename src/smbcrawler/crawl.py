@@ -1,11 +1,13 @@
 import logging
 import threading
+import os
 import queue
 import re
 import sys
 
 from smbcrawler.shares import SMBShare
 from smbcrawler.profiles import find_matching_profile
+from smbcrawler.io import get_hash, get_hash_of_file
 
 from impacket.smbconnection import SMBConnection
 from impacket.smbconnection import SessionError
@@ -162,18 +164,33 @@ class CrawlerThread(threading.Thread):
         if profile.get("download", True) is False or self.app.disable_autodownload:
             return
 
+        name_hash = get_hash(
+            f"{self.current_target}\\{share}\\{f.get_full_path()}".encode()
+        )
+        local_path = os.path.join(self.app.crawl_dir, f"tmp.{name_hash}")
+        bytes_written = 0
+
         def download(data):
-            self.app.event_reporter.downloading_file(
-                self.current_target,
-                share,
-                f.get_full_path(),
-                data,
-            )
+            nonlocal bytes_written
+            limit = max(0, self.app.max_file_size - bytes_written)
+            if limit or f.high_value:
+                with open(local_path, "ab") as fp:
+                    bytes_written += fp.write(data[:limit])
 
         self.smbClient.getFile(
             str(share),
             f.get_full_path(),
             download,
+        )
+
+        f.content_hash = get_hash_of_file(local_path)
+
+        self.app.event_reporter.downloaded_file(
+            self.current_target,
+            share,
+            f.get_full_path(),
+            local_path,
+            f.content_hash,
         )
 
     @log_exceptions()

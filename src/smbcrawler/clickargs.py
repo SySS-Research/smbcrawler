@@ -89,6 +89,14 @@ def cli(crawl_file):
     "files, -1 lists everything",
 )
 @click.option(
+    "-m",
+    "--max-file_size",
+    default=200,
+    type=int,
+    show_default=True,
+    help="Maximum size of downloaded files in KiBi (unless high value)",
+)
+@click.option(
     "-w",
     "--check-write-access",
     is_flag=True,
@@ -149,6 +157,7 @@ def crawl(
     timeout,
     threads,
     depth,
+    max_file_size,
     check_write_access,
     disable_autodownload,
     extra_profile_directory,
@@ -181,6 +190,7 @@ def crawl(
         threads=threads,
         timeout=timeout,
         depth=depth,
+        max_file_size=max_file_size * 1024,
         check_write_access=check_write_access,
         disable_autodownload=disable_autodownload,
         profile_collection=profile_collection,

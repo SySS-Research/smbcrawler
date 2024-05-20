@@ -2,6 +2,7 @@ import sys
 import logging
 import queue
 import threading
+import os
 import time
 
 import smbcrawler.monkeypatch  # noqa monkeypatch impacket scripts
@@ -39,6 +40,7 @@ class CrawlerApp(object):
         check_write_access=False,
         crawl_printers_and_pipes=False,
         disable_autodownload=False,
+        max_file_size=1024 * 200,
         profile_collection=None,
         force=False,
         inputfilename=None,
@@ -46,6 +48,9 @@ class CrawlerApp(object):
     ):
         self.cmd = cmd
         self.crawl_file = crawl_file
+        # Create output dir
+        self.crawl_dir = self.crawl_file + ".d"
+        os.makedirs(self.crawl_dir, exist_ok=True)
 
         self.targets = get_targets(
             targets,
@@ -61,6 +66,7 @@ class CrawlerApp(object):
         self.depth = depth
         self.check_write_access = check_write_access
         self.crawl_printers_and_pipes = crawl_printers_and_pipes
+        self.max_file_size = max_file_size
         self.disable_autodownload = disable_autodownload
         self.force = force
 

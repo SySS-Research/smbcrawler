@@ -267,6 +267,7 @@ def samba_server_pool(smb_configs, tmp_path_factory, container_engine):
     for share in ["small", "big", "superbig"]:
         os.mkdir(tmp_path / share)
     open(tmp_path / "small" / "hello-world.txt", "w").write("Hello!\n")
+    open(tmp_path / "small" / "large-logon.ps1", "w").write("0" * (3 * 10**6))
     # This generates about 5MB worth of data in 794 files and 517 directories.
     # It also sprinkles some files with secrets in there
     create_random_file_structure(tmp_path / "big", 3, 5, 3, SECRETS)

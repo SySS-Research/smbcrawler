@@ -85,9 +85,9 @@ def init_db(path):
         maxed_out = peewee.BooleanField(null=True)
 
     class FileContents(BaseModel):
-        content = peewee.BlobField(unique=True)
-        content_hash = peewee.BlobField(unique=True, index=True)
+        content = peewee.BlobField(null=True)
         clean_content = peewee.TextField(null=True)
+        content_hash = peewee.BlobField(unique=True, index=True)
 
     class Path(BaseModel):
         name = peewee.CharField(index=True)
@@ -212,6 +212,7 @@ def insert_paths(models, target, share, paths):
                 target=str(target),
                 size=p.size,
                 high_value=p.high_value,
+                content_hash=p.content_hash,
             )
             recursive_insert(path_object, p.paths)
 

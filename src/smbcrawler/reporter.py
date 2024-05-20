@@ -7,7 +7,7 @@ import magic
 
 from smbcrawler.sql import QueuedDBWriter, DbLinkPaths, DbInsert, DbUpdate
 from smbcrawler.log import init_db_logger
-from smbcrawler.io import get_hash, convert, find_secrets
+from smbcrawler.io import convert, find_secrets
 
 
 log = logging.getLogger(__name__)
@@ -206,12 +206,22 @@ class EventReporter(object):
             "Crawling with non-default depth", extra=dict(target=target, share=share)
         )
 
-    def downloading_file(self, target, share, path, data):
-        content_hash = get_hash(data)
+    def downloaded_file(self, target, share, path, local_path, content_hash):
+        log.info("Downloaded", extra=dict(target=target, share=share, path=path))
+        data = open(local_path, "rb").read()
 
         try:
             row = self.db_instance.models["FileContents"].get(content_hash=content_hash)
+            # File already seen, delete
+            os.unlink(local_path)
         except peewee.DoesNotExist:
+            # New file
+            row = self.db_instance.models["FileContents"].create(
+                content_hash=content_hash,
+            )
+
+            new_filename = os.path.join(os.path.dirname(local_path), content_hash)
+            os.rename(local_path, new_filename)
             mime = magic.from_buffer(data, mime=True)
             file_type = magic.from_buffer(data)
 
@@ -223,27 +233,11 @@ class EventReporter(object):
                     exc_info=True,
                     extra=dict(target=target, share=share, path=path),
                 )
-                clean_content = None
+                clean_content = ""
             secrets = find_secrets(clean_content, self.profile_collection["secrets"])
-
-            if clean_content.encode() == data:
-                clean_content = None
-
-            row = self.db_instance.models["FileContents"].create(
-                content_hash=content_hash,
-                content=data,
-                clean_content=clean_content,
-            )
 
             for s in secrets:
                 self.found_secret(target, share, path, s, row)
-
-        # Write data to disk
-        dirname = self.db_instance.path + ".d"
-        os.makedirs(dirname, exist_ok=True)
-        path = os.path.join(dirname, content_hash)
-        with open(path, "wb") as f:
-            f.write(data)
 
     def skip_share(self, target, share):
         log.info(
