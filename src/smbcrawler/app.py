@@ -49,7 +49,7 @@ class CrawlerApp(object):
         self.cmd = cmd
         self.crawl_file = crawl_file
         # Create output dir
-        self.crawl_dir = self.crawl_file + ".d"
+        self.crawl_dir = str(self.crawl_file) + ".d"
         os.makedirs(self.crawl_dir, exist_ok=True)
 
         self.targets = get_targets(
