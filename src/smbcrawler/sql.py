@@ -92,8 +92,8 @@ def init_db(path):
     class Path(BaseModel):
         name = peewee.CharField(index=True)
         parent = peewee.ForeignKeyField("self", null=True, backref="children")
-        target = peewee.ForeignKeyField(Target, backref="paths")
-        share = peewee.ForeignKeyField(Share, backref="paths")
+        target = peewee.ForeignKeyField(Target)
+        share = peewee.ForeignKeyField(Share)
         size = peewee.IntegerField()
         content = peewee.ForeignKeyField(FileContents, backref="paths", null=True)
         high_value = peewee.BooleanField(default=False)

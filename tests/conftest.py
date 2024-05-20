@@ -386,6 +386,7 @@ def crawl_result(request, samba_server_pool, tmp_path_factory):
 @pytest.fixture(scope="session")
 def filter_crawl_result(request, crawl_result):
     criteria = request.param
+    breakpoint()
     if all(crawl_result["param"].get(key) == value for key, value in criteria.items()):
         return crawl_result
     pytest.skip(f"No matching craw_result for criteria: {criteria}")

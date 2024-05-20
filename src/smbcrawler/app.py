@@ -89,7 +89,7 @@ class CrawlerApp(object):
         self.event_reporter = EventReporter(self.db_instance, self.profile_collection)
 
         log.info("Starting up with these arguments: " + self.cmd)
-        log.info(
+        print(
             "Hit <space> for progress, <s> for a status update, and <p> for pause to skip shares or hosts"
         )
 
@@ -99,13 +99,13 @@ class CrawlerApp(object):
             log.debug(e, exc_info=True)
             log.critical("Exception caught, trying to exit gracefully...")
         except KeyboardInterrupt:
-            log.info("CTRL-C caught, trying to kill threads and exit gracefully...")
+            print("CTRL-C caught, trying to kill threads and exit gracefully...")
             try:
                 self.kill_threads()
             except (Exception, KeyboardInterrupt) as e:
                 log.debug(e, exc_info=True)
                 log.error("Exception during thread killing")
-        log.info("Finishing ...")
+        print("Finishing ...")
         self.event_reporter.close()
 
     def pause(self):
