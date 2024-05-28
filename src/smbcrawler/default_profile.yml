@@ -241,6 +241,9 @@ secrets:
     regex: "ConvertTo-SecureString .*"
     regex_flags:
       - IGNORECASE
+  TrackITPassword:
+    comment: "TrackIT uses a static key"
+    regex: 'TRACKIT_PASSWORD=(?P<secret>[A-Za-z0-9+/=]*)'
   PasswordConfig:
     comment: "'password =' in config"
     regex: '(password|pwd|passwd)[a-z]*\s*=\s*(?P<secret>..+)'
