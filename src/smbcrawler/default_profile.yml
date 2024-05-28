@@ -175,7 +175,7 @@ files:
     comment: "GnuPG - Encrypted private keys"
     high_value: true
   binaries:
-    regex: '.*\.(dll|exe|msi)$'
+    regex: '.*\.(dll|exe|msi|msp)$'
     comment:  "Very unlikely to contain passwords"
     download: false
   stylesheets:
