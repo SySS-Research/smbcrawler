@@ -114,7 +114,7 @@ class CrawlerThread(threading.Thread):
         self.app.event_reporter.share_finished(self.current_target, share)
 
     @log_exceptions(
-        silence=".*STATUS_ACCESS_DENIED|STATUS_NOT_SUPPORTED|STATUS_SHARING_VIOLATION.*"
+        silence=".*STATUS_ACCESS_DENIED|STATUS_NOT_SUPPORTED|STATUS_PATH_NOT_COVERED|STATUS_SHARING_VIOLATION.*"
     )
     def crawl_dir(self, share, depth, parent=None):
         if depth == 0:
