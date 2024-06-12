@@ -216,6 +216,8 @@ class CrawlerApp(object):
     def print_status(self):
         message = "Current threads:\n"
         for i, t in enumerate(self.threads):
+            if t.done:
+                continue
             message += f"{i}) \\\\{t.current_target}\\"
             if t.current_share:
                 message += f"{t.current_share}\\"
