@@ -210,34 +210,40 @@ class EventReporter(object):
         log.info("Downloaded", extra=dict(target=target, share=share, path=path))
         data = open(local_path, "rb").read()
 
-        try:
-            row = self.db_instance.models["FileContents"].get(content_hash=content_hash)
-            # File already seen, delete
-            os.unlink(local_path)
-        except peewee.DoesNotExist:
-            # New file
-            row = self.db_instance.models["FileContents"].create(
-                content_hash=content_hash,
-            )
-
-            new_filename = os.path.join(os.path.dirname(local_path), content_hash)
-            os.rename(local_path, new_filename)
-            mime = magic.from_buffer(data, mime=True)
-            file_type = magic.from_buffer(data)
-
+        with self.db_instance.lock:
             try:
-                clean_content = convert(data, mime, file_type)
-            except Exception:
-                log.debug(
-                    "Unable to parse",
-                    exc_info=True,
-                    extra=dict(target=target, share=share, path=path),
+                row = self.db_instance.models["FileContents"].get(
+                    content_hash=content_hash
                 )
-                clean_content = ""
-            secrets = find_secrets(clean_content, self.profile_collection["secrets"])
+                # File already seen, delete
+                os.unlink(local_path)
+            except peewee.DoesNotExist:
+                # New file
+                row = self.db_instance.models["FileContents"].create(
+                    content_hash=content_hash,
+                )
 
-            for s in secrets:
-                self.found_secret(target, share, path, s, row)
+                new_filename = os.path.join(os.path.dirname(local_path), content_hash)
+                os.rename(local_path, new_filename)
+                mime = magic.from_buffer(data, mime=True)
+                file_type = magic.from_buffer(data)
+
+                try:
+                    clean_content = convert(data, mime, file_type)
+                except Exception:
+                    log.debug(
+                        "Unable to parse",
+                        exc_info=True,
+                        extra=dict(target=target, share=share, path=path),
+                    )
+                    clean_content = ""
+
+                secrets = find_secrets(
+                    clean_content, self.profile_collection["secrets"]
+                )
+
+                for s in secrets:
+                    self.found_secret(target, share, path, s, row)
 
     def skip_share(self, target, share):
         log.info(

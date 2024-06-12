@@ -16,6 +16,7 @@ class DbInstance:
     database: peewee.SqliteDatabase
     models: typing.Dict[str, peewee.Model]
     path: str
+    lock: threading.Lock = threading.Lock()
 
 
 @dataclasses.dataclass
@@ -251,7 +252,8 @@ class QueuedDBWriter:
             self._commit()
 
     def _commit(self):
-        process_db_actions(self.db_instance, self._batch)
+        with self.db_instance.lock:
+            process_db_actions(self.db_instance, self._batch)
         self._batch = []
 
     def close(self, force=False):
