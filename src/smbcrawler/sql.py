@@ -20,19 +20,17 @@ class DbInstance:
 
 @dataclasses.dataclass
 class DbAction:
-    pass
+    model: str
+    data: dict
 
 
 @dataclasses.dataclass
 class DbInsert(DbAction):
-    model: str
-    data: dict
+    pass
 
 
 @dataclasses.dataclass
 class DbUpdate(DbAction):
-    model: str
-    data: dict
     filter_: dict
 
 

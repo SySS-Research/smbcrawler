@@ -90,7 +90,7 @@ class EventReporter(object):
 
     def share_finished(self, target, share):
         log.info("Share finished: %s", extra=dict(target=target, share=share))
-        self.db_queue.write(DbLinkPaths(target, share, share.paths))
+        self.db_queue.write(DbLinkPaths("Path", {}, target, share, share.paths))
 
     def process_path(self, target, share, path, size):
         self.db_queue.write(
