@@ -142,24 +142,6 @@ def memoized_get(model, *args, **kwargs):
     return model.get(**args, **kwargs)
 
 
-def replace_foreign_keys(models, db_action: DbAction):
-    """Replace strings that represent a foreign relationship with the
-    respective object"""
-
-    m = models[db_action.model]
-    data = db_action.data
-
-    if db_action.model in ["event", "logitem"]:
-        target = data["name"]
-        if target:
-            data["name"] = memoized_get(m, m.name == target)
-
-        m = models["Share"]
-        share = data["share"]
-        if target and share:
-            data["share"] = memoized_get(m, m.target == target & m.name == share)
-
-
 def process_db_actions(db_instance, db_actions):
     database = db_instance.database
     models = db_instance.models
@@ -177,10 +159,8 @@ def process_db_actions(db_instance, db_actions):
             # Else, insert new object.
 
             if isinstance(db_action, DbInsert):
-                replace_foreign_keys(models, db_action)
                 models[db_action.model].create(**db_action.data)
             elif isinstance(db_action, DbUpdate):
-                replace_foreign_keys(models, db_action)
                 query = [
                     getattr(models[db_action.model], k) == v
                     for k, v in db_action.filter_.items()
