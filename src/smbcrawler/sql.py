@@ -171,7 +171,7 @@ def process_db_actions(db_instance, db_actions):
                     .where(*query)
                     .execute()
                 )
-                assert updated_rows
+                assert updated_rows, f"Row updated failed: {db_action.filter_}"
             elif isinstance(db_action, DbLinkPaths):
                 insert_paths(models, db_action.target, db_action.share, db_action.paths)
 
