@@ -118,7 +118,10 @@ class CrawlerThread(threading.Thread):
 
     @log_exceptions()
     def crawl_dir(self, share, depth, parent=None):
+        share.add_read_level(depth)
+
         if depth == 0:
+            share.maxed_out = False
             self.app.event_reporter.depth_limit_reached(self.current_target, share)
             return
 

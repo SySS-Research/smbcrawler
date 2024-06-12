@@ -77,6 +77,8 @@ class SMBShare(object):
         self.event_reporter = app.event_reporter
         self.profile_collection = app.profile_collection
         self.current_path = None
+        self.read_level = None
+        self.maxed_out = None
 
     def __str__(self):
         return self.name
@@ -158,3 +160,9 @@ class SMBShare(object):
                 return 0
         else:
             return depth
+
+    def add_read_level(self, depth):
+        """Increase the deepest read level we have seen on this share"""
+        if self.read_level is None:
+            self.read_level = []
+        self.read_level.append(depth)

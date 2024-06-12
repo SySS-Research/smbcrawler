@@ -2,7 +2,6 @@ import os
 import logging
 import tempfile
 
-import peewee
 import magic
 
 from smbcrawler.sql import QueuedDBWriter, DbLinkPaths, DbInsert, DbUpdate
@@ -16,8 +15,7 @@ log = logging.getLogger(__name__)
 class EventReporter(object):
     """
     All events that occurred that should be reported to the user somehow go
-    through
-    here.
+    through here.
     """
 
     def __init__(self, db_instance, profile_collection):
@@ -91,6 +89,22 @@ class EventReporter(object):
     def share_finished(self, target, share):
         log.info("Share finished: %s", extra=dict(target=target, share=share))
         self.db_queue.write(DbLinkPaths("Path", {}, target, share, share.paths))
+        read_level = max(share.read_level or [0]) - min(share.read_level or [0])
+        if share.maxed_out is None and share.read_level:
+            maxed_out = True
+        else:
+            maxed_out = False
+
+        self.db_queue.write(
+            DbUpdate(
+                "Share",
+                dict(
+                    read_level=read_level,
+                    maxed_out=maxed_out,
+                ),
+                filter_={"target": str(target), "name": share.name},
+            )
+        )
 
     def process_path(self, target, share, path, size):
         self.db_queue.write(
@@ -103,7 +117,7 @@ class EventReporter(object):
             DbUpdate(
                 "Share",
                 dict(target=str(target), name=share, maxed_out=False),
-                filter_={"target": str(target), "name": share},
+                filter_={"target": str(target), "name": share.name},
             )
         )
 
@@ -171,7 +185,7 @@ class EventReporter(object):
             ),
         )
 
-    def found_secret(self, target, share, path, secret, content):
+    def found_secret(self, target, share, path, secret, content_hash):
         log.success(
             f"Found potential secret ({secret['comment']}): {secret['secret']}",
             extra=dict(
@@ -181,7 +195,9 @@ class EventReporter(object):
             ),
         )
 
-        self.db_queue.write(DbInsert("Secret", {"content": content, **secret}))
+        self.db_queue.write(
+            DbInsert("Secret", {"content_hash": content_hash, **secret})
+        )
 
     def found_high_value_file(self, target, share, path, comment):
         log.success(
@@ -209,42 +225,36 @@ class EventReporter(object):
 
     def downloaded_file(self, target, share, path, local_path, content_hash):
         log.info("Downloaded", extra=dict(target=target, share=share, path=path))
+
+        new_filename = os.path.join(os.path.dirname(local_path), content_hash)
+
+        if os.path.exists(new_filename):
+            # File already seen, discard
+            os.unlink(local_path)
+            return
+
         data = open(local_path, "rb").read()
+        os.rename(local_path, new_filename)
+        mime = magic.from_buffer(data, mime=True)
+        file_type = magic.from_buffer(data)
 
-        with self.db_instance.lock:
-            try:
-                row = self.db_instance.models["FileContents"].get(
-                    content_hash=content_hash
-                )
-                # File already seen, delete
-                os.unlink(local_path)
-            except peewee.DoesNotExist:
-                # New file
-                row = self.db_instance.models["FileContents"].create(
-                    content_hash=content_hash,
-                )
+        try:
+            clean_content = convert(data, mime, file_type)
+        except Exception:
+            log.debug(
+                "Unable to parse",
+                exc_info=True,
+                extra=dict(target=target, share=share, path=path),
+            )
+            return
 
-                new_filename = os.path.join(os.path.dirname(local_path), content_hash)
-                os.rename(local_path, new_filename)
-                mime = magic.from_buffer(data, mime=True)
-                file_type = magic.from_buffer(data)
+        if clean_content.encode() != data:
+            open(new_filename + ".txt", "r").write(clean_content)
 
-                try:
-                    clean_content = convert(data, mime, file_type)
-                except Exception:
-                    log.debug(
-                        "Unable to parse",
-                        exc_info=True,
-                        extra=dict(target=target, share=share, path=path),
-                    )
-                    clean_content = ""
+        secrets = find_secrets(clean_content, self.profile_collection["secrets"])
 
-                secrets = find_secrets(
-                    clean_content, self.profile_collection["secrets"]
-                )
-
-                for s in secrets:
-                    self.found_secret(target, share, path, s, row)
+        for s in secrets:
+            self.found_secret(target, share, path, s, content_hash)
 
     def skip_share(self, target, share):
         log.info(
