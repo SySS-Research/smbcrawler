@@ -48,7 +48,10 @@ def test_profile_high_value_file(profile_collection):
     "content,expected",
     [
         ("foo <Password><Value>thesecret</Value></Password bar", "thesecret"),
-        ("net use /user:admin thesecret x:", "thesecret"),
+        ("net use x: \\\\host\\share /user:admin thesecret", "thesecret"),
+        ("net use x: \\\\host\\share /user:admin thesecret /persist:no", "thesecret"),
+        ("net use x: \\\\host\\share thesecret /user:admin", "thesecret"),
+        ("net use x: \\\\host\\share thesecret /user:admin /persist:no", "thesecret"),
         ("foo runas /user:admin thesecret", "thesecret"),
         ("foo RunAs.exe /user:admin thesecret", "thesecret"),
         ("foo ConvertTo-SecureString thesecret", "thesecret"),

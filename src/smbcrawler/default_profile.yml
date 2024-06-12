@@ -228,7 +228,13 @@ secrets:
       - IGNORECASE
   NetUser:
     comment: "'net use' command in script"
-    regex: "net use.*/user.*"
+    regex: 'net use .*\\.*/user:.* (?P<secret>[^/> ]+)'
+    regex_flags:
+      - IGNORECASE
+  NetUserAlt:
+    # alternative regex
+    comment: "'net use' command in script"
+    regex: 'net use .*\\.* (?P<secret>[^/> ]+).*/user:'
     regex_flags:
       - IGNORECASE
   RunAs:
