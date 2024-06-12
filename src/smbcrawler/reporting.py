@@ -90,8 +90,6 @@ def run_query(pathToSqliteDb: str, query: str) -> list[dict]:
     connection.row_factory = dict_factory
     cursor = connection.cursor()
     cursor.execute(query)
-    # fetchall as result
     results = cursor.fetchall()
-    # close connection
     connection.close()
     return results
