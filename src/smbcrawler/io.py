@@ -150,8 +150,13 @@ def find_secrets(content, secret_profiles):
         for s in secret_profiles.values():
             s.match(line)
             if s.secret:
-                result.append({"secret": s.secret, "line": line})
-                break
+                result.append(
+                    {
+                        "secret": s.secret.strip(),
+                        "line": line.strip(),
+                        "comment": s.comment,
+                    }
+                )
 
     return result
 
