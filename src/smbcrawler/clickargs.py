@@ -233,7 +233,16 @@ def showlog():
 @click.option(
     "-s",
     "--section",
-    type=click.Choice(["summary", "targets", "shares", "secrets", "secrets_unique"]),
+    type=click.Choice(
+        [
+            "summary",
+            "targets",
+            "shares",
+            "secrets",
+            "secrets_unique",
+            "high_value_files",
+        ]
+    ),
     help="Only output this section of the report",
 )
 @click.argument("outputfile", type=click.File("w"), default="-")
