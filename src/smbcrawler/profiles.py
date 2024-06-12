@@ -157,7 +157,7 @@ def collect_profiles(
     return ProfileCollection(result)
 
 
-def parse_acces_path(path):
+def parse_access_path(path):
     # Regular expression to match keys, including those in quotes
     key_regex = re.compile(r'(?:\[["\'](.*?)["\']\])|([^.]+)')
 
@@ -177,7 +177,7 @@ def parse_acces_path(path):
 
 
 def update_nested_dict(nested_dict, path, value):
-    keys = parse_acces_path(path)
+    keys = parse_access_path(path)
     d = nested_dict
     for key in keys[:-1]:
         d = d.setdefault(key, {})
