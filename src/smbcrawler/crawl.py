@@ -9,6 +9,7 @@ from smbcrawler.shares import SMBShare
 from smbcrawler.profiles import find_matching_profile
 from smbcrawler.io import get_hash, get_hash_of_file
 
+from impacket.nmb import NetBIOSError
 from impacket.smbconnection import SMBConnection
 from impacket.smbconnection import SessionError
 
@@ -17,7 +18,7 @@ PYTEST_ENV = "pytest" in sys.modules
 log = logging.getLogger(__name__)
 
 
-def log_exceptions(silence=""):
+def log_exceptions(silence="", ignore_type=(SessionError, NetBIOSError)):
     """Catch the exception, log it, and don't reraise it
 
     `silence` is a regex; if it matches, the exception is silently supressed
@@ -34,7 +35,9 @@ def log_exceptions(silence=""):
                     func.__name__,
                     str(e),
                 )
-                if not (silence and re.match(silence, msg)):
+                if not isinstance(e, ignore_type) and not (
+                    silence and re.match(silence, msg)
+                ):
                     log.error(msg)
                 log.debug(msg, exc_info=True)
 
@@ -104,7 +107,7 @@ class CrawlerThread(threading.Thread):
         self.app.event_reporter.skip_host(self.current_target)
         self._skip_host = True
 
-    @log_exceptions(silence=".*STATUS_CONNECTION_REFUSED|STATUS_ACCESS_DENIED.*")
+    @log_exceptions()
     def crawl_share(self, share, depth=0):
         self._skip_share = False
 
@@ -113,9 +116,7 @@ class CrawlerThread(threading.Thread):
 
         self.app.event_reporter.share_finished(self.current_target, share)
 
-    @log_exceptions(
-        silence=".*STATUS_ACCESS_DENIED|STATUS_NOT_SUPPORTED|STATUS_PATH_NOT_COVERED|STATUS_SHARING_VIOLATION.*"
-    )
+    @log_exceptions()
     def crawl_dir(self, share, depth, parent=None):
         if depth == 0:
             self.app.event_reporter.depth_limit_reached(self.current_target, share)
@@ -143,9 +144,7 @@ class CrawlerThread(threading.Thread):
             else:
                 self.process_file(share, f)
 
-    @log_exceptions(
-        silence=".*STATUS_ACCESS_DENIED|STATUS_NOT_SUPPORTED|STATUS_SHARING_VIOLATION.*"
-    )
+    @log_exceptions()
     def process_file(self, share, f):
         profile = find_matching_profile(
             self.app.profile_collection, "files", f.get_longname()
