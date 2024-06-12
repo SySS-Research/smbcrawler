@@ -269,7 +269,7 @@ class CrawlerThread(threading.Thread):
             profile = find_matching_profile(
                 self.app.profile_collection, "shares", share_name
             )
-            if profile and profile["high_value"]:
+            if profile and profile.get("high_value") and share.permissions["list_root"]:
                 self.app.event_reporter.found_high_value_share(
                     self.current_target, share_name
                 )
