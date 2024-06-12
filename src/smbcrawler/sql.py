@@ -83,22 +83,17 @@ def init_db(path):
         read_level = peewee.IntegerField(null=True)
         maxed_out = peewee.BooleanField(null=True)
 
-    class FileContents(BaseModel):
-        content = peewee.BlobField(null=True)
-        clean_content = peewee.TextField(null=True)
-        content_hash = peewee.BlobField(unique=True, index=True)
-
     class Path(BaseModel):
         name = peewee.CharField(index=True)
         parent = peewee.ForeignKeyField("self", null=True, backref="children")
         target = peewee.ForeignKeyField(Target)
         share = peewee.ForeignKeyField(Share)
         size = peewee.IntegerField()
-        content = peewee.ForeignKeyField(FileContents, backref="paths", null=True)
+        content_hash = peewee.BlobField(index=True, null=True)
         high_value = peewee.BooleanField(default=False)
 
     class Secret(BaseModel):
-        content = peewee.ForeignKeyField(FileContents, backref="finding_secrets")
+        content_hash = peewee.BlobField(unique=True, index=True)
         line = peewee.CharField()
         secret = peewee.CharField()
 
