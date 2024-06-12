@@ -183,9 +183,10 @@ class EventReporter(object):
 
         self.db_queue.write(DbInsert("Secret", {"content": content, **secret}))
 
-    def found_high_value_file(self, target, share, path):
+    def found_high_value_file(self, target, share, path, comment):
         log.success(
-            "Found high value file", extra=dict(target=target, share=share, path=path)
+            f"Found high value file ({comment})",
+            extra=dict(target=target, share=share, path=path),
         )
 
     def found_high_value_share(self, target, share):
