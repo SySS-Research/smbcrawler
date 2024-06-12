@@ -20,7 +20,13 @@ def deactivate_password_prompt(ctx, param, value):
     "-d",
     "--debug",
     is_flag=True,
-    help="Show debug output",
+    help="Show debug output (implies --verbose)",
+)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    help="Show verbose output",
 )
 @click.option(
     "-C",
@@ -29,7 +35,7 @@ def deactivate_password_prompt(ctx, param, value):
     show_default=True,
     help="Path to output file",
 )
-def cli(debug, crawl_file):
+def cli(debug, verbose, crawl_file):
     pass
 
 
@@ -184,7 +190,12 @@ def crawl(
     from smbcrawler.log import init_logger
     from smbcrawler.profiles import collect_profiles
 
-    init_logger(debug=ctx.parent.params["debug"])
+    log_level = "WARN"
+    if ctx.parent.params["verbose"]:
+        log_level = "INFO"
+    if ctx.parent.params["debug"]:
+        log_level = "DEBUG"
+    init_logger(log_level=log_level)
     profile_collection = collect_profiles(
         extra_profile_directory, extra_profile_file, update_profile
     )
