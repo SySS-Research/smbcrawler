@@ -58,8 +58,8 @@ def insert_summary(report: dict) -> None:
     summary = {
         "Total targets": len(report["targets"]),
         "Targets with open ports": sum(1 for t in report["targets"] if t["port_open"]),
-        "Targets with at least one share": sum(
-            1 for s in report["shares"] if s.get("target_id")
+        "Targets with at least one share": len(
+            {s["target_id"] for s in report["shares"] if s.get("target_id")}
         ),
         "Total secrets": len(report["secrets"]),
         "Unique secrets": len(report["secrets_unique"]),
