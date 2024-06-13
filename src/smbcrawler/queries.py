@@ -4,7 +4,7 @@ WITH RECURSIVE FullPath AS (
     SELECT
         p.id,
         p.parent_id,
-        p.content_id,
+        p.content_hash,
         t.name AS target_name,
         s.name AS share_name,
         p.name AS path
@@ -23,7 +23,7 @@ WITH RECURSIVE FullPath AS (
     SELECT
         p.id,
         p.parent_id,
-        fp.content_id,
+        fp.content_hash,
         fp.target_name,
         fp.share_name,
         p.name || '\\' || fp.path AS path
@@ -34,7 +34,7 @@ WITH RECURSIVE FullPath AS (
 )
 -- Final selection from the recursive CTE, filtering for root nodes
 SELECT DISTINCT
-    target_name, share_name, path, content_id
+    target_name, share_name, path, content_hash
 FROM
     FullPath
 WHERE parent_id IS NULL
