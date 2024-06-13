@@ -9,7 +9,7 @@ from smbcrawler.shares import SMBShare
 from smbcrawler.profiles import find_matching_profile
 from smbcrawler.io import get_hash, get_hash_of_file
 
-from impacket.nmb import NetBIOSError
+from impacket.nmb import NetBIOSError, NetBIOSTimeout
 from impacket.smbconnection import SMBConnection
 from impacket.smbconnection import SessionError
 
@@ -18,7 +18,9 @@ PYTEST_ENV = "pytest" in sys.modules
 log = logging.getLogger(__name__)
 
 
-def log_exceptions(silence="", ignore_type=(SessionError, NetBIOSError)):
+def log_exceptions(
+    silence="", ignore_type=(SessionError, NetBIOSError, NetBIOSTimeout)
+):
     """Catch the exception, log it, and don't reraise it
 
     `silence` is a regex; if it matches, the exception is silently supressed
