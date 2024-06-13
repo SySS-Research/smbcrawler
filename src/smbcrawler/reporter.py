@@ -249,7 +249,7 @@ class EventReporter(object):
             return
 
         if clean_content.encode() != data:
-            open(new_filename + ".txt", "r").write(clean_content)
+            open(new_filename + ".txt", "w").write(clean_content)
 
         secrets = find_secrets(clean_content, self.profile_collection["secrets"])
 
