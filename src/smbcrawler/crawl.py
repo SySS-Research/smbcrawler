@@ -160,7 +160,7 @@ class CrawlerThread(threading.Thread):
 
         if profile.get("high_value"):
             self.app.event_reporter.found_high_value_file(
-                self.current_target, share, f.get_full_path(), profile.get("comment")
+                self.current_target, share, f.get_full_path(), profile
             )
             f.high_value = True
 

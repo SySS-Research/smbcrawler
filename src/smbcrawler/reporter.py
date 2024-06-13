@@ -199,9 +199,14 @@ class EventReporter(object):
             DbInsert("Secret", {"content_hash": content_hash, **secret})
         )
 
-    def found_high_value_file(self, target, share, path, comment):
+    def found_high_value_file(self, target, share, path, profile):
+        if profile["download"]:
+            verb = "Found"
+        else:
+            verb = "Seen"
+        comment = profile["comment"]
         log.success(
-            f"Found high value file ({comment})",
+            f"{verb} high value file ({comment})",
             extra=dict(target=target, share=share, path=path),
         )
 
