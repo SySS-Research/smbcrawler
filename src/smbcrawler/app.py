@@ -113,6 +113,7 @@ class CrawlerApp(object):
                 log.error("Exception during thread killing")
         print("Finishing ...")
         self.event_reporter.close()
+        print("Done. Use `smbcrawler report` to analyze results.")
 
     def pause(self):
         # Use print because log level might not be high enough
