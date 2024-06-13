@@ -46,8 +46,14 @@ def test_profile_high_value_file(profile_collection):
 # Test all the secret regexes contained in the default profile
 @pytest.mark.parametrize(
     "content,expected",
+    # Use expected=None if no result is expected
+    # Use expected="" if a result is expected, but no secret can be extracted
     [
         ("foo <Password><Value>thesecret</Value></Password bar", "thesecret"),
+        (
+            "foo <Password><Value>*SENSITIVE*DATA*DELETED*</Value></Password bar",
+            None,
+        ),
         ("net use x: \\\\host\\share /user:admin thesecret", "thesecret"),
         ("net use x: \\\\host\\share /user:admin thesecret /persist:no", "thesecret"),
         ("net use x: \\\\host\\share thesecret /user:admin", "thesecret"),
@@ -57,22 +63,22 @@ def test_profile_high_value_file(profile_collection):
         ("foo ConvertTo-SecureString thesecret", "thesecret"),
         ("foo password=thesecret bar", "thesecret"),
         ("foo password = thesecret bar", "thesecret"),
-        ("----- BEGIN PRIVATE KEY -----", None),
-        ("----- BEGIN RSA PRIVATE KEY -----", None),
+        ("----- BEGIN PRIVATE KEY -----", ""),
+        ("----- BEGIN RSA PRIVATE KEY -----", ""),
         ("foo https://username:thesecret@host:80/fs bar", "thesecret"),
         ("foo http://user:pass@hostname.com", "user:pass"),
         ("foo https://user:pass@192.168.1.1 bar", "user:pass"),
         ("foo ftp://user:pass@ftp.server.com bar", "user:pass"),
         ("foo git+ssh://user:pass@ftp.server.com bar", "user:pass"),
-        ('foo cpassword="ABKRDJALKSasldkdsfa8924+sdf/fsdfk3=" bar', None),
+        ('foo cpassword="ABKRDJALKSasldkdsfa8924+sdf/fsdfk3=" bar', ""),
         ("foo <adminpass>thesecret</adminpass> bar", "thesecret"),
         ("    password: thesecret", "thesecret"),
         ('foo    "passwd": "thesecret"', "thesecret"),
         ("foo Kennwort: thesecret", "thesecret"),
         ("foo PASSWORD_SETUP=thesecret", "thesecret"),
         ("foo PASSWORD_EIS=thesecret", "thesecret"),
-        ("foo k4AlddsflASkfwwSNdsflASkfwwSNsfl+/ASkfwwSNFslkfd2392=", None),
-        ("foo k4AlddsflASkfwwSNdsflASkfwwSNsfl+/ASkfwwSNFslkfd2392", None),
+        ("foo k4AlddsflASkfwwSNdsflASkfwwSNsfl+/ASkfwwSNFslkfd2392=", ""),
+        ("foo k4AlddsflASkfwwSNdsflASkfwwSNsfl+/ASkfwwSNFslkfd2392", ""),
     ],
 )
 def test_profile_secrets(content, expected, profile_collection):
@@ -80,8 +86,12 @@ def test_profile_secrets(content, expected, profile_collection):
 
     result = find_secrets(content, profile_collection["secrets"])
 
+    if expected is None:
+        return
+
     assert result
     result = result[0]
     assert result["line"] in content
+
     if expected:
         assert expected in result["secret"]
