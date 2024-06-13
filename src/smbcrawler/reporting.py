@@ -84,7 +84,10 @@ def run_query(pathToSqliteDb: str, query: str) -> list[dict]:
     def dict_factory(curs, row):
         d = {}
         for idx, col in enumerate(curs.description):
-            d[col[0]] = row[idx]
+            val = row[idx]
+            if isinstance(val, bytes):
+                val = val.decode()
+            d[col[0]] = val
         return d
 
     connection.row_factory = dict_factory
