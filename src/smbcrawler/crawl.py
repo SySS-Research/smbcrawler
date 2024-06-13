@@ -17,6 +17,8 @@ PYTEST_ENV = "pytest" in sys.modules
 
 log = logging.getLogger(__name__)
 
+FILE_LOCK = threading.Lock()
+
 
 def log_exceptions(
     silence="", ignore_type=(SessionError, NetBIOSError, NetBIOSTimeout)
@@ -189,13 +191,14 @@ class CrawlerThread(threading.Thread):
 
         f.content_hash = get_hash_of_file(local_path)
 
-        self.app.event_reporter.downloaded_file(
-            self.current_target,
-            share,
-            f.get_full_path(),
-            local_path,
-            f.content_hash,
-        )
+        with FILE_LOCK:
+            self.app.event_reporter.downloaded_file(
+                self.current_target,
+                share,
+                f.get_full_path(),
+                local_path,
+                f.content_hash,
+            )
 
     @log_exceptions()
     def process_directory(self, share, f, depth):
