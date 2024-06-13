@@ -89,11 +89,11 @@ def init_db(path):
         target = peewee.ForeignKeyField(Target)
         share = peewee.ForeignKeyField(Share)
         size = peewee.IntegerField()
-        content_hash = peewee.BlobField(index=True, null=True)
+        content_hash = peewee.BlobField(null=True)
         high_value = peewee.BooleanField(default=False)
 
     class Secret(BaseModel):
-        content_hash = peewee.BlobField(unique=True, index=True)
+        content_hash = peewee.BlobField()
         line = peewee.CharField()
         secret = peewee.CharField()
 
