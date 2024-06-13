@@ -122,6 +122,8 @@ files:
   unattend_xml:
     regex: 'unattend.*\.xml'
     comment: "Windows installation files - Plain text passwords"
+    false_positives:
+      - '*SENSITIVE*DATA*DELETED*'
   bash_history:
     regex: '\.bash_history'
     comment: "Bash History - Plain text passwords"
