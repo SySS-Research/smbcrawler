@@ -226,9 +226,12 @@ def crawl(
 
 
 @click.command(**help_alias)
-def showlog():
+@click.pass_context
+def showlog(ctx):
     """Show the log file"""
-    click.echo("Log file ...")
+    from smbcrawler.reporting import show_log
+
+    show_log(ctx.parent.params["crawl_file"])
 
 
 @click.command(**help_alias)

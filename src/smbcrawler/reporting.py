@@ -96,3 +96,10 @@ def run_query(pathToSqliteDb: str, query: str) -> list[dict]:
     results = cursor.fetchall()
     connection.close()
     return results
+
+
+def show_log(crawl_file):
+    log = run_query(crawl_file, "SELECT * FROM LogItem")
+    for line in log:
+        msg = "{level[0]} [{timestamp}] {message}".format(**line)
+        print(msg)
