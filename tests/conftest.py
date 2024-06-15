@@ -354,9 +354,11 @@ def spin_up_samba(engine, ip_address, share_dir, config, container_id):
 def crawl_result(request, samba_server_pool, tmp_path_factory):
     tmp_path = tmp_path_factory.mktemp("output")
 
+    import logging
     from smbcrawler.log import init_logger
+    from smbcrawler.profiles import collect_profiles
 
-    init_logger()
+    init_logger(log_level="INFO")
 
     login = request.param["login"]
     targets = request.param["targets"] or list(samba_server_pool.values())
@@ -366,6 +368,8 @@ def crawl_result(request, samba_server_pool, tmp_path_factory):
     crawl_file = tmp_path / "output.crwl"
     assert not os.path.isfile(crawl_file)
 
+    logger = logging.getLogger("__name__")
+    logger.debug(kwargs)
     app = CrawlerApp(
         login,
         targets=targets,

@@ -25,6 +25,7 @@ def test_base_guest_access(filter_crawl_result):
 def test_full(filter_crawl_result):
     data = filter_crawl_result["data"]
     assert data
+    assert data["secret"]
 
 
 @pytest.fixture
