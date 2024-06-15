@@ -12,6 +12,7 @@ from smbcrawler.io import get_hash, get_hash_of_file
 from impacket.nmb import NetBIOSError, NetBIOSTimeout
 from impacket.smbconnection import SMBConnection
 from impacket.smbconnection import SessionError
+from impacket.smb3 import SessionError as smb3SessionError
 
 PYTEST_ENV = "pytest" in sys.modules
 
@@ -21,7 +22,8 @@ FILE_LOCK = threading.Lock()
 
 
 def log_exceptions(
-    silence="", ignore_type=(SessionError, NetBIOSError, NetBIOSTimeout)
+    silence="",
+    ignore_type=(smb3SessionError, SessionError, NetBIOSError, NetBIOSTimeout),
 ):
     """Catch the exception, log it, and don't reraise it
 

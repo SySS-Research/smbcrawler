@@ -126,7 +126,7 @@ class SMBShare(object):
             self.smbClient.createDirectory(str(self), dirname)
             self.permissions["write"] = True
             log.debug("%s is writable" % self)
-        except impacket.smb3.SessionError:
+        except (impacket.smb3.SessionError, impacket.smbconnection.SessionError):
             log.debug("%s is readonly" % self, exc_info=False)
             return
 
