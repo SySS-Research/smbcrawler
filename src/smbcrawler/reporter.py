@@ -200,11 +200,11 @@ class EventReporter(object):
         )
 
     def found_high_value_file(self, target, share, path, profile):
-        if profile["download"]:
+        if profile.get("download", True):
             verb = "Found"
         else:
             verb = "Seen"
-        comment = profile["comment"]
+        comment = profile.get("comment")
         log.success(
             f"{verb} high value file ({comment})",
             extra=dict(target=target, share=share, path=path),
