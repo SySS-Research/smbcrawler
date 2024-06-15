@@ -44,9 +44,7 @@ class CrawlerApp(object):
         profile_collection=None,
         force=False,
         inputfilename=None,
-        cmd="",
     ):
-        self.cmd = cmd
         self.crawl_file = crawl_file
         # Create output dir
         self.crawl_dir = str(self.crawl_file) + ".d"
@@ -94,7 +92,6 @@ class CrawlerApp(object):
         self.db_instance = init_db(self.crawl_file)
         self.event_reporter = EventReporter(self.db_instance, self.profile_collection)
 
-        log.info("Starting up with these arguments: " + self.cmd)
         print(
             "Hit <space> for progress, <s> for a status update, and <p> for pause to skip shares or hosts"
         )

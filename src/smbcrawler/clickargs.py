@@ -186,6 +186,7 @@ def crawl(
     """
     import shlex
     import sys
+    import logging
     from smbcrawler.app import CrawlerApp, Login
     from smbcrawler.log import init_logger
     from smbcrawler.profiles import collect_profiles
@@ -200,6 +201,12 @@ def crawl(
         extra_profile_directory, extra_profile_file, update_profile
     )
 
+    logger = logging.getLogger(__name__)
+    cmd = " ".join(
+        shlex.quote(arg if arg not in [password, nthash] else "***") for arg in sys.argv
+    )
+    logger.info(f"Starting up with these arguments: {cmd}")
+
     app = CrawlerApp(
         Login(user, domain, password, nthash),
         targets=target,
@@ -213,10 +220,6 @@ def crawl(
         profile_collection=profile_collection,
         force=force,
         inputfilename=input,
-        cmd=" ".join(
-            shlex.quote(arg if arg not in [password, nthash] else "***")
-            for arg in sys.argv
-        ),
     )
 
     if dry_run:
