@@ -360,6 +360,7 @@ def crawl_result(request, samba_server_pool, tmp_path_factory):
 
     login = request.param["login"]
     targets = request.param["targets"] or list(samba_server_pool.values())
+    profile_collection = collect_profiles()
     kwargs = request.param["kwargs"]
 
     crawl_file = tmp_path / "output.crwl"
@@ -369,6 +370,7 @@ def crawl_result(request, samba_server_pool, tmp_path_factory):
         login,
         targets=targets,
         crawl_file=crawl_file,
+        profile_collection=profile_collection,
         **kwargs,
     )
 
