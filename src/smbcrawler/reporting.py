@@ -1,6 +1,8 @@
+import csv
+import io
 import json
-import yaml
 import sqlite3
+import yaml
 
 from smbcrawler import queries
 
@@ -15,6 +17,23 @@ def generate(crawl_file, format, outputfile, section=None):
         output = json.dumps(report)
     elif format == "yaml":
         output = yaml.dump(report)
+    elif format == "csv":
+        if isinstance(report, dict):
+            report = [report]
+        skip_header = False
+        for i, line in enumerate(report):
+            if not isinstance(line, dict):
+                skip_header = True
+                report[i] = {"value": line}
+
+        fieldnames = report[0].keys()
+
+        output_io = io.StringIO()
+        writer = csv.DictWriter(output_io, fieldnames=fieldnames, delimiter="\t")
+        if not skip_header:
+            writer.writeheader()
+        writer.writerows(report)
+        output = output_io.getvalue()
     elif format == "html":
         output = generate_html(report, crawl_file)
 

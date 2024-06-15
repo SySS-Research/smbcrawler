@@ -242,7 +242,7 @@ def showlog(ctx):
 @click.option(
     "-f",
     "--format",
-    type=click.Choice(["html", "json", "yaml"]),
+    type=click.Choice(["html", "json", "yaml", "csv"]),
     default="html",
     show_default=True,
     help="Output format",
