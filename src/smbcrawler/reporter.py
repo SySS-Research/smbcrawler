@@ -6,7 +6,7 @@ import magic
 
 from smbcrawler.sql import QueuedDBWriter, DbLinkPaths, DbInsert, DbUpdate
 from smbcrawler.log import init_db_logger
-from smbcrawler.io import convert, find_secrets
+from smbcrawler.io import convert, find_secrets, create_link
 
 
 log = logging.getLogger(__name__)
@@ -232,6 +232,7 @@ class EventReporter(object):
         log.info("Downloaded", extra=dict(target=target, share=share, path=path))
 
         new_filename = os.path.join(os.path.dirname(local_path), content_hash)
+        create_link(str(target), str(share), path, new_filename)
 
         if os.path.exists(new_filename):
             # File already seen, discard

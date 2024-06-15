@@ -1,4 +1,5 @@
 import io
+import os
 import re
 import ipaddress
 import sys
@@ -165,3 +166,13 @@ def sanitize(remark):
     """Remove unwanted characters"""
     result = "".join([x for x in remark if ord(x) >= 32])
     return result
+
+
+def create_link(target, share, path, src):
+    local_path = os.path.join(os.path.dirname(src), "tree")
+    for part in [target, share] + path.split("\\"):
+        os.makedirs(local_path, exist_ok=True)
+        local_path = os.path.join(local_path, part)
+        src = os.path.join("..", src)
+    src = os.path.join("..", src)
+    os.symlink(src, local_path)
