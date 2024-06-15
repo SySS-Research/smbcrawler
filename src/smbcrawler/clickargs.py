@@ -260,6 +260,7 @@ def showlog(ctx):
             "high_value_files",
         ]
     ),
+    default="summary",
     help="Only output this section of the report",
 )
 @click.argument("outputfile", type=click.File("w"), default="-")

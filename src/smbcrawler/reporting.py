@@ -53,6 +53,7 @@ def generate_report(crawl_file):
         crawl_file,
         queries.high_value_shares,
     )
+    # TODO undeleted directories
 
     result = {
         "secrets_unique": list(set(s["secret"] for s in secrets)),
@@ -94,7 +95,7 @@ def insert_summary(report: dict) -> None:
 
 
 def generate_html(report, crawl_file) -> str:
-    pass
+    raise NotImplementedError
 
 
 def run_query(pathToSqliteDb: str, query: str) -> list[dict]:
