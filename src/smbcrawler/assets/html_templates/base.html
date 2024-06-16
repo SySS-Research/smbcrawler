@@ -1,0 +1,23 @@
+ <!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>SmbCrawler</title>
+    <script type="text/javascript" src="static/bootstrap.min.js"></script>
+    <script type="text/javascript" src="static/sql-wasm.min.js"></script>
+    <link rel="stylesheet" href="static/bootstrap.min.css" type="text/css">
+    <link rel="stylesheet" href="static/bootstrap-icons.min.css">
+    <script>const queries = {{queries}};</script>
+    <script type="text/javascript" src="static/common.js"></script>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row flex-nowrap">
+        {% include "sidebar.html" %}
+        <div class="col py-3">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+</body>
+</html>

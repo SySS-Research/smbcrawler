@@ -1,13 +1,25 @@
 import csv
 import io
 import json
+import logging
 import sqlite3
 import yaml
 
 from smbcrawler import queries
+from smbcrawler import html
+
+logger = logging.getLogger(__name__)
 
 
 def generate(crawl_file, format, outputfile, section=None):
+    if format == "html":
+        if section:
+            logger.warn(
+                "The --section argument is ignored when generating an HTML report"
+            )
+        html.generate_html(crawl_file, outputfile)
+        return
+
     report = generate_report(crawl_file)
 
     if section:
@@ -32,10 +44,9 @@ def generate(crawl_file, format, outputfile, section=None):
         writer = csv.DictWriter(output_io, fieldnames=fieldnames, delimiter="\t")
         if not skip_header:
             writer.writeheader()
+
         writer.writerows(report)
         output = output_io.getvalue()
-    elif format == "html":
-        output = generate_html(report, crawl_file)
 
     outputfile.write(output)
 
@@ -92,10 +103,6 @@ def insert_summary(report: dict) -> None:
     }
 
     report["summary"] = summary
-
-
-def generate_html(report, crawl_file) -> str:
-    raise NotImplementedError
 
 
 def run_query(pathToSqliteDb: str, query: str) -> list[dict]:
