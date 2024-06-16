@@ -41,7 +41,7 @@ def generate(crawl_file, format, outputfile, section=None):
 
 
 def generate_report(crawl_file):
-    secrets = run_query(crawl_file, "SELECT * FROM Secret")
+    secrets = run_query(crawl_file, queries.secrets_with_paths)
     shares = run_query(crawl_file, "SELECT * FROM Share")
     targets = run_query(crawl_file, "SELECT * FROM Target")
     config = run_query(crawl_file, "SELECT * FROM Config")
