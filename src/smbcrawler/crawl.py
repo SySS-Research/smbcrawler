@@ -191,7 +191,10 @@ class CrawlerThread(threading.Thread):
             download,
         )
 
-        f.content_hash = get_hash_of_file(local_path)
+        try:
+            f.content_hash = get_hash_of_file(local_path)
+        except FileNotFoundError:
+            return
 
         with FILE_LOCK:
             self.app.event_reporter.downloaded_file(
