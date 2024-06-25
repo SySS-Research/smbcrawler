@@ -63,3 +63,49 @@ version-file = "_version.py"
 [tool.pytest.ini_options]
 norecursedirs = "tests/shares"
 filterwarnings = "ignore::DeprecationWarning"
+minversion = "8.0"
+addopts = "-ra -q"
+pythonpath = "src tests"
+testpaths = [
+    "tests",
+]
+
+[tool.hatch.envs.default]
+installer = "uv"
+dependencies = [
+  "coverage[toml]>=6.5",
+  "pytest",
+]
+
+[tool.hatch.envs.lint]
+dependencies = [
+  "mypy>=1.0.0",
+  "ruff>=0.0.243",
+  "pytest-stub",
+]
+
+[tool.hatch.envs.lint.scripts]
+typing = "mypy --install-types --non-interactive {args:src tests}"
+style = [
+  "ruff check {args:src tests}",
+]
+fmt = [
+  "ruff check --fix {args:src tests}",
+  "style",
+]
+all = [
+  "style",
+  "typing",
+]
+
+[tool.hatch.envs.default.scripts]
+test = "pytest {args:tests}"
+test-cov = "coverage run -m pytest {args:tests}"
+cov-report = [
+  "- coverage combine",
+  "coverage report",
+]
+cov = [
+  "test-cov",
+  "cov-report",
+]
