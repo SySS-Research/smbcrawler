@@ -187,7 +187,7 @@ class EventReporter(object):
 
     def found_secret(self, target, share, path, secret, content_hash):
         log.success(
-            f"Found potential secret ({secret['comment']}): {secret['secret']}",
+            f"Found potential secret ({secret.get('comment')}): {secret['secret']}",
             extra=dict(
                 target=target,
                 share=share,
