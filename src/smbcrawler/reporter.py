@@ -254,7 +254,7 @@ class EventReporter(object):
             )
             return
 
-        if clean_content.encode() != data:
+        if clean_content and clean_content.encode() != data:
             open(new_filename + ".txt", "w").write(clean_content)
 
         secrets = find_secrets(clean_content, self.profile_collection["secrets"])
