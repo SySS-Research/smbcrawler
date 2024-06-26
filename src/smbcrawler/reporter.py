@@ -228,11 +228,11 @@ class EventReporter(object):
             "Crawling with non-default depth", extra=dict(target=target, share=share)
         )
 
-    def downloaded_file(self, target, share, path, local_path, content_hash):
+    def downloaded_file(self, target, share, path, local_path, content_hash, tree):
         log.info("Downloaded", extra=dict(target=target, share=share, path=path))
 
         new_filename = os.path.join(os.path.dirname(local_path), content_hash)
-        create_link(str(target), str(share), path, new_filename)
+        create_link(str(target), str(share), path, new_filename, tree)
 
         if os.path.exists(new_filename):
             # File already seen, discard

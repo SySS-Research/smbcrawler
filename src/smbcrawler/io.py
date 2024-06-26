@@ -168,8 +168,8 @@ def sanitize(remark):
     return result
 
 
-def create_link(target, share, path, src):
-    local_path = os.path.join(os.path.dirname(src), "tree")
+def create_link(target, share, path, src, dst):
+    local_path = os.path.join(dst, "tree")
     for part in [target, share] + path.split("\\"):
         os.makedirs(local_path, exist_ok=True)
         local_path = os.path.join(local_path, part)
