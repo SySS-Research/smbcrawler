@@ -7,7 +7,7 @@
 </p>
 
 <script>
-    const labels = {
+    const pathLabels = {
         id: "#",
         target_name: "Target",
         share_name: "Share",
@@ -15,7 +15,7 @@
         size: "Size",
         high_value: "High Value",
     };
-    async function main(){
+    async function pathsMain(){
         const db = await initDb();
         const targets = db.exec(queries.serialized_paths)[0];
         const columns = targets.columns.map(col => {
@@ -32,7 +32,7 @@
             sort: true,
         }).render(document.getElementById("table"));
     };
-    window.addEventListener("load", main);
+    window.addEventListener("load", pathsMain);
 </script>
 
 {% endblock %}
