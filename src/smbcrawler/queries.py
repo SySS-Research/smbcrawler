@@ -87,4 +87,47 @@ SELECT DISTINCT
 FROM
     FullPath
 """,
+    serialized_paths="""
+WITH RECURSIVE FullPath AS (
+    -- Base case: select the root entries
+    SELECT
+        p.id,
+        p.parent_id,
+        p.size,
+        p.high_value,
+        t.name AS target_name,
+        s.name AS share_name,
+        p.name AS full_path
+    FROM
+        path AS p
+    JOIN
+        target AS t ON p.target_id = t.name
+    JOIN
+        share AS s ON p.share_id = s.name
+    WHERE
+        p.parent_id IS NULL
+
+    UNION
+
+    -- Recursive case: append child paths
+    SELECT
+        p.id,
+        p.parent_id,
+        p.size,
+        p.high_value,
+        fp.target_name,
+        fp.share_name,
+        fp.full_path || '\\' || p.name AS full_path
+    FROM
+        path AS p
+    JOIN
+        FullPath AS fp ON p.parent_id = fp.id
+)
+-- Final selection from the recursive CTE
+SELECT DISTINCT
+    target_name, share_name, full_path, size, high_value
+FROM
+    FullPath
+
+""",
 )

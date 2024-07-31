@@ -1,4 +1,38 @@
 {% extends "base.html" %}
 {% block content %}
 
+<h2>Paths</h2>
+<p>
+<div id="table"></div>
+</p>
+
+<script>
+    const labels = {
+        id: "#",
+        target_name: "Target",
+        share_name: "Share",
+        full_path: "Path",
+        size: "Size",
+        high_value: "High Value",
+    };
+    async function main(){
+        const db = await initDb();
+        const targets = db.exec(queries.serialized_paths)[0];
+        const columns = targets.columns.map(col => {
+            if (labels[col]) { return labels[col] }
+            else { return col }
+        });
+
+        new gridjs.Grid({
+            columns: columns,
+            data: targets.values,
+            style: {td: {'font-family': "monospace"}},
+            pagination: {limit: 20},
+            search: true,
+            sort: true,
+        }).render(document.getElementById("table"));
+    };
+    window.addEventListener("load", main);
+</script>
+
 {% endblock %}

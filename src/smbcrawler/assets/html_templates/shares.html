@@ -21,15 +21,15 @@
     };
     async function main(){
         const db = await initDb();
-        const targets = db.exec("SELECT * FROM share")[0];
-        const columns = targets.columns.map(col => {
+        const data = db.exec("SELECT * FROM share")[0];
+        const columns = data.columns.map(col => {
             if (labels[col]) { return labels[col] }
             else { return col }
         });
 
         new gridjs.Grid({
             columns: columns,
-            data: targets.values,
+            data: data.values,
             style: {td: {'font-family': "monospace"}},
             pagination: {limit: 20},
             search: true,

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Tree</h2>
+
+<div id="tree-root"></div>
+
+<template id="node-template">
+    <div class="node row mb-1">
+        <div class="indent col-1">
+        </div>
+        <div class="col row">
+            <div class="header col row">
+                <div class="icon col">
+                    <button class="expand-button btn btn-sm">➕</button>
+                </div>
+                <div class="type col">
+                </div>
+                <div class="body col">
+                </div>
+            </div>
+            <div class="children col">
+            </div>
+        </div>
+    </div>
+</template>
+
+<template id="node-expand-template">
+    <div class="expand">
+        <a href="#">Show more</a> / <a href="#">Show all</a>
+    </div>
+</template>
+
+
+<script>
+    window.addEventListener("load", tree_main);
+</script>
+
+
+{% endblock %}
