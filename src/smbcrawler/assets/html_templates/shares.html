@@ -7,7 +7,7 @@
 </p>
 
 <script>
-    const labels = {
+    const shareLabels = {
         id: "#",
         target_id: "Target",
         name: "Share",
@@ -23,7 +23,7 @@
         const db = await initDb();
         const data = db.exec("SELECT * FROM share")[0];
         const columns = data.columns.map(col => {
-            if (labels[col]) { return labels[col] }
+            if (shareLabels[col]) { return shareLabels[col] }
             else { return col }
         });
 

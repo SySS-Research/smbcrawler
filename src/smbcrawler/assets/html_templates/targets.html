@@ -7,7 +7,7 @@
 </p>
 
 <script>
-    const labels = {
+    const targetLabels = {
         id: "#",
         name: "Target",
         port_open: "Port open",
@@ -19,7 +19,7 @@
         const db = await initDb();
         const targets = db.exec("SELECT * FROM target")[0];
         const columns = targets.columns.map(col => {
-            if (labels[col]) { return labels[col] }
+            if (targetLabels[col]) { return targetLabels[col] }
             else { return col }
         });
 
