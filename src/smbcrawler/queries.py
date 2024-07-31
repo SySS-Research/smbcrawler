@@ -1,4 +1,5 @@
-high_value_files = """
+ALL_QUERIES = dict(
+    high_value_files="""
 WITH RECURSIVE FullPath AS (
     -- Base case: select the root entries
     SELECT
@@ -38,13 +39,11 @@ SELECT DISTINCT
 FROM
     FullPath
 WHERE parent_id IS NULL
-"""
-
-high_value_shares = (
-    "SELECT name, 'target' AS target_id FROM Share WHERE high_value = True"
-)
-
-secrets_with_paths = """
+""",
+    high_value_shares=(
+        "SELECT name, 'target' AS target_id FROM Share WHERE high_value = True"
+    ),
+    secrets_with_paths="""
 WITH RECURSIVE FullPath AS (
     -- Base case: select the root entries
     SELECT
@@ -87,4 +86,5 @@ SELECT DISTINCT
     secret, line, target_name, share_name, path
 FROM
     FullPath
-"""
+""",
+)

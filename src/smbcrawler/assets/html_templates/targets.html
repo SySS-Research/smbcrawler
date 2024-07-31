@@ -1,4 +1,38 @@
 {% extends "base.html" %}
 {% block content %}
 
+<h2>Targets</h2>
+<p>
+<div id="table"></div>
+</p>
+
+<script>
+    const labels = {
+        id: "#",
+        name: "Target",
+        port_open: "Port open",
+        instance_name: "Instance name",
+        listable_authenticated: "Listable (auth)",
+        listable_unauthenticated: "Listable (no auth)",
+    };
+    async function main(){
+        const db = await initDb();
+        const targets = db.exec("SELECT * FROM target")[0];
+        const columns = targets.columns.map(col => {
+            if (labels[col]) { return labels[col] }
+            else { return col }
+        });
+
+        new gridjs.Grid({
+            columns: columns,
+            data: targets.values,
+            style: {td: {'font-family': "monospace"}},
+            pagination: {limit: 20},
+            search: true,
+            sort: true,
+        }).render(document.getElementById("table"));
+    };
+    window.addEventListener("load", main);
+</script>
+
 {% endblock %}

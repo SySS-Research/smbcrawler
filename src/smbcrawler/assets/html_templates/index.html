@@ -1,4 +1,27 @@
 {% extends "base.html" %}
 {% block content %}
 
+<h2>Summary</h2>
+
+<p>
+<dl>
+  <dt>File created</dt>
+  <dd id="created"></dd>
+  <dt>Command</dt>
+  <dd id="cmd"></dd>
+</dl>
+</p>
+
+<script>
+    async function main(){
+        const db = await initDb();
+        const config = db.exec("SELECT * FROM config")[0];
+        config.columns.forEach( (column, i) => {
+            const el = document.getElementById(column);
+            if (el) { el.innerText = config.values[0][i] };
+        });
+    };
+    window.addEventListener("load", main);
+</script>
+
 {% endblock %}

@@ -1,4 +1,43 @@
 {% extends "base.html" %}
 {% block content %}
 
+<h2>Shares</h2>
+<p>
+<div id="table"></div>
+</p>
+
+<script>
+    const labels = {
+        id: "#",
+        target_id: "Target",
+        name: "Share",
+        remark: "Remark",
+        high_value: "High Value",
+        auth_access: "Auth. access",
+        guest_access: "Guest access",
+        write_access: "Write access",
+        read_level: "Read level",
+        maxed_out: "Maxed Out",
+    };
+    async function main(){
+        const db = await initDb();
+        const targets = db.exec("SELECT * FROM share")[0];
+        const columns = targets.columns.map(col => {
+            if (labels[col]) { return labels[col] }
+            else { return col }
+        });
+
+        new gridjs.Grid({
+            columns: columns,
+            data: targets.values,
+            style: {td: {'font-family': "monospace"}},
+            pagination: {limit: 20},
+            search: true,
+            sort: true,
+        }).render(document.getElementById("table"));
+    };
+    window.addEventListener("load", main);
+</script>
+
+
 {% endblock %}

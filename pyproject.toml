@@ -33,6 +33,7 @@ dependencies = [
     'click',
     'pyxdg',
     'pyyaml',
+    'zundler',
 ]
 
 [tool.setuptools]

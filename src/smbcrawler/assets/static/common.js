@@ -1,10 +1,11 @@
-config = {
-  locateFile: filename => "crawl.sqlite"
+async function initDb() {
+	const sqlPromise = initSqlJs({
+		locateFile: (filename) => "static/sql-wasm.wasm",
+	});
+	const dataPromise = fetch("static/crawl.sqlite").then((res) =>
+		res.arrayBuffer(),
+	);
+	const [SQL, buf] = await Promise.all([sqlPromise, dataPromise]);
+	const db = new SQL.Database(new Uint8Array(buf));
+	return db;
 }
-
-initSqlJs(config).then(SQL => {
-  //Create the database
-  const db = new SQL.Database();
-  // Run a query without reading the results
-  db.run("CREATE TABLE test (col1, col2);");
-});
