@@ -1,16 +1,107 @@
-const items_limit = 600;
-const labels = {
-	id: "#",
-	target_id: "Target",
-	name: "Share",
-	remark: "Remark",
-	high_value: "High Value",
-	auth_access: "Auth. access",
-	guest_access: "Guest access",
-	write_access: "Write access",
-	read_level: "Read level",
-	maxed_out: "Maxed Out",
-};
+const items_limit = 50;
+
+function getTargets(limit, offset) {
+	const query = `SELECT * FROM target WHERE listable_authenticated = 1 OR listable_unauthenticated = 1 ORDER BY name LIMIT ${offset}, ${limit + 1}`;
+	const result = document.db.exec(query)[0];
+	return result;
+}
+
+function getShares(target_id, limit, offset) {
+	const query = `SELECT * FROM share WHERE target_id = '${target_id}' ORDER BY name LIMIT ${offset}, ${items_limit + 1}`;
+	const result = document.db.exec(query)[0];
+	return result;
+}
+
+function getPaths(targetId, shareId, limit, offset) {
+	const query = `SELECT * FROM path WHERE target_id = '${targetId}' AND share_id = '${shareId}' AND parent_id IS NULL ORDER BY name LIMIT ${offset}, ${limit + 1}`;
+	const result = document.db.exec(query)[0];
+	return result;
+}
+
+function getSubPaths(parentId, limit, offset) {
+	const query = `SELECT * FROM path WHERE parent_id = '${parentId}' ORDER BY name LIMIT ${offset}, ${limit + 1}`;
+	const result = document.db.exec(query)[0];
+	return result;
+}
+
+function addShowMore(parentNode) {
+	const newNode = createNode("more", "Show more");
+	parentNode.append(newNode);
+}
+
+function loadMore(evnt) {
+	const showMoreNode = evnt.target.closest("div.node");
+	const node = showMoreNode.previousElementSibling;
+
+	let rows = null;
+	let nodeFactory = null;
+
+	if (node.dataset.table === "target") {
+		rows = getTargets(items_limit, Number(node.dataset.index) + 1);
+		nodeFactory = (rows, row) =>
+			createNode(
+				"target",
+				accessRow(row, rows.columns, "name"),
+				accessRow(row, rows.columns, "name"),
+			);
+	}
+
+	if (node.dataset.table === "share") {
+		rows = getShares(
+			node.parentNode.closest("div.node").dataset.id,
+			items_limit,
+			Number(node.dataset.index) + 1,
+		);
+		nodeFactory = (rows, row) =>
+			createNode(
+				"share",
+				accessRow(row, rows.columns, "name"),
+				accessRow(row, rows.columns, "name"),
+			);
+	}
+
+	if (node.dataset.table === "path") {
+		if (node.parentNode.closest("div.node").dataset.table === "share") {
+			rows = getPaths(
+				node.parentNode.closest("div.node").parentNode.closest("div.node")
+					.dataset.id,
+				node.parentNode.closest("div.node").dataset.id,
+				items_limit,
+				Number(node.dataset.index) + 1,
+			);
+		} else {
+			rows = getSubPaths(
+				node.parentNode.closest("div.node").dataset.id,
+				items_limit,
+				Number(node.dataset.index) + 1,
+			);
+		}
+		nodeFactory = (rows, path) =>
+			createNode(
+				"path",
+				accessRow(path, rows.columns, "name"),
+				accessRow(path, rows.columns, "id"),
+				accessRow(path, rows.columns, "size") > 0,
+			);
+	}
+
+	const nodesRemaining = checkRemaining(rows, items_limit);
+
+	if (rows) {
+		for (const row of rows.values) {
+			showMoreNode.before(nodeFactory(rows, row));
+		}
+	}
+	let children = node.closest("div.children");
+	if (!children) {
+		children = document.getElementById("tree-root");
+	}
+	orientateChildNodes(children);
+
+	if (!nodesRemaining) {
+		showMoreNode.remove();
+	}
+}
 
 async function expandButton(evnt) {
 	const node = evnt.target.closest("div.node");
@@ -23,49 +114,56 @@ async function expandButton(evnt) {
 		node.dataset.expanded = "false";
 		childrenDiv.replaceChildren();
 	} else {
+		let rows = null;
+		let nodeFactory = null;
+
 		if (node.dataset.table === "target") {
-			const query = `SELECT * FROM share WHERE target_id = '${node.dataset.id}' ORDER BY name LIMIT ${items_limit + 1}`;
-			const shares = document.db.exec(query)[0];
-			if (shares) {
-				for (const share of shares.values) {
-					const newNode = createNode(
-						"share",
-						accessRow(share, shares.columns, "name"),
-						accessRow(share, shares.columns, "name"),
-					);
-					childrenDiv.appendChild(newNode);
-				}
-			}
+			rows = getShares(node.dataset.id, items_limit, 0);
+			nodeFactory = (rows, share) =>
+				createNode(
+					"share",
+					accessRow(share, rows.columns, "name"),
+					accessRow(share, rows.columns, "name"),
+				);
 		}
 
 		if (node.dataset.table === "share") {
-			const query = `SELECT * FROM path WHERE share_id = '${node.dataset.id}' AND parent_id IS NULL ORDER BY name LIMIT ${items_limit + 1}`;
-			const paths = document.db.exec(query)[0];
-			if (paths) {
-				for (const path of paths.values) {
-					const newNode = createNode(
-						"path",
-						accessRow(path, paths.columns, "name"),
-						accessRow(path, paths.columns, "id"),
-					);
-					childrenDiv.appendChild(newNode);
-				}
-			}
+			rows = getPaths(
+				node.parentNode.closest("div.node").dataset.id,
+				node.dataset.id,
+				items_limit,
+				0,
+			);
+			nodeFactory = (rows, path) =>
+				createNode(
+					"path",
+					accessRow(path, rows.columns, "name"),
+					accessRow(path, rows.columns, "id"),
+					accessRow(path, rows.columns, "size") > 0,
+				);
 		}
 
 		if (node.dataset.table === "path") {
-			const query = `SELECT * FROM path WHERE parent_id = ${node.dataset.id} ORDER BY name LIMIT ${items_limit + 1}`;
-			const paths = document.db.exec(query)[0];
-			if (paths) {
-				for (const path of paths.values) {
-					const newNode = createNode(
-						"path",
-						accessRow(path, paths.columns, "name"),
-						accessRow(path, paths.columns, "id"),
-					);
-					childrenDiv.appendChild(newNode);
-				}
+			rows = getSubPaths(node.dataset.id, items_limit, 0);
+			nodeFactory = (rows, path) =>
+				createNode(
+					"path",
+					accessRow(path, rows.columns, "name"),
+					accessRow(path, rows.columns, "id"),
+					accessRow(path, rows.columns, "size") > 0,
+				);
+		}
+
+		if (rows) {
+			const nodesRemaining = checkRemaining(rows, items_limit);
+			for (const v of rows.values) {
+				const newNode = nodeFactory(rows, v);
+				childrenDiv.appendChild(newNode);
 			}
+			if (nodesRemaining) {
+				addShowMore(childrenDiv);
+			}
+			orientateChildNodes(childrenDiv);
 		}
 
 		evnt.target.innerText = "➖";
@@ -73,30 +171,41 @@ async function expandButton(evnt) {
 	}
 }
 
-function createNode(type, body, id) {
+function createNode(type, body, id, isLeaf) {
 	const icons = {
 		share: "📁 ",
 		target: "🖥️",
 		path: "",
+		more: "",
 	};
 	const template = document.getElementById("node-template");
 	const clone = template.content.cloneNode(true);
+
 	clone.querySelector("div.node").dataset.id = id;
 	clone.querySelector("div.node").dataset.table = type;
 	clone.querySelector("div.node").dataset.expanded = "false";
 	clone.querySelector("div.type").dataset.type = type;
 	clone.querySelector("div.type").innerText = icons[type];
 	clone.querySelector("div.body").innerText = body;
-	clone
-		.querySelector("button.expand-button")
-		.addEventListener("click", expandButton);
+
+	const button = clone.querySelector("button.expand-button");
+
+	if (type === "more") {
+		button.innerText = "…";
+		button.addEventListener("click", loadMore);
+	} else if (isLeaf && type === "path") {
+		button.innerText = "📄";
+		button.disabled = true;
+	} else {
+		button.addEventListener("click", expandButton);
+	}
 	return clone;
 }
 
 function orientateChildNodes(parentNode) {
+	// Set level and index
 	let i = 0;
 	for (const node of parentNode.children) {
-		// Set level and index
 		if (parentNode.dataset.level) {
 			node.dataset.level = Number(parentNode.dataset.level) + 1;
 		} else {
@@ -115,15 +224,13 @@ function checkRemaining(array, limit) {
 	return result;
 }
 
-async function tree_main() {
+async function treeMain() {
 	document.db = await initDb();
-	const targets = document.db.exec(
-		`SELECT * FROM target ORDER BY name LIMIT ${items_limit + 1}`,
-	)[0];
-
-	const nodesRemaining = checkRemaining(targets.values, items_limit);
+	const targets = getTargets(items_limit, 0);
+	const nodesRemaining = checkRemaining(targets, items_limit);
 
 	const treeRoot = document.getElementById("tree-root");
+	const showMoreParent = treeRoot.parentNode.querySelector("div.show-more");
 
 	for (const target of targets.values) {
 		const node = createNode(
@@ -133,11 +240,8 @@ async function tree_main() {
 		);
 		treeRoot.appendChild(node);
 	}
-	orientateChildNodes(treeRoot);
-
 	if (nodesRemaining) {
-		const template = document.getElementById("node-expand-template");
-		const clone = template.content.cloneNode(true);
-		treeRoot.append(node);
+		addShowMore(treeRoot);
 	}
+	orientateChildNodes(treeRoot);
 }

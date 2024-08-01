@@ -10,10 +10,19 @@
     const targetLabels = {
         id: "#",
         name: "Target",
-        port_open: "Port open",
+        port_open: {
+            name: "Port open",
+            formatter: boolFormatter,
+        },
         instance_name: "Instance name",
-        listable_authenticated: "Listable (auth)",
-        listable_unauthenticated: "Listable (no auth)",
+        listable_authenticated: {
+            name: "Listable (auth)",
+            formatter: boolFormatter,
+        },
+        listable_unauthenticated: {
+            name: "Listable (no auth)",
+            formatter: boolFormatter,
+        },
     };
     async function main(){
         const db = await initDb();
@@ -30,6 +39,7 @@
             pagination: {limit: 20},
             search: true,
             sort: true,
+            resizable: true,
         }).render(document.getElementById("table"));
     };
     window.addEventListener("load", main);

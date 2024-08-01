@@ -13,3 +13,5 @@ async function initDb() {
 function accessRow(row, columns, key) {
 	return row[columns.indexOf(key)];
 }
+
+const boolFormatter = (cell) => (cell === 1 ? "Yes ✅" : "No ❌");

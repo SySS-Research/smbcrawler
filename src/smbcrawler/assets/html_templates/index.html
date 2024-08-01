@@ -7,8 +7,24 @@
 <dl>
   <dt>File created</dt>
   <dd id="created"></dd>
+
   <dt>Command</dt>
   <dd id="cmd"></dd>
+
+  <dt>Number of targets</dt>
+  <dd id="targets"></dd>
+
+  <dt>Number of targets with open port</dt>
+  <dd id="targets_with_open_ports"></dd>
+
+  <dt>Number of shares</dt>
+  <dd id="shares"></dd>
+
+  <dt>Number of paths</dt>
+  <dd id="paths"></dd>
+
+  <dt>Number of secrets</dt>
+  <dd id="secrets"></dd>
 </dl>
 </p>
 
@@ -16,9 +32,26 @@
     async function main(){
         const db = await initDb();
         const config = db.exec("SELECT * FROM config")[0];
+        const rows = db.exec(`
+SELECT 'targets' AS table_name, COUNT(*) AS row_count FROM target
+UNION ALL
+SELECT 'targets_with_open_ports' AS table_name, COUNT(*) AS row_count FROM target WHERE port_open = "1"
+UNION ALL
+SELECT 'shares' AS table_name, COUNT(*) AS row_count FROM share
+UNION ALL
+SELECT 'paths' AS table_name, COUNT(*) AS row_count FROM path
+UNION ALL
+SELECT 'secrets' AS table_name, COUNT(*) AS row_count FROM secret;
+`)[0];
+
         config.columns.forEach( (column, i) => {
             const el = document.getElementById(column);
             if (el) { el.innerText = config.values[0][i] };
+        });
+
+        rows.values.forEach( (row, i) => {
+            const el = document.getElementById(row[0]);
+            if (el) { el.innerText = row[1] };
         });
     };
     window.addEventListener("load", main);

@@ -12,12 +12,27 @@
         target_id: "Target",
         name: "Share",
         remark: "Remark",
-        high_value: "High Value",
-        auth_access: "Auth. access",
-        guest_access: "Guest access",
-        write_access: "Write access",
+        high_value: {
+            name: "High Value",
+            formatter: boolFormatter,
+        },
+        auth_access: {
+            name: "Auth. access",
+            formatter: boolFormatter,
+        },
+        guest_access: {
+            name: "Guest access",
+            formatter: boolFormatter,
+        },
+        write_access: {
+            name: "Write access",
+            formatter: boolFormatter,
+        },
         read_level: "Read level",
-        maxed_out: "Maxed Out",
+        maxed_out: {
+            name: "Maxed out",
+            formatter: boolFormatter,
+        },
     };
     async function main(){
         const db = await initDb();
@@ -34,6 +49,7 @@
             pagination: {limit: 20},
             search: true,
             sort: true,
+            resizable: true,
         }).render(document.getElementById("table"));
     };
     window.addEventListener("load", main);

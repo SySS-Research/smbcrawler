@@ -6,10 +6,7 @@
 <div id="tree-root"></div>
 
 <template id="node-template">
-    <div class="node row mb-1">
-        <div class="indent col-auto">
-            &emsp;
-        </div>
+    <div class="node row mb-1 ms-3">
         <div class="col row ps-0">
             <div class="header col row">
                 <div class="icon col-auto">
@@ -26,15 +23,13 @@
     </div>
 </template>
 
-<template id="node-expand-template">
-    <div class="expand">
-        <a href="#">Show more</a> / <a href="#">Show all</a>
-    </div>
+<template id="node-show-more-template">
+    <a href="#">Show more</a> / <a href="#">Show all</a>
 </template>
 
 
 <script>
-    window.addEventListener("load", tree_main);
+    window.addEventListener("load", treeMain);
 </script>
 
 
