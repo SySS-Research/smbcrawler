@@ -52,21 +52,24 @@ def generate(crawl_file, format, outputfile, section=None):
 
 
 def generate_report(crawl_file):
-    secrets = run_query(crawl_file, queries.secrets_with_paths)
+    summary = run_query(crawl_file, queries.ALL_QUERIES["summary"])
+    summary = format_summary(summary)
+    secrets = run_query(crawl_file, queries.ALL_QUERIES["secrets_with_paths"])
     shares = run_query(crawl_file, "SELECT * FROM Share")
     targets = run_query(crawl_file, "SELECT * FROM Target")
     config = run_query(crawl_file, "SELECT * FROM Config")
     high_value_files = run_query(
         crawl_file,
-        queries.high_value_files,
+        queries.ALL_QUERIES["high_value_files"],
     )
     high_value_shares = run_query(
         crawl_file,
-        queries.high_value_shares,
+        queries.ALL_QUERIES["high_value_shares"],
     )
     # TODO undeleted directories
 
     result = {
+        "summary": summary,
         "secrets_unique": list(set(s["secret"] for s in secrets)),
         "high_value_files": high_value_files,
         "high_value_shares": high_value_shares,
@@ -75,34 +78,28 @@ def generate_report(crawl_file):
         "targets": targets,
         "config": config,
     }
-    insert_summary(result)
+
     return result
 
 
-def insert_summary(report: dict) -> None:
-    summary = {
-        "Total targets": len(report["targets"]),
-        "Targets with open ports": sum(1 for t in report["targets"] if t["port_open"]),
-        "Targets with at least one share": len(
-            {s["target_id"] for s in report["shares"] if s.get("target_id")}
-        ),
-        "Total secrets": len(report["secrets"]),
-        "Unique secrets": len(report["secrets_unique"]),
-        "Total shares": len(report["shares"]),
-        "Shares with listable root": sum(
-            1 for s in report["shares"] if s["read_level"]
-        ),
-        "Shares with listable root as guest": sum(
-            1 for s in report["shares"] if s["read_level"] and s["guest_access"]
-        ),
-        "Shares with write access in root": sum(
-            1 for s in report["shares"] if s["write_access"]
-        ),
-        "High value files": len(report["high_value_files"]),
-        "High value shares": len(report["high_value_shares"]),
-    }
+def format_summary(summary: list[dict]) -> dict:
+    labels = dict(
+        number_targets="Total targets",
+        number_targets_with_open_ports="Targets with open ports",
+        number_targets_with_open_shares="Targets with at least one share",
+        number_secrets="Total secrets",
+        number_unique_secrets="Unique secrets",
+        number_shares="Total shares",
+        number_shares_listable_root="Shares with listable root",
+        number_shares_listable_root_as_guest="Shares with listable root as guest",
+        number_shares_writable="Shares with write access in root",
+        number_paths="Total paths",
+        number_high_value_files="High value files",
+        number_high_value_shares="High value shares",
+    )
 
-    report["summary"] = summary
+    result = {labels.get(row["key"], row["key"]): row["value"] for row in summary}
+    return result
 
 
 def run_query(pathToSqliteDb: str, query: str) -> list[dict]:
