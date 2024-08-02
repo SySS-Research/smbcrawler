@@ -30,13 +30,23 @@ def generate_html(crawl_file: str, outputfile: str) -> None:
 
 
 def render_templates(directory: str) -> None:
-    sidebar = [
-        dict(label="index", title="Summary", icon=None),
-        dict(label="targets", title="Targets", icon=None),
-        dict(label="shares", title="Shares", icon=None),
-        dict(label="paths", title="Paths", icon=None),
-        dict(label="tree", title="Tree", icon=None),
-        dict(label="secrets", title="Secrets", icon=None),
+    base_js = ["common", "bootstrap.bundle.min", "sql-wasm.min"]
+    base_css = ["bootstrap.min", "bootstrap-icons.min"]
+    table_js = base_js + ["gridjs.production.min"]
+    table_css = base_css + ["mermaid.min"]
+    pages = [
+        dict(label="index", title="Summary", icon=None, css=base_css, js=base_js),
+        dict(label="targets", title="Targets", icon=None, css=table_css, js=table_js),
+        dict(label="shares", title="Shares", icon=None, css=table_css, js=table_js),
+        dict(label="paths", title="Paths", icon=None, css=table_css, js=table_js),
+        dict(
+            label="tree",
+            title="Tree",
+            icon=None,
+            css=base_css + ["tree"],
+            js=base_js + ["tree"],
+        ),
+        dict(label="secrets", title="Secrets", icon=None, css=table_css, js=table_js),
     ]
     queries_json = json.dumps(queries.ALL_QUERIES)
 
@@ -45,10 +55,12 @@ def render_templates(directory: str) -> None:
         loader=jinja2.FileSystemLoader(template_path),
     )
 
-    for page in sidebar:
+    for page in pages:
         file = f"{page['label']}.html"
         t = env.get_template(file)
-        content = t.render(sidebar=sidebar, queries=queries_json)
+        content = t.render(
+            pages=pages, queries=queries_json, css=page["css"], js=page["js"]
+        )
         open(Path(directory) / file, "w").write(content)
 
 

@@ -3,16 +3,13 @@
 <head>
     <meta charset="utf-8">
     <title>SmbCrawler</title>
-    <script type="text/javascript" src="static/bootstrap.bundle.min.js"></script>
-    <script type="text/javascript" src="static/sql-wasm.min.js"></script>
-    <script type="text/javascript" src="static/gridjs.production.min.js"></script>
-    <link rel="stylesheet" href="static/tree.css" type="text/css">
-    <link rel="stylesheet" href="static/mermaid.min.css" type="text/css">
-    <link rel="stylesheet" href="static/bootstrap.min.css" type="text/css">
-    <link rel="stylesheet" href="static/bootstrap-icons.min.css">
+    {% for name in css %}
+    <link rel="stylesheet" href="static/{{name}}.css" type="text/css">
+    {% endfor %}
+    {% for name in js %}
+    <script type="text/javascript" src="static/{{name}}.js"></script>
+    {% endfor %}
     <script>const queries = {{queries}};</script>
-    <script type="text/javascript" src="static/common.js"></script>
-    <script type="text/javascript" src="static/tree.js"></script>
 </head>
 <body>
 <div class="container-fluid">
