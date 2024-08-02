@@ -83,7 +83,7 @@ WITH RECURSIVE FullPath AS (
 )
 -- Final selection from the recursive CTE
 SELECT DISTINCT
-    secret, line, target_name, share_name, path
+    secret, line, target_name, share_name, path, content_hash
 FROM
     FullPath
 """,
