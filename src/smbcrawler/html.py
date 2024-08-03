@@ -29,8 +29,7 @@ def generate_html(crawl_file: str, outputfile: str) -> None:
         copy_static_files(tempdir.name, crawl_file, content_files)
         embed.embed_assets(str(Path(tempdir.name) / "index.html"), outputfile)
     finally:
-        #  tempdir.cleanup()
-        print(tempdir.name)
+        tempdir.cleanup()
 
 
 def render_templates(directory: str) -> None:
