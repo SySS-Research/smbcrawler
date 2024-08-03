@@ -9,6 +9,7 @@ from zundler import embed  # type: ignore
 
 import smbcrawler
 from smbcrawler import queries
+from smbcrawler.sql import run_query
 
 BASE_DIR = Path(os.path.abspath(os.path.dirname(smbcrawler.__file__)))
 
@@ -21,8 +22,11 @@ def generate_html(crawl_file: str, outputfile: str) -> None:
     )
 
     try:
+        rows = run_query(crawl_file, "SELECT DISTINCT content_hash FROM Secret")
+        content_files = [r["content_hash"] for r in rows]
+
         render_templates(tempdir.name)
-        copy_static_files(tempdir.name, crawl_file)
+        copy_static_files(tempdir.name, crawl_file, content_files)
         embed.embed_assets(str(Path(tempdir.name) / "index.html"), outputfile)
     finally:
         #  tempdir.cleanup()
@@ -71,7 +75,17 @@ def render_templates(directory: str) -> None:
         open(Path(directory) / file, "w").write(content)
 
 
-def copy_static_files(directory: str, crawl_file) -> None:
+def copy_static_files(
+    directory: str, crawl_file: str, content_files: list[str]
+) -> None:
     shutil.copytree(BASE_DIR / "assets" / "static", Path(directory) / "static")
     shutil.copy(crawl_file, Path(directory) / "static" / "crawl.sqlite")
-    shutil.copytree(Path(crawl_file + ".d") / "content", Path(directory) / "content")
+
+    # Copy content files which contain a secret
+    os.makedirs(Path(directory) / "content", exist_ok=True)
+    for c in content_files:
+        path = Path(crawl_file + ".d") / "content" / c
+        clean_path = Path(str(path) + ".txt")
+        if clean_path.exists():
+            path = clean_path
+        shutil.copy(path, Path(directory) / "content")

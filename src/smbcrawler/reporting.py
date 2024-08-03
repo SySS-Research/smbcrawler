@@ -3,11 +3,11 @@ import csv
 import io
 import json
 import logging
-import sqlite3
 import yaml
 
 from smbcrawler import queries
 from smbcrawler import html
+from smbcrawler.sql import run_query
 
 logger = logging.getLogger(__name__)
 
@@ -122,26 +122,6 @@ def create_cleanup_guide(secrets):
     ]
 
     return result
-
-
-def run_query(pathToSqliteDb: str, query: str) -> list[dict]:
-    connection = sqlite3.connect(pathToSqliteDb)
-
-    def dict_factory(curs, row):
-        d = {}
-        for idx, col in enumerate(curs.description):
-            val = row[idx]
-            if isinstance(val, bytes):
-                val = val.decode()
-            d[col[0]] = val
-        return d
-
-    connection.row_factory = dict_factory
-    cursor = connection.cursor()
-    cursor.execute(query)
-    results = cursor.fetchall()
-    connection.close()
-    return results
 
 
 def show_log(crawl_file):

@@ -4,6 +4,7 @@ import dataclasses
 import queue
 import threading
 import typing
+import sqlite3
 import sys
 
 import peewee
@@ -236,3 +237,23 @@ class QueuedDBWriter:
             self.finished.set()
             self.queue.put_nowait(self.DONE)
             self.thread.join()
+
+
+def run_query(pathToSqliteDb: str, query: str) -> list[dict]:
+    connection = sqlite3.connect(pathToSqliteDb)
+
+    def dict_factory(curs, row):
+        d = {}
+        for idx, col in enumerate(curs.description):
+            val = row[idx]
+            if isinstance(val, bytes):
+                val = val.decode()
+            d[col[0]] = val
+        return d
+
+    connection.row_factory = dict_factory
+    cursor = connection.cursor()
+    cursor.execute(query)
+    results = cursor.fetchall()
+    connection.close()
+    return results
