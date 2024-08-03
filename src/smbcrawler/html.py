@@ -47,6 +47,13 @@ def render_templates(directory: str) -> None:
             js=base_js + ["tree"],
         ),
         dict(label="secrets", title="Secrets", icon=None, css=table_css, js=table_js),
+        dict(
+            label="secrets_cleanup_guide",
+            title="Secrets Cleanup Guide",
+            icon=None,
+            css=base_css,
+            js=base_js + ["secrets_cleanup_guide"],
+        ),
     ]
     queries_json = json.dumps(queries.ALL_QUERIES)
 

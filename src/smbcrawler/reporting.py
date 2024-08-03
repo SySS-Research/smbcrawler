@@ -1,3 +1,4 @@
+from collections import defaultdict
 import csv
 import io
 import json
@@ -69,14 +70,15 @@ def generate_report(crawl_file):
     # TODO undeleted directories
 
     result = {
+        "config": config,
         "summary": summary,
         "secrets_unique": list(set(s["secret"] for s in secrets)),
+        "secrets_cleanup_guide": create_cleanup_guide(secrets),
         "high_value_files": high_value_files,
         "high_value_shares": high_value_shares,
         "secrets": secrets,
         "shares": shares,
         "targets": targets,
-        "config": config,
     }
 
     return result
@@ -99,6 +101,26 @@ def format_summary(summary: list[dict]) -> dict:
     )
 
     result = {labels.get(row["key"], row["key"]): row["value"] for row in summary}
+    return result
+
+
+def create_cleanup_guide(secrets):
+    # Group by line first, then group by the groups
+
+    secret_map = defaultdict(list)
+    path_map = defaultdict(list)
+
+    for s in secrets:
+        secret_map[(s["secret"], s["line"])].append(s["path"])
+
+    for k, v in secret_map.items():
+        path_map[frozenset(v)].append(k)
+
+    result = [
+        {"secrets": [{"secret": s[0], "line": s[1]} for s in k], "locations": v}
+        for k, v in zip(path_map.values(), map(list, path_map.keys()))
+    ]
+
     return result
 
 

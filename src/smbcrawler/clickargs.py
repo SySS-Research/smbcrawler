@@ -257,6 +257,7 @@ def showlog(ctx):
             "shares",
             "secrets",
             "secrets_unique",
+            "secrets_cleanup_guide",
             "high_value_files",
         ]
     ),
