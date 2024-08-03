@@ -220,6 +220,7 @@ def crawl(
         profile_collection=profile_collection,
         force=force,
         inputfilename=input,
+        cmd=cmd,
     )
 
     if dry_run:

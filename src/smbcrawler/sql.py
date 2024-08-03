@@ -51,7 +51,7 @@ def get_subclasses(cls):
     return result
 
 
-def init_db(path):
+def init_db(path, cmd=None):
     database_instance = peewee.SqliteDatabase(path)
 
     class BaseModel(peewee.Model):
@@ -61,7 +61,7 @@ def init_db(path):
     class Config(BaseModel):
         smbcrawler_version = peewee.CharField()
         created = peewee.DateTimeField(default=datetime.datetime.now)
-        cmd = peewee.CharField()
+        cmd = peewee.CharField(null=True)
 
     class Target(BaseModel):
         name = peewee.CharField(unique=True, index=True)
@@ -127,7 +127,7 @@ def init_db(path):
 
     Config.create(
         smbcrawler_version=__version__,
-        cmd="TODO",
+        cmd=cmd,
     )
 
     return db_instance

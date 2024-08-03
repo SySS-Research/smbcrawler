@@ -44,6 +44,7 @@ class CrawlerApp(object):
         profile_collection=None,
         force=False,
         inputfilename=None,
+        cmd=None,
     ):
         self.crawl_file = crawl_file
         # Create output dir
@@ -69,6 +70,7 @@ class CrawlerApp(object):
         self.max_file_size = max_file_size
         self.disable_autodownload = disable_autodownload
         self.force = force
+        self.cmd = cmd
 
         self.profile_collection = profile_collection
 
@@ -91,7 +93,7 @@ class CrawlerApp(object):
 
     def run(self):
         # Instantiate DB
-        self.db_instance = init_db(self.crawl_file)
+        self.db_instance = init_db(self.crawl_file, cmd=self.cmd)
         self.event_reporter = EventReporter(self.db_instance, self.profile_collection)
 
         print(
