@@ -186,14 +186,24 @@ to scan these duplicate shares in a third run. Here is an example:
 
 ```
 $ smbcrawler -C dc_only.crwl crawl -D -1 <DC IP> \
-    -u <USER> -d <DOMAIN> -p <PASSWORD> \
-    -s dc_only
+    -u <USER> -d <DOMAIN> -p <PASSWORD>
 $ smbcrawler -C full.crwl crawl -D5 -t10 -i <NEW INPUT FILE> \
     -u <USER> -d <DOMAIN> -p <PASSWORD> \
-    -aA 'boring_shares:SYSVOL|NETLOGON' \
-    -s full_run
+    --extra-profile-file skip_sysvol.yml
 ```
 
+Here, `skip_sysvol.yml` would be:
+
+```yaml
+shares:
+  sysvol:
+    comment: "Skip sysvol and netlogon share"
+    regex: 'SYSVOL|NETLOGON'
+    crawl_depth: 0
+```
+
+Feel free to include other shares here which you may think are not worth
+crawling.
 
 ### Help out
 
