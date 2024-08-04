@@ -136,15 +136,16 @@ def collect_profiles(
 
     for d in dirs:
         for f in glob.glob(str(pathlib.Path(d) / "*.yml")):
-            files.append(os.path.join(d, f))
+            files.append(pathlib.Path(d) / f)
 
-    files.extend(extra_files)
+    files.extend(map(pathlib.Path, extra_files))
 
-    result = {}
-    for f in files:
+    result: dict[str, object] = {}
+
+    for f in map(str, files):
         try:
-            fp = open(f, "r")
-            data = yaml.safe_load(fp)
+            with open(f, "r") as fp:
+                data = yaml.safe_load(fp)
         except Exception as e:
             print("Error while parsing file: %s\n%s" % (f, e))
         else:
