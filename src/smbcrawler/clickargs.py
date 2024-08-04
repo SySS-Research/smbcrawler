@@ -102,11 +102,11 @@ def cli(debug, verbose, crawl_file):
 )
 @click.option(
     "-m",
-    "--max-file_size",
+    "--max-file-size",
     default=200,
     type=int,
     show_default=True,
-    help="Maximum size of downloaded files in KiBi (unless high value)",
+    help="Maximum size of downloaded files in KiBi (except high value files)",
 )
 @click.option(
     "-w",
