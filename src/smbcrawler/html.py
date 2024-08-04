@@ -57,6 +57,7 @@ def render_templates(directory: str) -> None:
             css=base_css,
             js=base_js + ["secrets_cleanup_guide"],
         ),
+        dict(label="info", title="Info", icon=None, css=base_css, js=base_js),
     ]
     queries_json = json.dumps(queries.ALL_QUERIES)
 
