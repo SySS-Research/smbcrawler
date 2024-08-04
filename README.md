@@ -32,9 +32,6 @@ bash, zsh and fish using the [usual
 mechanism](https://click.palletsprojects.com/en/8.1.x/shell-completion/#enabling-completion).
 
 
-
-
-
 Example
 -------
 
@@ -58,7 +55,7 @@ are:
 * Permissions are now reported more granularly
 
 The old CLI arguments regarding "interesting files", "boring shares" and so
-on was clunky and intuitive. Instead we now use "profiles; see below for
+on was clunky and confusing. Instead we now use "profiles; see below for
 details.
 
 Also, I realized I basically reinvented relational databases, except did so
@@ -73,6 +70,7 @@ directory of the share, but all sub directories are protected, e.g. for user
 profiles. SmbCrawler will now report how deep it was able to read the
 directory tree of a share and whether it maxed out or could have gone deeper
 with a higher value for the maximum depth argument.
+
 
 Usage
 -----
@@ -153,13 +151,11 @@ is again a dictionary with different properties.
   downloaded (or the entire file if `high_value=true`) and parsed for
   secrets
 
-
 #### Shares and directories
 
 * `comment`, `regex`, `regex_flags`, `high_value`: Same as above
 * `crawl_depth`: Crawl this share or directory up to a different depth than
   what is defined by the `--depth` argument
-
 
 #### Secrets
 
@@ -207,10 +203,10 @@ crawling.
 
 ### Help out
 
-If you notice a lot of false positives or false negatives in the secrets,
-please help out and let me know. Community input is important when trying to
-improve automatic detection. Best case scenario: provide a pull request with
-changes to the default profile file.
+If you notice a lot of false positives or false negatives in the reported
+secrets, please help out and let me know. Community input is important when
+trying to improve automatic detection. Best case scenario: provide a pull
+request with changes to the default profile file.
 
 
 
