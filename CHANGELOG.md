@@ -6,19 +6,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+## 1.0.0 (???)
 
-- Add the `secretscrawler` tool
-
-### Fixed
-
-- Make `--force` do something
-- Don't show the password when echoing the command line arguments
+Major changes in this one.
 
 ### Changed
 
-- Improve guest access check
-- Make log output slightly less noisy
+- Use sqlite instead of JSON files for output
+- Revamped CLI
+- Use profiles instead of `interesting_shares` etc. lists
+- Decluttered console output
+- Improved the regular expressions that find the secrets
+
+### Added
+
+- Interacive HTML report
+- Tab completion for popular shells using the `click` library
+- Detailed status update
+
 
 ## 0.2.0 (2022-09-23)
 
