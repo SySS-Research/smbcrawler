@@ -107,8 +107,6 @@ async function expandButton(evnt) {
 	const node = evnt.target.closest("div.node");
 	const childrenDiv = node.querySelector("div.children");
 
-	document.db = await initDb();
-
 	if (node.dataset.expanded === "true") {
 		evnt.target.innerText = "➕";
 		node.dataset.expanded = "false";
