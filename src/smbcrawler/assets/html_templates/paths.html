@@ -7,36 +7,12 @@
 </p>
 
 <script>
-    const pathLabels = {
-        id: "#",
-        target_name: "Target",
-        share_name: "Share",
-        full_path: "Path",
-        size: "Size",
-        high_value: {
-            name: "High Value",
-            formatter: boolFormatter,
-        },
+    async function main(){
+        await initDb();
+        makeGrid("path").render(document.getElementById("table"));
     };
-    async function pathsMain(){
-        const db = await initDb();
-        const targets = db.exec(queries.serialized_paths)[0];
-        const columns = targets.columns.map(col => {
-            if (pathLabels[col]) { return pathLabels[col] }
-            else { return col }
-        });
 
-        new gridjs.Grid({
-            columns: columns,
-            data: targets.values,
-            style: {td: {'font-family': "monospace"}},
-            pagination: {limit: 20},
-            search: true,
-            sort: true,
-            resizable: true,
-        }).render(document.getElementById("table"));
-    };
-    window.addEventListener("load", pathsMain);
+    window.addEventListener("load", main);
 </script>
 
 {% endblock %}

@@ -29,9 +29,10 @@
 
 <script>
     async function main(){
-        const db = await initDb();
+        await initDb();
+        const db = document.db;
         const config = db.exec("SELECT * FROM config")[0];
-        const rows = db.exec(queries.summary)[0];
+        const rows = db.exec(document.queries.summary)[0];
 
         config.columns.forEach( (column, i) => {
             const el = document.getElementById(column);

@@ -223,7 +223,7 @@ function checkRemaining(array, limit) {
 }
 
 async function treeMain() {
-	document.db = await initDb();
+	await initDb();
 	const targets = getTargets(items_limit, 0);
 	const nodesRemaining = checkRemaining(targets, items_limit);
 

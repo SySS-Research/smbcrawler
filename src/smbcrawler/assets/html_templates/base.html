@@ -3,13 +3,13 @@
 <head>
     <meta charset="utf-8">
     <title>SmbCrawler</title>
+    <script>document.queries = {{queries}};</script>
     {% for name in css %}
     <link rel="stylesheet" href="static/{{name}}.css" type="text/css">
     {% endfor %}
     {% for name in js %}
     <script type="text/javascript" src="static/{{name}}.js"></script>
     {% endfor %}
-    <script>const queries = {{queries}};</script>
 </head>
 <body>
 <div class="container-fluid">

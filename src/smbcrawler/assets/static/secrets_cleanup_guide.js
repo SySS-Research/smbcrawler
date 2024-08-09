@@ -50,8 +50,8 @@ function addItem(item, headline) {
 }
 
 async function secretsCleanupGuideMain() {
-	const db = await initDb();
-	const rows = db.exec(queries.secrets_with_paths)[0];
+	await initDb();
+	const rows = document.db.exec(document.queries.secrets_with_paths)[0];
 	const secrets = rows.values.map((row) => {
 		return {
 			secret: accessRow(row, rows.columns, "secret"),
