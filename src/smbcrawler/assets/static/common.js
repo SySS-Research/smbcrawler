@@ -68,11 +68,7 @@ WHERE ${where}
 ORDER BY ${order}
 LIMIT ${opts.url.limit}
 OFFSET ${opts.url.page * opts.url.limit}`;
-		// TODO: prevent SQLi?
-		console.log(query);
 		const rows = document.db.exec(query)[0];
-		console.log(rows);
-		console.log(document.rowCount);
 
 		if (!rows) {
 			reject("Query returned no results");
