@@ -82,7 +82,7 @@ WITH RECURSIVE FullPath AS (
         path AS p ON p.id = fp.parent_id
 )
 -- Final selection from the recursive CTE
-SELECT DISTINCT
+SELECT
     secret, line, target_name, share_name, path, content_hash
 FROM
     FullPath

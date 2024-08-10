@@ -28,6 +28,11 @@ async function initDb() {
 	for (const row of rowCount.values) {
 		document.rowCount[row[0]] = row[1];
 	}
+	// Special case for secrets. The table secrets_with_paths is bigger
+	// because the same secret can be in many paths.
+	document.rowCount.secret = db.exec(
+		`SELECT COUNT(*) as row_count FROM (${document.queries.secrets_with_paths})`,
+	)[0].values[0][0];
 
 	document.db = db;
 }
@@ -39,6 +44,7 @@ function queryDb(table, opts) {
 
 		let where = "1=1";
 		if (opts.url.keyword) {
+			opts.url.keyword = opts.url.keyword.replaceAll("'", "''");
 			where = document.columns[table]
 				.map((c) => `${c.label} LIKE '%${opts.url.keyword}%'`)
 				.join(" OR ");
@@ -63,10 +69,13 @@ ORDER BY ${order}
 LIMIT ${opts.url.limit}
 OFFSET ${opts.url.page * opts.url.limit}`;
 		// TODO: prevent SQLi?
+		console.log(query);
 		const rows = document.db.exec(query)[0];
+		console.log(rows);
+		console.log(document.rowCount);
 
 		if (!rows) {
-			reject();
+			reject("Query returned no results");
 		}
 
 		resolve({
@@ -125,7 +134,7 @@ function makeGrid(table) {
 			},
 		},
 		resizable: true,
-		style: { td: { "font-family": "monospace" } },
+		style: { td: { "font-family": "monospace", "word-break": "break-all" } },
 	});
 	return grid;
 }
@@ -164,7 +173,7 @@ document.columns = {
 	],
 	share: [
 		{ label: "id", name: "#" },
-		{ label: "target_name", name: "Target" },
+		{ label: "target_id", name: "Target" },
 		{ label: "name", name: "Share" },
 		{ label: "remark", name: "Remark" },
 		{ label: "high_value", name: "High Value", formatter: boolFormatter },
@@ -175,7 +184,6 @@ document.columns = {
 		{ label: "maxed_out", name: "Maxed out", formatter: boolFormatter },
 	],
 	path: [
-		{ label: "id", name: "#" },
 		{ label: "target_name", name: "Target" },
 		{ label: "share_name", name: "Share" },
 		{ label: "full_path", name: "Path" },
