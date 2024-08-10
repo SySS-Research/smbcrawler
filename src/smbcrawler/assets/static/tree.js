@@ -1,25 +1,61 @@
 const items_limit = 50;
 
 function getTargets(limit, offset) {
-	const query = `SELECT * FROM target WHERE listable_authenticated = 1 OR listable_unauthenticated = 1 ORDER BY name LIMIT ${offset}, ${limit + 1}`;
+	const query = `
+    SELECT target.*,
+        CASE WHEN EXISTS (
+            SELECT 1 FROM share WHERE target.name = share.target_id
+        ) THEN 'true' ELSE 'false'
+        END AS has_children
+    FROM target
+    WHERE listable_authenticated = 1 OR listable_unauthenticated = 1
+    ORDER BY name
+    LIMIT ${offset}, ${limit + 1}`;
 	const result = document.db.exec(query)[0];
 	return result;
 }
 
 function getShares(target_id, limit, offset) {
-	const query = `SELECT * FROM share WHERE target_id = '${target_id}' ORDER BY name LIMIT ${offset}, ${items_limit + 1}`;
+	const query = `
+    SELECT share.*,
+        CASE WHEN EXISTS (
+            SELECT 1 FROM path WHERE path.share_id = share.name AND path.target_id = share.target_id
+        ) THEN 'true' ELSE 'false'
+        END AS has_children
+    FROM share
+    WHERE target_id = '${target_id}'
+    ORDER BY has_children DESC, name
+    LIMIT ${offset}, ${items_limit + 1}`;
 	const result = document.db.exec(query)[0];
 	return result;
 }
 
 function getPaths(targetId, shareId, limit, offset) {
-	const query = `SELECT * FROM path WHERE target_id = '${targetId}' AND share_id = '${shareId}' AND parent_id IS NULL ORDER BY name LIMIT ${offset}, ${limit + 1}`;
+	const query = `
+    SELECT path.*,
+        CASE WHEN EXISTS (
+            SELECT 1 FROM path AS subpath WHERE subpath.parent_id = path.id
+        ) THEN 'true' ELSE 'false'
+        END AS has_children
+    FROM path
+    WHERE target_id = '${targetId}' AND share_id = '${shareId}' AND parent_id IS NULL
+    ORDER BY has_children DESC, name
+    LIMIT ${offset}, ${limit + 1}`;
 	const result = document.db.exec(query)[0];
 	return result;
 }
 
 function getSubPaths(parentId, limit, offset) {
-	const query = `SELECT * FROM path WHERE parent_id = '${parentId}' ORDER BY name LIMIT ${offset}, ${limit + 1}`;
+	const query = `
+    SELECT path.*,
+        CASE WHEN EXISTS (
+            SELECT 1 FROM path AS subpath WHERE subpath.parent_id = path.id
+        ) THEN 'true' ELSE 'false'
+        END AS has_children
+    FROM path
+    WHERE parent_id = '${parentId}'
+    ORDER BY has_children DESC, name
+    LIMIT ${offset}, ${limit + 1}`;
 	const result = document.db.exec(query)[0];
 	return result;
 }
@@ -43,6 +79,7 @@ function loadMore(evnt) {
 				"target",
 				accessRow(row, rows.columns, "name"),
 				accessRow(row, rows.columns, "name"),
+				accessRow(row, rows.columns, "has_children") === "false",
 			);
 	}
 
@@ -57,6 +94,7 @@ function loadMore(evnt) {
 				"share",
 				accessRow(row, rows.columns, "name"),
 				accessRow(row, rows.columns, "name"),
+				accessRow(row, rows.columns, "has_children") === "false",
 			);
 	}
 
@@ -81,7 +119,7 @@ function loadMore(evnt) {
 				"path",
 				accessRow(path, rows.columns, "name"),
 				accessRow(path, rows.columns, "id"),
-				accessRow(path, rows.columns, "size") > 0,
+				accessRow(path, rows.columns, "has_children") === "false",
 			);
 	}
 
@@ -122,6 +160,7 @@ async function expandButton(evnt) {
 					"share",
 					accessRow(share, rows.columns, "name"),
 					accessRow(share, rows.columns, "name"),
+					accessRow(share, rows.columns, "has_children") === "false",
 				);
 		}
 
@@ -137,7 +176,7 @@ async function expandButton(evnt) {
 					"path",
 					accessRow(path, rows.columns, "name"),
 					accessRow(path, rows.columns, "id"),
-					accessRow(path, rows.columns, "size") > 0,
+					accessRow(path, rows.columns, "has_children") === "false",
 				);
 		}
 
@@ -148,7 +187,7 @@ async function expandButton(evnt) {
 					"path",
 					accessRow(path, rows.columns, "name"),
 					accessRow(path, rows.columns, "id"),
-					accessRow(path, rows.columns, "size") > 0,
+					accessRow(path, rows.columns, "has_children") === "false",
 				);
 		}
 
@@ -191,8 +230,8 @@ function createNode(type, body, id, isLeaf) {
 	if (type === "more") {
 		button.innerText = "…";
 		button.addEventListener("click", loadMore);
-	} else if (isLeaf && type === "path") {
-		button.innerText = "📄";
+	} else if (isLeaf && (type === "share" || type === "path")) {
+		button.style = "visibility: hidden";
 		button.disabled = true;
 	} else {
 		button.addEventListener("click", expandButton);
@@ -235,6 +274,7 @@ async function treeMain() {
 			"target",
 			accessRow(target, targets.columns, "name"),
 			accessRow(target, targets.columns, "name"),
+			accessRow(target, targets.columns, "has_children") === "false",
 		);
 		treeRoot.appendChild(node);
 	}
