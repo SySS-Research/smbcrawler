@@ -121,7 +121,9 @@ def init_db(path, cmd=None):
 
     is_empty = Config.select().count() == 0
     if not is_empty:
-        print("DB is not empty; choose another filename. Aborting.")
+        print(
+            "DB is not empty; choose another filename or delete the crawl file. Aborting."
+        )
         sys.exit(1)
         # TODO offer to resume scan.
 

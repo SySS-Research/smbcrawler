@@ -211,7 +211,9 @@ class EventReporter(object):
         )
 
     def found_high_value_share(self, target, share):
-        log.success("Found high value share", extra=dict(target=target, share=share))
+        log.success(
+            "Found readable high value share", extra=dict(target=target, share=share)
+        )
         self.db_queue.write(
             DbUpdate(
                 "Share",
