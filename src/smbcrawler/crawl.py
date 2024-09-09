@@ -197,14 +197,18 @@ class CrawlerThread(threading.Thread):
             return
 
         with FILE_LOCK:
-            self.app.event_reporter.downloaded_file(
-                self.current_target,
-                share,
-                f.get_full_path(),
-                local_path,
-                f.content_hash,
-                self.app.crawl_dir,
-            )
+            try:
+                self.app.event_reporter.downloaded_file(
+                    self.current_target,
+                    share,
+                    f.get_full_path(),
+                    local_path,
+                    f.content_hash,
+                    self.app.crawl_dir,
+                )
+            except FileExistsError:
+                # Race condition?
+                pass
 
     @log_exceptions()
     def process_directory(self, share, f, depth):
