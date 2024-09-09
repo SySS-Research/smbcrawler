@@ -110,7 +110,7 @@ class CrawlerThread(threading.Thread):
 
     def skip_host(self):
         """Stop crawling this host"""
-        self.app.event_reporter.skip_host(self.current_target)
+        self.app.event_reporter.skip_target(self.current_target)
         self._skip_host = True
 
     @log_exceptions()

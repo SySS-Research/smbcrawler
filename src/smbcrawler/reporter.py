@@ -271,8 +271,8 @@ class EventReporter(object):
             ),
         )
 
-    def skip_target(self, target, share):
-        log.info("Skipping target", extra=dict(target=self.current_target))
+    def skip_target(self, target):
+        log.info("Skipping target", extra=dict(target=target))
 
     def skip_directory(self, target, share, path):
         log.info(
