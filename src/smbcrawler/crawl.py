@@ -176,6 +176,7 @@ class CrawlerThread(threading.Thread):
             f"{self.current_target}\\{share}\\{f.get_full_path()}".encode()
         )
         local_path = os.path.join(self.app.content_dir, f"tmp.{name_hash}")
+
         bytes_written = 0
 
         def download(data):
