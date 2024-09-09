@@ -71,7 +71,7 @@ def init_db(path, cmd=None):
         listable_unauthenticated = peewee.BooleanField(null=True)
 
     class Share(BaseModel):
-        target = peewee.ForeignKeyField(Target, backref="shares")
+        target = peewee.ForeignKeyField(Target, backref="shares", index=True)
         name = peewee.CharField(index=True)
         remark = peewee.CharField(default=None, null=True)
         high_value = peewee.BooleanField(default=False)
@@ -87,8 +87,8 @@ def init_db(path, cmd=None):
     class Path(BaseModel):
         name = peewee.CharField(index=True)
         parent = peewee.ForeignKeyField("self", null=True, backref="children")
-        target = peewee.ForeignKeyField(Target)
-        share = peewee.ForeignKeyField(Share)
+        target = peewee.ForeignKeyField(Target, index=True)
+        share = peewee.ForeignKeyField(Share, index=True)
         size = peewee.IntegerField()
         content_hash = peewee.CharField(null=True, index=True)
         high_value = peewee.BooleanField(default=False)
