@@ -42,6 +42,9 @@ files:
   powershell_scripts:
     regex: '.*\.ps1'
     comment:
+  vbs_scripts:
+    regex: '.*\.(vbs|vbe|wsf|wsc)$'
+    comment:
   cmd_scripts:
     regex: '.*\.cmd'
     comment:
