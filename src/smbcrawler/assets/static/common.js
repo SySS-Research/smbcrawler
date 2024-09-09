@@ -138,7 +138,11 @@ function makeGrid(table) {
 const boolFormatter = (cell) => (cell === 1 ? "Yes ✅" : "No ❌");
 
 function convertArray(value) {
-	return new TextDecoder().decode(value);
+	try {
+		return new TextDecoder().decode(value);
+	} catch {
+		return `${value}`;
+	}
 }
 
 document.tableQueries = {
