@@ -17,7 +17,6 @@ BASE_DIR = Path(os.path.abspath(os.path.dirname(smbcrawler.__file__)))
 def generate_html(crawl_file: str, outputfile: str) -> None:
     tempdir = tempfile.TemporaryDirectory(
         prefix="smcrawler_html_report_",
-        delete=False,
         ignore_cleanup_errors=True,
     )
 
