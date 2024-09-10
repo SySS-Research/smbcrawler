@@ -140,7 +140,7 @@ files:
     regex: '\.mysql_history'
     comment: "Mysql History - Plain text passwords"
   etc_shadow:
-    regex: 'shadow'
+    regex: 'shadow$'
     comment: "Unix - Encrypted passwords"
     high_value: true
   firefox_logins:
@@ -155,7 +155,7 @@ files:
     comment: "Chrome - Encrypted passwords"
     high_value: true
   baramundi_scripts:
-    regex: '.*\.bds'
+    regex: '.*\.bds$'
     comment: "Baramundi Scripts"
   filezilla_config:
     regex: 'filezilla.xml|recentservers.xml'
@@ -168,7 +168,7 @@ files:
     comment: "SSH private key"
     high_value: true
   windows_user_db:
-    regex: 'SAM|SYSTEM|SECURITY|NTDS.DIT'
+    regex: '(SAM|SYSTEM|SECURITY|NTDS.DIT)$'
     comment: "Windows user database"
     high_value: true
   password_database:
@@ -184,11 +184,11 @@ files:
     comment:  "Very unlikely to contain passwords"
     download: false
   stylesheets:
-    regex: '.*\.css'
+    regex: '.*\.css$'
     comment:  "Very unlikely to contain passwords"
     download: false
   virtual_hard_drives:
-    regex: '.*\.(vhd|vhdx|vdi|vmdk|hdd)'
+    regex: '.*\.(vhd|vhdx|vdi|vmdk|hdd)$'
     download: false
     high_value: true
 
