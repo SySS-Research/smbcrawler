@@ -201,6 +201,28 @@ shares:
 Feel free to include other shares here which you may think are not worth
 crawling.
 
+### Output
+
+The raw data is contained in an SQLite database and a directory (`crawl` and
+`crawl.d` by default). The directory contains two more directories: one with
+the downloaded files unique-ified by the hash content and a directory
+mirroring all shares with symlinks pointing to the content files. The latter
+is good for grepping through all downloaded files.
+
+The data can be transformed in various formats. You can also simply access
+the database with `sqlitebrowser`, for example. Or you can output JSON and
+use `jq` to mangle the data.
+
+If you want to display all shares that you were able to read beyond the root
+directory in a LaTeX table, for instance, use this query:
+
+```sql
+SELECT target_id || " & " || name || " & " || remark || " \\"
+FROM share
+WHERE read_level > 0
+ORDER BY target_id, name
+```
+
 ### Help out
 
 If you notice a lot of false positives or false negatives in the reported
