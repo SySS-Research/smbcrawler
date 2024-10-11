@@ -232,11 +232,16 @@ secrets:
     regex_flags:
       - IGNORECASE
   NetUser:
+    comment: "'net user' command in script"
+    regex: 'net user [^ ]+ (?P<secret>[^/> ]{3,})'
+    regex_flags:
+      - IGNORECASE
+  NetUse:
     comment: "'net use' command in script"
     regex: 'net use .*\\.*/user:.* (?P<secret>[^/> ]{3,})'
     regex_flags:
       - IGNORECASE
-  NetUserAlt:
+  NetUseAlt:
     # alternative regex
     comment: "'net use' command in script"
     regex: 'net use .*\\.* (?P<secret>[^/> ]{3,}).*/user:'

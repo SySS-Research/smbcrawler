@@ -59,6 +59,8 @@ def test_profile_high_value_file(profile_collection):
         ("net use x: \\\\host\\share /user:admin thesecret /persist:no", "thesecret"),
         ("net use x: \\\\host\\share thesecret /user:admin", "thesecret"),
         ("net use x: \\\\host\\share thesecret /user:admin /persist:no", "thesecret"),
+        ("net user admin thesecret", "thesecret"),
+        ("net user admin *$!'", "*$!'"),
         ("foo runas /user:admin thesecret", "thesecret"),
         ("foo RunAs.exe /user:admin thesecret", "thesecret"),
         ("foo ConvertTo-SecureString thesecret", "thesecret"),
