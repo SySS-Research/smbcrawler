@@ -46,66 +46,66 @@ files:
     regex: '.*\.(vbs|vbe|wsf|wsc)$'
     comment:
   cmd_scripts:
-    regex: '.*\.cmd'
+    regex: '.*\.cmd$'
     comment:
   batch_scripts:
-    regex: '.*\.bat'
+    regex: '.*\.bat$'
     comment:
   private_keys:
-    regex: '.*\.(key|pem|p7b|p7c|pfx|p12|aws)'
+    regex: '.*\.(key|pem|p7b|p7c|pfx|p12|aws)$'
     comment:
   aws_creds:
-    regex: '.*\.aws'
+    regex: '.*\.aws$'
     comment:
   rdp_creds:
-    regex: '.*\.rdp|remmina'
+    regex: '.*\.rdp|remmina$'
     comment:
   exports:
-    regex: '.*\.exports'
+    regex: '.*\.exports$'
     comment:
   keypass2:
-    regex: '.*\.kdbx'
+    regex: '.*\.kdbx$'
     comment: "Keepass 2.x - Encrypted passwords"
     high_value: true
   keypass1:
-    regex: '.*\.kdb'
+    regex: '.*\.kdb$'
     comment: "Keepass 1.x - Encrypted passwords"
     high_value: true
   putty:
-    regex: '.*\.ppk'
+    regex: '.*\.ppk$'
     comment: "putty private keys"
     high_value: true
   password_safe:
-    regex: '.*\.psafe3'
+    regex: '.*\.psafe3$'
     comment: "password safe"
     high_value: true
   cloud_config:
-    regex: '.*\.cscfg'
+    regex: '.*\.cscfg$'
     comment: "Cloud config"
   kix_script:
-    regex: '.*\.kix'
+    regex: '.*\.kix$'
     comment: "KiXtart Script"
   kde_wallet:
-    regex: '.*\.kwallet'
+    regex: '.*\.kwallet$'
     comment: "kde wallet manager"
     high_value: true
   tunnelblick_config:
-    regex: '.*\.tblk'
+    regex: '.*\.tblk$'
     comment: "VPN profiles"
   open_vpn_profile:
-    regex: '.*\.ovpn'
+    regex: '.*\.ovpn$'
     comment: "VPN profiles"
   tomcat_config:
-    regex: 'tomcat-users\.xml'
+    regex: 'tomcat-users\.xml$'
     comment: "Apache Tomcat - Plain text passwords"
   empirum_config:
-    regex: 'AgentConfig\.xml'
+    regex: 'AgentConfig\.xml$'
     comment: "Matrix42 Empirum - Obfuscated passwords"
   dsm_config:
-    regex: 'NiCfg.*\.ncp'
+    regex: 'NiCfg.*\.ncp$'
     comment: "Ivanti DSM - Obfuscated passwords"
   netop_config:
-    regex: 'nhstconf\.ndb'
+    regex: 'nhstconf\.ndb$'
     comment: "Netop Remote Control - Encrypted passwords with static key"
   avira_config:
     regex: 'avwin\.ini'
