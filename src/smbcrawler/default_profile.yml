@@ -265,6 +265,11 @@ secrets:
     regex: '(password|pwd|passwd)[a-z]*\s*=\s*(?P<secret>..+)'
     regex_flags:
       - IGNORECASE
+    false_positives:
+      - "true"
+      - "false"
+      - "enter"
+      - ""
   PasswordJson:
     comment: "'password' value in JSON file"
     regex: '"[a-z]*(password|pwd|passwd)[a-z]*":\s*"(?P<secret>..+)"'
@@ -275,6 +280,11 @@ secrets:
     regex: '\s*[a-z]*passw[a-z]*:\s*(?P<secret>..+)'
     regex_flags:
       - IGNORECASE
+    false_positives:
+      - "true"
+      - "false"
+      - "enter"
+      - ""
   PasswordXml:
     comment: "'password' element in XML file"
     regex: "<[a-z]*pass[^>]*>(?P<secret>[^<]+)</[a-z]*pass"
