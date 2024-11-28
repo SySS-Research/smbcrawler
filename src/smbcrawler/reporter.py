@@ -80,14 +80,14 @@ class EventReporter(object):
         )
 
         log.info(
-            "Found share [%s]" % share.remark, extra=dict(taget=target, share=share)
+            "Found share: %s" % share.remark, extra=dict(taget=target, share=share)
         )
 
         if share.permissions["write"]:
             self.found_write_access(target, share)
 
     def share_finished(self, target, share):
-        log.info("Share finished: %s", extra=dict(target=target, share=share))
+        log.info("Share finished", extra=dict(target=target, share=share))
         self.db_queue.write(DbLinkPaths("Path", {}, target, share, share.paths))
         read_level = max(share.read_level or [0]) - min(share.read_level or [0])
         if share.maxed_out is None and share.read_level:
