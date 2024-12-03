@@ -312,4 +312,4 @@ secrets:
     regex: 'PASSWORD_[A-Z0-9_]*(SETUP|EIS|SYNC)=(?P<secret>..+)'
   DsmPassword:
     comment: "DSM password (Ivanti/Frontrange/Heat)"
-    regex: '\b(?P<secret>k[123456][A-Za-z0-9+/=]{32,})\b'
+    regex: '[^/+ ]\b(?P<secret>k[123456][A-Za-z0-9+/=]{32,})\b'
