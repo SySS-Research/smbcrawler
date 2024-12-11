@@ -205,10 +205,10 @@ class EventReporter(object):
         else:
             verb = "Seen"
         comment = profile.get("comment")
-        log.success(
-            f"{verb} high value file ({comment})",
-            extra=dict(target=target, share=share, path=path),
-        )
+        msg = f"{verb} high value file"
+        if comment:
+            msg += f" ({comment})"
+        log.success(msg, extra=dict(target=target, share=share, path=path))
 
     def found_high_value_directory(self, target, share, path, profile):
         comment = profile.get("comment")
