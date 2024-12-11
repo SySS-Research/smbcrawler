@@ -210,6 +210,13 @@ class EventReporter(object):
             extra=dict(target=target, share=share, path=path),
         )
 
+    def found_high_value_directory(self, target, share, path, profile):
+        comment = profile.get("comment")
+        msg = "Found high value directory"
+        if comment:
+            msg += f" ({comment})"
+        log.success(msg, extra=dict(target=target, share=share))
+
     def found_high_value_share(self, target, share):
         log.success(
             "Found readable high value share", extra=dict(target=target, share=share)
