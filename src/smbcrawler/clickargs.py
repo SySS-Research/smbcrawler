@@ -244,7 +244,7 @@ def showlog(ctx):
     "-f",
     "--format",
     type=click.Choice(["html", "json", "yaml", "csv"]),
-    default="html",
+    default="yaml",
     show_default=True,
     help="Output format",
 )
