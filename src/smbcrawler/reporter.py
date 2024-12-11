@@ -106,11 +106,6 @@ class EventReporter(object):
             )
         )
 
-    def process_path(self, target, share, path, size):
-        self.db_queue.write(
-            DbInsert("Path", dict(target=target, share=share, name=path, size=size))
-        )
-
     def depth_limit_reached(self, target, share):
         log.info("Maximum depth reached: \\\\%s\\%s" % (target, share))
         self.db_queue.write(
