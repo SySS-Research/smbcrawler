@@ -214,9 +214,10 @@ class CrawlerThread(threading.Thread):
     @log_exceptions()
     def process_directory(self, share, f, depth):
         profile = find_matching_profile(
-            self.app.profile_collection, "directories", self.name
+            self.app.profile_collection, "directories", str(f)
         )
-        if profile and profile["crawl_depth"]:
+
+        if profile and profile.get("crawl_depth"):
             self.app.event_reporter.non_default_depth(str(f))
             depth = profile["depth"]
 
