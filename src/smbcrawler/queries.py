@@ -52,6 +52,7 @@ WITH RECURSIVE FullPath AS (
         p.content_hash,
         secret.secret,
         secret.line,
+        secret.line_number,
         t.name AS target_name,
         s.name AS share_name,
         p.name AS path
@@ -73,6 +74,7 @@ WITH RECURSIVE FullPath AS (
         fp.content_hash,
         fp.secret,
         fp.line,
+        fp.line_number,
         fp.target_name,
         fp.share_name,
         p.name || '\\' || fp.path AS path
@@ -83,7 +85,7 @@ WITH RECURSIVE FullPath AS (
 )
 -- Final selection from the recursive CTE
 SELECT
-    secret, line, target_name, share_name, path, content_hash
+    secret, line, line_number, target_name, share_name, path, content_hash
 FROM
     FullPath
 """,

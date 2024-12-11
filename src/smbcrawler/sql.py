@@ -96,6 +96,7 @@ def init_db(path, cmd=None):
     class Secret(BaseModel):
         content_hash = peewee.CharField(index=True)
         line = peewee.CharField()
+        line_number = peewee.IntegerField()
         secret = peewee.CharField()
 
     class LogItem(BaseModel):
@@ -103,7 +104,7 @@ def init_db(path, cmd=None):
         message = peewee.CharField()
         level = peewee.CharField()
         thread_id = peewee.IntegerField()
-        line_no = peewee.IntegerField()
+        line_number = peewee.IntegerField()
         module = peewee.CharField()
         exc_info = peewee.CharField(null=True)
         target = peewee.ForeignKeyField(Target, backref="logitems", null=True)

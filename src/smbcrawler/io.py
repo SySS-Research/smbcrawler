@@ -143,7 +143,7 @@ def find_secrets(content, secret_profiles):
     """Extract secrets from content"""
     result = []
 
-    for line in content.splitlines():
+    for line_number, line in enumerate(content.splitlines()):
         if not line or len(line) > 1024:
             continue
 
@@ -155,6 +155,7 @@ def find_secrets(content, secret_profiles):
                     {
                         "secret": s.secret.strip(),
                         "line": line.strip(),
+                        "line_number": line_number + 1,
                         "comment": s.comment,
                     }
                 )

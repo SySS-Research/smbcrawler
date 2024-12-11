@@ -86,7 +86,7 @@ class DBHandler(logging.Handler):
             message=record.msg,
             level=record.levelname,
             thread_id=record.thread,
-            line_no=record.lineno,
+            line_number=record.lineno,
             module=record.module,
             exc_info=record.exc_info,
             target=str(getattr(record, "target", None)),

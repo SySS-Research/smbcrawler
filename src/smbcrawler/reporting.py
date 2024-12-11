@@ -111,7 +111,7 @@ def create_cleanup_guide(secrets):
     path_map = defaultdict(list)
 
     for s in secrets:
-        secret_map[(s["secret"], s["line"])].append(
+        secret_map[(s["secret"], s["line"], s["line_number"])].append(
             f"\\\\{s['target_name'].replace(':445', '')}\\{s['share_name']}\\{s['path']}"
         )
 
@@ -119,7 +119,10 @@ def create_cleanup_guide(secrets):
         path_map[frozenset(v)].append(k)
 
     result = [
-        {"secrets": [{"secret": s[0], "line": s[1]} for s in k], "locations": v}
+        {
+            "secrets": [{"secret": s[0], "line": s[1], "line_number": s[2]} for s in k],
+            "locations": v,
+        }
         for k, v in zip(path_map.values(), map(list, path_map.keys()))
     ]
 
