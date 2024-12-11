@@ -224,6 +224,10 @@ directories:
     regex: 'WinSxS'
     comment: "Backups of binaries"
     crawl_depth: 0
+  windows_image_backups:
+    regex: 'WindowsImageBackup'
+    comment: "Backups made with Windows board tools"
+    high_value: true
 
 secrets:
   PasswordNaturalLanguage:
