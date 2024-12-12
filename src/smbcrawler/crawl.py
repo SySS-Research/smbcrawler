@@ -217,10 +217,6 @@ class CrawlerThread(threading.Thread):
             self.app.profile_collection, "directories", str(f)
         )
 
-        if profile and profile.get("crawl_depth"):
-            self.app.event_reporter.non_default_depth(str(f))
-            depth = profile["depth"]
-
         if profile and profile.get("high_value"):
             self.app.event_reporter.found_high_value_directory(
                 self.current_target,
@@ -229,7 +225,11 @@ class CrawlerThread(threading.Thread):
                 profile,
             )
             f.high_value = True
-            depth = 999
+            depth = -1
+
+        if profile and profile.get("crawl_depth"):
+            self.app.event_reporter.non_default_depth(str(f))
+            depth = int(profile["crawl_depth"])
 
         self.crawl_dir(share, depth - 1, parent=f)
 
@@ -307,20 +307,27 @@ class CrawlerThread(threading.Thread):
             profile = find_matching_profile(
                 self.app.profile_collection, "shares", share_name
             )
+
             if profile and profile.get("high_value") and share.permissions["list_root"]:
                 self.app.event_reporter.found_high_value_share(
                     self.current_target, share_name
                 )
+                depth = -1
 
             self.current_share = share
             depth = share.effective_depth(
                 self.depth,
                 self.crawl_printers_and_pipes,
             )
+
+            if profile and profile.get("crawl_depth"):
+                depth = int(profile.get("crawl_depth"))
+
             if depth != self.depth:
                 self.app.event_reporter.non_default_depth(
                     self.current_target, share_name
                 )
+
             self.crawl_share(share, depth=depth)
 
         self.smbClient.close()
