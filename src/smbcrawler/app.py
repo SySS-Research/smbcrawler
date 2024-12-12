@@ -1,7 +1,7 @@
 import sys
 import logging
 import queue
-import readline
+import readline  # noqa
 import threading
 import os
 import time
