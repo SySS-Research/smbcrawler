@@ -51,13 +51,14 @@ class EventReporter(object):
             log("Failed to create FIFO: %s" % e)
         self.fifo_pipe = filename
 
-    def process_target(self, target, port_open=False, instance_name=None):
+    def process_target(self, target, port_open=False):
         log.info("Processing target: %s" % target)
         self.db_queue.write(
             DbInsert(
                 "Target",
                 dict(
-                    name=str(target), instance_name=instance_name, port_open=port_open
+                    name=str(target),
+                    port_open=port_open,
                 ),
             )
         )
@@ -66,13 +67,25 @@ class EventReporter(object):
         else:
             log.info("No SMB service found", extra=dict(target=target))
 
+    def update_target(self, target, netbios_name):
+        self.db_queue.write(
+            DbUpdate(
+                "Target",
+                dict(netbios_name=netbios_name),
+                filter_=dict(name=str(target)),
+            )
+        )
+
     def found_share(self, target, share):
+        name = str(share)
+        if name.endswith(":445"):
+            name = name[:-4]
         self.db_queue.write(
             DbInsert(
                 "Share",
                 dict(
                     target=str(target),
-                    name=str(share),
+                    name=name,
                     remark=share.remark,
                     #  maxed_out=False,
                 ),

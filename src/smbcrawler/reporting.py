@@ -112,7 +112,7 @@ def create_cleanup_guide(secrets):
 
     for s in secrets:
         secret_map[(s["secret"], s["line"], s["line_number"])].append(
-            f"\\\\{s['target_name'].replace(':445', '')}\\{s['share_name']}\\{s['path']}"
+            f"\\\\{s['target_name']}\\{s['share_name']}\\{s['path']}"
         )
 
     for k, v in secret_map.items():

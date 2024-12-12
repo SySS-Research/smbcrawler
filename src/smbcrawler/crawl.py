@@ -243,7 +243,10 @@ class CrawlerThread(threading.Thread):
             return False
 
         if not target.is_port_open(self.timeout):
-            self.app.event_reporter.process_target(target, port_open=False)
+            self.app.event_reporter.process_target(
+                target,
+                port_open=False,
+            )
             return False
 
         self.smbClient = SMBConnection(
@@ -256,7 +259,10 @@ class CrawlerThread(threading.Thread):
             self.app.event_reporter.connection_error(target)
             return False
 
-        self.app.event_reporter.process_target(target, port_open=True)
+        self.app.event_reporter.process_target(
+            target,
+            port_open=True,
+        )
 
         # log on
         try:
@@ -279,6 +285,8 @@ class CrawlerThread(threading.Thread):
                     self.app.event_reporter.list_access_denied(target)
                     return False
                 raise
+
+        self.app.event_reporter.update_target(target, str(self.smbClient))
 
         for share in shares:
             self.check_paused()

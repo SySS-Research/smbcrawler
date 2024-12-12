@@ -36,7 +36,10 @@ function addItem(item, headline) {
 	const locationListElement = clone.querySelector(".locations ul");
 
 	for (const s of item.values) {
-		preElement.innerHTML += `${s.line.replace(s.secret, `<strong>${s.secret}</strong>`)}\n`;
+		preElement.innerHTML += `${s.line.replace(
+			s.secret,
+			`<strong>${s.secret}</strong>`,
+		)}\n`;
 	}
 	for (const l of item.locations) {
 		const listItem = document.createElement("li");
@@ -57,7 +60,7 @@ async function secretsCleanupGuideMain() {
 			secret: accessRow(row, rows.columns, "secret"),
 			line: accessRow(row, rows.columns, "line"),
 			path: accessRow(row, rows.columns, "path"),
-			target: accessRow(row, rows.columns, "target_name").replace(":445", ""),
+			target: accessRow(row, rows.columns, "target_name"),
 			share: accessRow(row, rows.columns, "share_name"),
 		};
 	});

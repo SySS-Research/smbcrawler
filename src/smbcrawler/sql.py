@@ -65,8 +65,8 @@ def init_db(path, cmd=None):
 
     class Target(BaseModel):
         name = peewee.CharField(unique=True, index=True)
+        netbios_name = peewee.CharField(index=True, null=True)
         port_open = peewee.BooleanField()
-        instance_name = peewee.CharField(index=True, null=True)
         listable_authenticated = peewee.BooleanField(null=True)
         listable_unauthenticated = peewee.BooleanField(null=True)
 

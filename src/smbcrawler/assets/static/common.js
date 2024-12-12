@@ -159,7 +159,7 @@ document.columns = {
 			name: "Port open",
 			formatter: boolFormatter,
 		},
-		{ label: "instance_name", name: "Instance name" },
+		{ label: "netbios_name", name: "NetBIOS name" },
 		{
 			label: "listable_authenticated",
 			name: "Listable (auth)",

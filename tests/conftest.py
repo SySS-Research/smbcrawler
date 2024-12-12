@@ -105,26 +105,26 @@ def smb_configs():
         "base": {
             "shares": ["secret", "small", "Admin$"],
             "globals": ["noprinting", "default"],
-            "instance_name": "SAMBA_BASE",
+            "netbios_name": "SAMBA_BASE",
         },
         "anonymous_listing": {
             "shares": ["small"],
             "globals": ["noprinting", "allow_anonymous_listing"],
-            "instance_name": "SAMBA_ANON_LIST",
+            "netbios_name": "SAMBA_ANON_LIST",
         },
         "anonymous_read": {
             "shares": ["small"],
             "globals": ["noprinting", "allow_anonymous_share_access"],
-            "instance_name": "SAMBA_ANON_READ",
+            "netbios_name": "SAMBA_ANON_READ",
         },
         "no_access": {
             "shares": ["small"],
-            "instance_name": "SAMBA_ACCESS_DENIED",
+            "netbios_name": "SAMBA_ACCESS_DENIED",
         },
         "realistic": {
             "shares": ["small", "big", "superbig"],
             "globals": ["noprinting", "default"],
-            "instance_name": "SAMBA_REALISTIC",
+            "netbios_name": "SAMBA_REALISTIC",
         },
     }
 
