@@ -20,15 +20,18 @@ and 'crawls' (or 'spiders') through those shares. Features:
 Installation
 ------------
 
-Install with `python3 -m pip install .` or `pipx install .`. Make sure `$HOME/.local/bin` is in
-your `$PATH`.
+If you require instructions on how to install a Python package, I recommend
+you make sure you [have `pipx`
+installed](https://pipx.pypa.io/stable/installation/) and run `pipx install
+smbcrawler`.
 
-The `pdftotext` dependency will be built from source during the installation, which requires the
-poppler C++ headers. On Debian-based systems like Kali or Ubuntu, they can be installed with
-`apt install libpoppler-cpp-dev`.
+When building the package from source, the `pdftotext` dependency will be
+compiled during the installation, which requires the poppler C++ headers. On
+Debian-based systems like Kali or Ubuntu, they can be installed with `apt
+install libpoppler-cpp-dev`.
 
-As a Python app using the `click` library, you can add tab completion to
-bash, zsh and fish using the [usual
+Adding shell completion is highly recommended. As a Python app using the
+`click` library, you can add tab completion to bash, zsh and fish using the [usual
 mechanism](https://click.palletsprojects.com/en/8.1.x/shell-completion/#enabling-completion).
 
 
@@ -38,16 +41,14 @@ Example
 Run it like this (10 threads, maximum depth 5):
 
 ```
-$ smbcrawler crawl -i hosts.txt -u pen.tester -p iluvb0b -d contoso.local \
-        -t 10 -D 5
+$ smbcrawler crawl -i hosts.txt -u pen.tester -p iluvb0b -d contoso.local -t 10 -D 5
 ```
 
 
 Major changes in version 1.0
 ----------------------------
 
-SmbCrawler has undergone a major overhaul. The most significant changes
-are:
+SmbCrawler has undergone a major overhaul. The most significant changes are:
 
 * We cleaned up the CLI and introduced a "profile" mechanism to steer the
   behavior of the crawler
@@ -69,7 +70,7 @@ For example, it's not uncommon that you have read permissions in the root
 directory of the share, but all sub directories are protected, e.g. for user
 profiles. SmbCrawler will now report how deep it was able to read the
 directory tree of a share and whether it maxed out or could have gone deeper
-with a higher value for the maximum depth argument.
+if you had supplied a higher value for the maximum depth argument.
 
 
 Usage
@@ -109,8 +110,8 @@ SmbCrawler will report if you have permissions to:
 
 Because it is non-trivial to check permissions of SMB shares without
 attempting the action in question, SmbCrawler will attempt to create a
-directory on each share. Its name is `smbcrawler_DELETEME_<8 random
-characters>` and will be deleted immediately, but be aware anyway.
+directory on each share. Its name is `smbcrawler_DELETEME_<8 random characters>`
+and will be deleted immediately, but be aware anyway.
 
 > [!WARNING]
 > Sometimes you have the permission to create directories, but not to delete
@@ -153,7 +154,9 @@ is again a dictionary with different properties.
 
 #### Shares and directories
 
-* `comment`, `regex`, `regex_flags`, `high_value`: Same as above
+* `comment`, `regex`, `regex_flags`: Same as above
+* `high_value`: its presence will be reported and crawl depth changed to
+  infinity
 * `crawl_depth`: Crawl this share or directory up to a different depth than
   what is defined by the `--depth` argument
 
@@ -177,7 +180,7 @@ $ smbcrawler -C permissions_check.crwl crawl -D0 -t10 -w \
 
 Afterwards, you can identify interesting and boring shares for your next run
 or several runs. Some shares like `SYSVOL` and `NETLOGON` appear many times,
-so you should declare these as "boring" on your next run and pick one host
+so you should set the crawl depth to zero on your next run and pick one host
 to scan these duplicate shares in a third run. Here is an example:
 
 ```
@@ -203,13 +206,13 @@ crawling.
 
 ### Output
 
-The raw data is contained in an SQLite database and a directory (`crawl` and
-`crawl.d` by default). The directory contains two more directories: one with
+The raw data is contained in an SQLite database and a directory (`output.crwl` and
+`output.crwl.d` by default). The directory contains two more directories: one with
 the downloaded files unique-ified by the hash content and a directory
 mirroring all shares with symlinks pointing to the content files. The latter
 is good for grepping through all downloaded files.
 
-The data can be transformed in various formats. You can also simply access
+The data can be transformed to various formats. You can also simply access
 the database with `sqlitebrowser`, for example. Or you can output JSON and
 use `jq` to mangle the data.
 
@@ -223,13 +226,15 @@ WHERE read_level > 0
 ORDER BY target_id, name
 ```
 
+There is also an experimental HTML output feature. It may not be entirely
+useful yet for large amounts of data.
+
 ### Help out
 
 If you notice a lot of false positives or false negatives in the reported
 secrets, please help out and let me know. Community input is important when
 trying to improve automatic detection. Best case scenario: provide a pull
 request with changes to the default profile file.
-
 
 
 Credits
