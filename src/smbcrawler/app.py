@@ -135,7 +135,6 @@ class CrawlerApp(object):
     def show_menu(self):
         print("\ts <n>[,<m>,...]\tSkip share in thread <n>")
         print("\th <n>[,<m>,...]\tSkip host in thread <n>")
-        print("\td <n>\tShow debug info of thread <n>")
         print("\tr\tResume crawler")
         print("\tq\tWrite output files and quit")
         print("Threads:")
