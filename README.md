@@ -72,6 +72,8 @@ profiles. SmbCrawler will now report how deep it was able to read the
 directory tree of a share and whether it maxed out or could have gone deeper
 if you had supplied a higher value for the maximum depth argument.
 
+If you prefer the old version, it's still available on PyPI and installable
+with `pipx install smbcrawler==0.2.0`, for example.
 
 Usage
 -----
