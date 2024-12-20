@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Shares</h2>
+<p>
+<div id="table"></div>
+</p>
+
+<script>
+    async function main(){
+        await initDb();
+        makeGrid("share").render(document.getElementById("table"));
+    };
+
+    window.addEventListener("load", main);
+</script>
+
+
+{% endblock %}

@@ -6,6 +6,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 1.0.0 (???)
+
+Major changes in this one.
+
+### Changed
+
+- Use sqlite instead of JSON files for output
+- Revamped CLI
+- Use profiles instead of `interesting_shares` etc. lists
+- Decluttered console output
+- Improved the regular expressions that find the secrets
+
+### Added
+
+- Interacive HTML report
+- Tab completion for popular shells using the `click` library
+- Detailed status update
+
+
+## 0.2.0 (2022-09-23)
+
 ### Removed
 
 - Support for JSON and XML output files

@@ -1,0 +1,115 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "smbcrawler"
+dynamic = ["version"]
+authors = [
+    {name = "Adrian Vollmer", email = "adrian.vollmer@syss.de"},
+]
+description = 'Search SMB shares for interesting files'
+readme = "README.md"
+requires-python = ">=3.9"
+keywords = ["pentest", "smb", "shares", "reconnaissance"]
+license = {text = "MIT License"}
+classifiers = [
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    'impacket>=0.9.20',
+    'python-libnmap',
+    'lxml',
+    'pdftotext',
+    'python-magic',
+    'peewee',
+    'json2html',
+    'click',
+    'pyxdg',
+    'pyyaml',
+    'zundler>=0.2.1',
+]
+
+[tool.setuptools]
+packages = ["smbcrawler"]
+
+[tool.setuptools-git-versioning]
+enabled = true
+
+[project.urls]
+"Homepage" = 'https://github.com/SySS-Research/smbcrawler'
+"Bug Tracker" = 'https://github.com/SySS-Research/smbcrawler/issues'
+
+[project.scripts]
+smbcrawler = "smbcrawler.__main__:main"
+
+[project.optional-dependencies]
+tests = [
+  'pytest',
+  'pdbpp',
+]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "_version.py"
+
+[tool.hatch.build.targets.sdist]
+include = ["src"]
+
+[tool.pytest.ini_options]
+norecursedirs = "tests/shares"
+filterwarnings = "ignore::DeprecationWarning"
+minversion = "8.0"
+addopts = "-ra -q"
+pythonpath = "src tests"
+testpaths = [
+    "tests",
+]
+
+[tool.hatch.envs.default]
+installer = "uv"
+dependencies = [
+  "coverage[toml]>=6.5",
+  "pytest",
+]
+
+[tool.hatch.envs.lint]
+dependencies = [
+  "mypy>=1.0.0",
+  "ruff>=0.0.243",
+  "pytest-stub",
+]
+
+[tool.hatch.envs.lint.scripts]
+typing = "mypy --install-types --non-interactive {args:src tests}"
+style = [
+  "ruff check {args:src tests}",
+]
+fmt = [
+  "ruff check --fix {args:src tests}",
+  "style",
+]
+all = [
+  "style",
+  "typing",
+]
+
+[tool.hatch.envs.default.scripts]
+test = "pytest {args:tests}"
+test-cov = "coverage run -m pytest {args:tests}"
+cov-report = [
+  "- coverage combine",
+  "coverage report",
+]
+cov = [
+  "test-cov",
+  "cov-report",
+]

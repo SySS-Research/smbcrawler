@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Summary</h2>
+
+<p>
+<dl>
+  <dt>File created</dt>
+  <dd id="created"></dd>
+
+  <dt>Command</dt>
+  <dd><code id="cmd"></code></dd>
+
+<dt>Total targets</dt><dd id="number_targets"></dd>
+<dt>Targets with open ports</dt><dd id="number_targets_with_open_ports"></dd>
+<dt>Targets with at least one share</dt><dd id="number_targets_with_open_shares"></dd>
+<dt>Total secrets</dt><dd id="number_secrets"></dd>
+<dt>Unique secrets</dt><dd id="number_unique_secrets"></dd>
+<dt>Total shares</dt><dd id="number_shares"></dd>
+<dt>Shares with listable root</dt><dd id="number_shares_listable_root"></dd>
+<dt>Shares with listable root as guest</dt><dd id="number_shares_listable_root_as_guest"></dd>
+<dt>Shares with write access in root</dt><dd id="number_shares_writable"></dd>
+<dt>Total paths</dt><dd id="number_paths"></dd>
+<dt>High value files</dt><dd id="number_high_value_files"></dd>
+<dt>High value shares</dt><dd id="number_high_value_shares"></dd>
+
+</dl>
+</p>
+
+<script>
+    async function main(){
+        await initDb();
+        const db = document.db;
+        const config = db.exec("SELECT * FROM config")[0];
+        const rows = db.exec(document.queries.summary)[0];
+
+        config.columns.forEach( (column, i) => {
+            const el = document.getElementById(column);
+            if (el) { el.innerText = config.values[0][i] };
+        });
+
+        rows.values.forEach( (row, i) => {
+            const el = document.getElementById(row[0]);
+            if (el) { el.innerText = row[1] };
+        });
+    };
+    window.addEventListener("load", main);
+</script>
+
+{% endblock %}

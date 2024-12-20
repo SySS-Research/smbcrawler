@@ -1,0 +1,319 @@
+files:
+  creds:
+    regex: '.*cred(s|ential).*'
+    comment:
+  secrets:
+    regex: '.*secret.*'
+    comment:
+  settings:
+    regex: '.*settings.*'
+    comment:
+  configs:
+    regex: '.*config.*'
+    comment:
+  logins:
+    regex: '.*login.*'
+    comment:
+  bitlocker_files:
+    regex: '.*bitlocker.*'
+    comment:
+  bitlocker_key:
+    regex: '.*\.bek'
+    comment: "Bitlocker key"
+    high_value: true
+  passwords:
+    regex: '.*passw.*'
+    comment:
+  creds_german:
+    regex: '.*zug(a|ä|ae)ng.*'
+    comment:
+  cfgs:
+    regex: '.*\.cfg'
+    comment:
+  inis:
+    regex: '.*\.ini'
+    comment:
+  properties:
+    regex: '.*\.properties'
+    comment:
+  json_files:
+    regex: '.*\.json'
+    comment:
+  powershell_scripts:
+    regex: '.*\.ps1'
+    comment:
+  vbs_scripts:
+    regex: '.*\.(vbs|vbe|wsf|wsc)$'
+    comment:
+  cmd_scripts:
+    regex: '.*\.cmd$'
+    comment:
+  batch_scripts:
+    regex: '.*\.bat$'
+    comment:
+  private_keys:
+    regex: '.*\.(key|pem|p7b|p7c|pfx|p12|aws)$'
+    comment:
+  aws_creds:
+    regex: '.*\.aws$'
+    comment:
+  rdp_creds:
+    regex: '.*\.rdp|remmina$'
+    comment:
+  exports:
+    regex: '.*\.exports$'
+    comment:
+  keypass2:
+    regex: '.*\.kdbx$'
+    comment: "Keepass 2.x - Encrypted passwords"
+    high_value: true
+  keypass1:
+    regex: '.*\.kdb$'
+    comment: "Keepass 1.x - Encrypted passwords"
+    high_value: true
+  putty:
+    regex: '.*\.ppk$'
+    comment: "putty private keys"
+    high_value: true
+  password_safe:
+    regex: '.*\.psafe3$'
+    comment: "password safe"
+    high_value: true
+  cloud_config:
+    regex: '.*\.cscfg$'
+    comment: "Cloud config"
+  kix_script:
+    regex: '.*\.kix$'
+    comment: "KiXtart Script"
+  kde_wallet:
+    regex: '.*\.kwallet$'
+    comment: "kde wallet manager"
+    high_value: true
+  tunnelblick_config:
+    regex: '.*\.tblk$'
+    comment: "VPN profiles"
+  open_vpn_profile:
+    regex: '.*\.ovpn$'
+    comment: "VPN profiles"
+  tomcat_config:
+    regex: 'tomcat-users\.xml$'
+    comment: "Apache Tomcat - Plain text passwords"
+  empirum_config:
+    regex: 'AgentConfig\.xml$'
+    comment: "Matrix42 Empirum - Obfuscated passwords"
+  dsm_config:
+    regex: 'NiCfg.*\.ncp$'
+    comment: "Ivanti DSM - Obfuscated passwords"
+  netop_config:
+    regex: 'nhstconf\.ndb$'
+    comment: "Netop Remote Control - Encrypted passwords with static key"
+  avira_config:
+    regex: 'avwin\.ini'
+    comment: "Avira"
+  sophos_config:
+    regex: 'iconnlocal\.cfg'
+    comment: "Sophos - Obfuscated passwords"
+  mcaffee_config1:
+    regex: 'SiteList\.xml'
+    comment: "McAfee - Obfuscated passwords"
+  mcaffee_config2:
+    regex: 'ServerSiteList\.xml'
+    comment: "McAfee - Obfuscated passwords"
+  trackit_config:
+    regex: 'TrackIt.*\.xml'
+    comment: "BMC Track IT! - Encrypted passwords with static key"
+  unattend_xml:
+    regex: 'unattend.*\.xml'
+    comment: "Windows installation files - Plain text passwords"
+    false_positives:
+      - '*SENSITIVE*DATA*DELETED*'
+  bash_history:
+    regex: '\.bash_history'
+    comment: "Bash History - Plain text passwords"
+  zsh_history:
+    regex: '\.zsh_history'
+    comment: "Zsh History - Plain text passwords"
+  sh_history:
+    regex: '\.sh_history'
+    comment: "Sh History - Plain text passwords"
+  mysql_history:
+    regex: '\.mysql_history'
+    comment: "Mysql History - Plain text passwords"
+  etc_shadow:
+    regex: 'shadow$'
+    comment: "Unix - Encrypted passwords"
+    high_value: true
+  firefox_logins:
+    regex: 'logins\.json'
+    comment: "Firefox - Encrypted passwords"
+    high_value: true
+  firefox_keys:
+    regex: 'key3\.db'
+    comment: "Firefox - Key for logins.json"
+  chrome_passwords:
+    regex: 'Login Data'
+    comment: "Chrome - Encrypted passwords"
+    high_value: true
+  baramundi_scripts:
+    regex: '.*\.bds$'
+    comment: "Baramundi Scripts"
+  filezilla_config:
+    regex: 'filezilla.xml|recentservers.xml'
+    comment:
+  terraform_config:
+    regex: 'terraform\.tfvars'
+    comment:
+  ssh_private_keys:
+    regex: 'id_rsa|id_dsa|id_ecdsa|id_ed25519'
+    comment: "SSH private key"
+    high_value: true
+  windows_user_db:
+    regex: '(SAM|SYSTEM|SECURITY|NTDS.DIT)$'
+    comment: "Windows user database"
+    high_value: true
+  password_database:
+    regex: 'pwd\.db'
+    comment:
+    high_value: true
+  gpg_private_key:
+    regex: 'secring\.gpg'
+    comment: "GnuPG - Encrypted private keys"
+    high_value: true
+  binaries:
+    regex: '.*\.(dll|exe|msi|msp)$'
+    comment:  "Very unlikely to contain passwords"
+    download: false
+  stylesheets:
+    regex: '.*\.css$'
+    comment:  "Very unlikely to contain passwords"
+    download: false
+  virtual_hard_drives:
+    regex: '.*\.(vhd|vhdx|vdi|vmdk|hdd)$'
+    download: false
+    high_value: true
+
+shares:
+  printers:
+    regex: 'print\$'
+    regex_flags:
+      - IGNORECASE
+    comment: "Probably only contains drivers"
+    crawl_depth: 0
+  software_repos:
+    regex: 'wsus.*|sccm.*|sms.*|msscvm.*|.*reminst.*'
+    regex_flags:
+      - IGNORECASE
+    comment: "Contains only binary packages"
+    crawl_depth: 0
+  binary_backups:
+    regex: 'WinSxS|backup'
+    regex_flags:
+      - IGNORECASE
+    comment: "Backups of binaries"
+    crawl_depth: 0
+  admin:
+    regex: 'C\$|Admin\$'
+    regex_flags:
+      - IGNORECASE
+    comment: "Admin shares"
+    crawl_depth: 0
+    high_value: true
+
+directories:
+  binary_backups:
+    regex: 'WinSxS'
+    comment: "Backups of binaries"
+    crawl_depth: 0
+  windows_image_backups:
+    regex: 'WindowsImageBackup'
+    comment: "Backups made with Windows board tools"
+    high_value: true
+
+secrets:
+  PasswordNaturalLanguage:
+    comment: "A password in several languages"
+    regex: '(Password|Passwort|Kennwort|Wachtwoord|Adgangskode|L(ö|o|oe)senord|Salasana|Hasło|Parola|şifre|jelszó|Mot de passe|Senha|Пароль|密码|पासवर्ड|Contrase(ñ|n)a):\s*\b(?P<secret>.{3,24})\b'
+    regex_flags:
+      - IGNORECASE
+  NetUser:
+    comment: "'net user' command in script"
+    regex: 'net user [^ ]+ (?P<secret>[^/> ]{3,})'
+    regex_flags:
+      - IGNORECASE
+  NetUse:
+    comment: "'net use' command in script"
+    regex: 'net use .*\\.*/user:.* (?P<secret>[^/> ]{3,})'
+    regex_flags:
+      - IGNORECASE
+  NetUseAlt:
+    # alternative regex
+    comment: "'net use' command in script"
+    regex: 'net use .*\\.* (?P<secret>[^/> ]{3,}).*/user:'
+    regex_flags:
+      - IGNORECASE
+  RunAs:
+    comment: "'RunAs' command in script"
+    regex: 'runas(\.exe)? .*/user.*'
+    regex_flags:
+      - IGNORECASE
+  SecureString:
+    comment: "'ConvertTo-SecureString' command in script"
+    regex: "ConvertTo-SecureString .*"
+    regex_flags:
+      - IGNORECASE
+  TrackITPassword:
+    comment: "TrackIT uses a static key"
+    regex: 'TRACKIT_PASSWORD=(?P<secret>[A-Za-z0-9+/=]*)'
+  PasswordConfig:
+    comment: "'password =' in config"
+    regex: '(password|pwd|passwd)[a-z]*\s*=\s*(?P<secret>..+)'
+    regex_flags:
+      - IGNORECASE
+    false_positives:
+      - "true"
+      - "false"
+      - "enter"
+      - ""
+  PasswordJson:
+    comment: "'password' value in JSON file"
+    regex: '"[a-z]*(password|pwd|passwd)[a-z]*":\s*"(?P<secret>..+)"'
+    regex_flags:
+      - IGNORECASE
+  PasswordYaml:
+    comment: "'password' value in YAML file"
+    regex: '\s*[a-z]*passw[a-z]*:\s*(?P<secret>..+)'
+    regex_flags:
+      - IGNORECASE
+    false_positives:
+      - "true"
+      - "false"
+      - "enter"
+      - ""
+  PasswordXml:
+    comment: "'password' element in XML file"
+    regex: "<[a-z]*pass[^>]*>(?P<secret>[^<]+)</[a-z]*pass"
+    regex_flags:
+      - IGNORECASE
+  PasswordUnattend:
+    comment: "password in unattend.xml"
+    regex: '<Password>\s*<Value>(?P<secret>[^<]+)</Value'
+    regex_flags:
+      - MULTILINE
+  PasswordGPP:
+    comment: "password in GPP"
+    regex: 'cpassword="(?P<secret>[A-Za-z0-9/+=]+)"'
+  PrivateKey:
+    comment: "private key"
+    regex: "----- BEGIN[A-Z ]* PRIVATE KEY -----"
+  UrlPassword:
+    comment: "URL Password"
+    regex: '[A-Za-z0-9+.-]+://(?P<secret>[^:]+:[^@]+)@[A-Za-z0-9.-]+'
+  AwsSecrets:
+    comment: "AWS secrets"
+    regex: '(aws_access_key_id|aws_secret_access_key)\s*=\s*(?P<secret>..+)'
+  EmpirumPassword:
+    comment: "Empirum password (Matrix42)"
+    regex: 'PASSWORD_[A-Z0-9_]*(SETUP|EIS|SYNC)=(?P<secret>..+)'
+  DsmPassword:
+    comment: "DSM password (Ivanti/Frontrange/Heat)"
+    regex: '[^/+ ]\b(?P<secret>k[123456][A-Za-z0-9+/=]{32,})\b'

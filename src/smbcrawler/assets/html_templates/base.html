@@ -1,0 +1,24 @@
+ <!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>SmbCrawler</title>
+    <script>document.queries = {{queries}};</script>
+    {% for name in css %}
+    <link rel="stylesheet" href="static/{{name}}.css" type="text/css">
+    {% endfor %}
+    {% for name in js %}
+    <script type="text/javascript" src="static/{{name}}.js"></script>
+    {% endfor %}
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row flex-nowrap">
+        {% include "sidebar.html" %}
+        <div class="col py-3">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+</body>
+</html>
