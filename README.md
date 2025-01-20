@@ -128,10 +128,10 @@ profile](/SySS-Research/smbcrawler/tree/main/src/smbcrawler/default_profile.yml)
 Profiles are loaded from files with the `*.yml` extension from these
 locations:
 
-* The build-in default profile
+* The built-in default profile
 * `$XDG_DATA_HOME/smbcrawler/` (`~/.local/share/smbcrawler` by default)
 * The current working directory
-* The extra directory defined by `--extra-profile-file`
+* The extra directory defined by `--extra-profile-directory`
 * The extra files defined by `--extra-profile-file`
 
 Profiles from each location override previous definitions.
