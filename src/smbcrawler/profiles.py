@@ -182,8 +182,12 @@ def update_nested_dict(nested_dict, path, value):
     d = nested_dict
     for key in keys[:-1]:
         d = d.setdefault(key, {})
-    d[keys[-1]] = value
-
+    
+    if not value:
+        d.pop(keys[-1])
+    else:
+        d[keys[-1]] = value
+        
 
 def find_matching_profile(profile_collection: ProfileCollection, type: str, name: str):
     for label, item in reversed(profile_collection[type].items()):
