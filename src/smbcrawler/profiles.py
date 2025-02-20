@@ -133,6 +133,7 @@ def collect_profiles(
     extra_dirs: list[pathlib.Path] = [],
     extra_files: list[pathlib.Path] = [],
     update_queries: list[str] = [],
+    load_default: bool = True,
 ) -> ProfileCollection:
     """Build the profile collections
 
@@ -150,9 +151,10 @@ def collect_profiles(
     for d in extra_dirs:
         dirs.append(d)
 
-    files = [
-        SCRIPT_PATH / "default_profile.yml",
-    ]
+    files = []
+
+    if load_default:  # Conditionally add the default profile
+        files.append(SCRIPT_PATH / "default_profile.yml")
 
     for d in dirs:
         for pattern in ["**/*.yml", "**/*.yaml"]:

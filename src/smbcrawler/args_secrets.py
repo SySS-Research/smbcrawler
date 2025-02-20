@@ -53,6 +53,13 @@ parser.add_argument(
     help="enable recursive directory search (default: %(default)s)",
 )
 
+parser.add_argument(
+    "",
+    "--no-default",
+    default=False,
+    action="store_true",
+    help="avoid loading the default profile (default: %(default)s)",
+)
 
 def parse_args(argv=None):
     args = parser.parse_args(argv)

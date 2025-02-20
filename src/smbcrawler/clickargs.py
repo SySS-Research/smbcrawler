@@ -155,6 +155,12 @@ def cli(debug, verbose, crawl_file):
     " can either be XML output from nmap or a target"
     " specification on each line",
 )
+@click.option(
+    "-N",
+    "--no-default",
+    is_flag=True,
+    help="Do not load default profiles",
+)
 @click.argument(
     "target",
     nargs=-1,
@@ -178,6 +184,7 @@ def crawl(
     dry_run,
     input,
     target,
+    no_default,
 ):
     """Start crawling shares for secrets
 
@@ -201,7 +208,10 @@ def crawl(
 
     try:
         profile_collection = collect_profiles(
-            extra_profile_directory, extra_profile_file, update_profile
+            extra_dirs=extra_profile_directory,
+            extra_files=extra_profile_file,
+            update_queries=update_profile,
+            load_default=not no_default,
         )
     except Exception as e:
         logger.critical(f"Error while collecting profiles: {e}")
