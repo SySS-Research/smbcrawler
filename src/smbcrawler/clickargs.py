@@ -155,6 +155,11 @@ def cli(debug, verbose, crawl_file):
     " can either be XML output from nmap or a target"
     " specification on each line",
 )
+@click.option(
+    "--no-default",
+    is_flag=True,
+    help="Do not load default profiles",
+)
 @click.argument(
     "target",
     nargs=-1,
@@ -178,6 +183,7 @@ def crawl(
     dry_run,
     input,
     target,
+    no_default,  # Add this parameter
 ):
     """Start crawling shares for secrets
 
@@ -198,7 +204,10 @@ def crawl(
         log_level = "DEBUG"
     init_logger(log_level=log_level)
     profile_collection = collect_profiles(
-        extra_profile_directory, extra_profile_file, update_profile
+        extra_dirs=extra_profile_directory,
+        extra_files=extra_profile_file,
+        update_queries=update_profile,
+        load_default=not no_default,  # Pass the parameter
     )
 
     logger = logging.getLogger(__name__)
