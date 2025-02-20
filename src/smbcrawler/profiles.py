@@ -137,8 +137,9 @@ def collect_profiles(
         files.append(SCRIPT_PATH / "default_profile.yml")
 
     for d in dirs:
-        for f in glob.glob(str(pathlib.Path(d) / "*.yml")):
-            files.append(pathlib.Path(d) / f)
+        for pattern in ["**/*.yml", "**/*.yaml"]:
+            for f in pathlib.Path(d).rglob(pattern):
+                files.append(f)
 
     files.extend(map(pathlib.Path, extra_files))
 
