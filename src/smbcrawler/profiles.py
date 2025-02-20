@@ -123,18 +123,16 @@ def collect_profiles(
     load_default: bool = True,  # Add this parameter
 ) -> ProfileCollection:
     """Search directories for profile files"""
-    dirs = [
-        xdg.BaseDirectory.save_config_path("smbcrawler"),
-        os.getcwd(),
-    ]
-
-    for d in extra_dirs:
-        dirs.append(d)
-
-    files = []
+    dirs = []
+    files = []  # Initialize the files list
 
     if load_default:  # Conditionally add the default profile
         files.append(SCRIPT_PATH / "default_profile.yml")
+
+    if extra_dirs:
+        dirs.extend(extra_dirs)
+    else:
+        dirs.append(xdg.BaseDirectory.save_config_path("smbcrawler"))
 
     for d in dirs:
         for pattern in ["**/*.yml", "**/*.yaml"]:

@@ -156,6 +156,7 @@ def cli(debug, verbose, crawl_file):
     " specification on each line",
 )
 @click.option(
+    "-nd",
     "--no-default",
     is_flag=True,
     help="Do not load default profiles",

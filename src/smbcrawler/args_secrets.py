@@ -54,7 +54,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "",
+    "-nd",
     "--no-default",
     default=False,
     action="store_true",
