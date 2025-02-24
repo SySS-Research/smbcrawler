@@ -7,7 +7,7 @@ import logging
 import typing
 from functools import reduce
 
-import xdg.BaseDirectory
+from xdg_base_dirs import xdg_data_home
 import yaml
 
 SCRIPT_PATH = pathlib.Path(__file__).parent.resolve()
@@ -117,14 +117,14 @@ def deep_update(d, u):
 
 
 def collect_profiles(
-    extra_dirs: list[str] = [],
-    extra_files: list[str] = [],
+    extra_dirs: list[pathlib.Path] = [],
+    extra_files: list[pathlib.Path] = [],
     update_queries: list[str] = [],
 ) -> ProfileCollection:
     """Search directories for profile files"""
     dirs = [
-        xdg.BaseDirectory.save_config_path("smbcrawler"),
-        os.getcwd(),
+        xdg_data_home() / "smbcrawler",
+        pathlib.Path(os.getcwd()),
     ]
 
     for d in extra_dirs:
@@ -135,7 +135,7 @@ def collect_profiles(
     ]
 
     for d in dirs:
-        for f in glob.glob(str(pathlib.Path(d) / "*.yml")):
+        for f in glob.glob(str(d / "*.yml")):
             files.append(pathlib.Path(d) / f)
 
     files.extend(map(pathlib.Path, extra_files))
@@ -182,12 +182,12 @@ def update_nested_dict(nested_dict, path, value):
     d = nested_dict
     for key in keys[:-1]:
         d = d.setdefault(key, {})
-    
+
     if not value:
         d.pop(keys[-1])
     else:
         d[keys[-1]] = value
-        
+
 
 def find_matching_profile(profile_collection: ProfileCollection, type: str, name: str):
     for label, item in reversed(profile_collection[type].items()):

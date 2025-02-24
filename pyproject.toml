@@ -30,7 +30,7 @@ dependencies = [
     'python-magic',
     'peewee',
     'click',
-    'pyxdg',
+    'xdg_base_dirs',
     'pyyaml',
     'zundler>=0.2.1',
 ]
