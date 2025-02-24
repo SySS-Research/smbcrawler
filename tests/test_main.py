@@ -80,8 +80,8 @@ def test_profile_high_value_file(profile_collection):
         ("foo Kennwort: thesecret", "thesecret"),
         ("foo PASSWORD_SETUP=thesecret", "thesecret"),
         ("foo PASSWORD_EIS=thesecret", "thesecret"),
-        ("foo k4AlddsflASkfwwSNdsflASkfwwSNsfl+/ASkfwwSNFslkfd2392=", ""),
-        ("foo k4AlddsflASkfwwSNdsflASkfwwSNsfl+/ASkfwwSNFslkfd2392", ""),
+        ("foo k4AlddsflASkfwwSNdsflASkfwwSNsfl+/ASkfwwSNFslkfd2392=", None),
+        ("foo k4AlddsflASkfwwSNdsflASkfwwSNsfl+/ASkfwwSNFslkfd2392", None),
     ],
 )
 def test_profile_secrets(content, expected, profile_collection):
