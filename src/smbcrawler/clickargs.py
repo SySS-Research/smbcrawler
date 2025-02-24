@@ -81,7 +81,7 @@ def cli(debug, verbose, crawl_file):
     type=int,
     default=5,
     show_default=True,
-    help="Timeout in seconds when attempting to connect to an " "SMB service",
+    help="Timeout in seconds when attempting to connect to an SMB service",
 )
 @click.option(
     "-t",
