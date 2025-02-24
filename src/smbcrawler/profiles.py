@@ -64,7 +64,6 @@ class WellKnownThing(typing.TypedDict):
     comment: typing.Optional[str]
     high_value: typing.Optional[bool]
     download: typing.Optional[bool]
-    depth: typing.Optional[bool]
     crawl_depth: typing.Optional[int]
 
 
