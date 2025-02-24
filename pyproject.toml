@@ -84,6 +84,7 @@ dependencies = [
 dependencies = [
   "mypy>=1.0.0",
   "ruff>=0.0.243",
+  "types-pyyaml",
   "pytest-stub",
 ]
 

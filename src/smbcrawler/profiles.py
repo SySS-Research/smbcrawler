@@ -10,6 +10,8 @@ from functools import reduce
 from xdg_base_dirs import xdg_data_home
 import yaml
 
+from typing import Any
+
 SCRIPT_PATH = pathlib.Path(__file__).parent.resolve()
 log = logging.getLogger(__name__)
 
@@ -39,10 +41,10 @@ class Secret(object):
 
         self.false_positives = false_positives
 
-        self.secret = None
-        self.line = None
+        self.secret: str | None = None
+        self.line: str | None = None
 
-    def match(self, line):
+    def match(self, line: str) -> None:
         self.line = line
 
         match = self.regex.match(line)
@@ -106,7 +108,7 @@ class ProfileCollection(object):
         return str(self)
 
 
-def deep_update(d, u):
+def deep_update(d: dict, u: dict) -> dict:
     """Update nested dicts"""
     for k in u.keys():
         if isinstance(u[k], collections.abc.Mapping):
@@ -158,7 +160,7 @@ def collect_profiles(
     return ProfileCollection(result)
 
 
-def parse_access_path(path):
+def parse_access_path(path: str) -> list[str]:
     # Regular expression to match keys, including those in quotes
     key_regex = re.compile(r'(?:\[["\'](.*?)["\']\])|([^.]+)')
 
@@ -177,7 +179,7 @@ def parse_access_path(path):
     return keys
 
 
-def update_nested_dict(nested_dict, path, value):
+def update_nested_dict(nested_dict: dict, path: str, value: Any) -> None:
     keys = parse_access_path(path)
     d = nested_dict
     for key in keys[:-1]:
@@ -189,7 +191,9 @@ def update_nested_dict(nested_dict, path, value):
         d[keys[-1]] = value
 
 
-def find_matching_profile(profile_collection: ProfileCollection, type: str, name: str):
+def find_matching_profile(
+    profile_collection: ProfileCollection, type: str, name: str
+) -> dict | None:
     for label, item in reversed(profile_collection[type].items()):
         try:
             regex_flags = [getattr(re, flag) for flag in item.get("regex_flags", [])]
@@ -202,3 +206,4 @@ def find_matching_profile(profile_collection: ProfileCollection, type: str, name
             flags = 0
         if re.match(item["regex"], name, flags=flags):
             return item
+    return None
