@@ -241,6 +241,7 @@ def is_responsive(ip_address, port):
         if result == 0:
             return True
         else:
+            print(f"Error on {ip_address}:{port}: {result}")
             return False
         sock.close()
     except Exception:
@@ -252,7 +253,7 @@ def wait_until_services_ready(ip_addresses, port):
 
     total = 0
     while not all(map(lambda i: is_responsive(i, port), ip_addresses)):
-        time.sleep(0.1)
+        time.sleep(0.5)
         total += 1
         if total > 20:
             raise RuntimeError("Timeout: Services not ready")
@@ -364,15 +365,16 @@ def crawl_result(request, samba_server_pool, tmp_path_factory):
     targets = request.param["targets"] or list(samba_server_pool.values())
     profile_collection = collect_profiles()
     kwargs = request.param["kwargs"]
+    kwargs["targets"] = targets
 
     crawl_file = tmp_path / "output.crwl"
     assert not os.path.isfile(crawl_file)
 
-    logger = logging.getLogger("__name__")
+    logger = logging.getLogger(__name__)
     logger.debug(kwargs)
+
     app = CrawlerApp(
         login,
-        targets=targets,
         crawl_file=crawl_file,
         profile_collection=profile_collection,
         **kwargs,
