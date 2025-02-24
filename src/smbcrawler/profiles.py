@@ -16,6 +16,15 @@ SCRIPT_PATH = pathlib.Path(__file__).parent.resolve()
 log = logging.getLogger(__name__)
 
 
+def process_flags(flags: list[str]) -> int:
+    regex_flags = [getattr(re, flag) for flag in flags]
+    if regex_flags:
+        result = reduce(lambda x, y: x | y, regex_flags)
+    else:
+        result = 0
+    return result
+
+
 class Secret(object):
     def __init__(
         self,
@@ -27,14 +36,9 @@ class Secret(object):
         self.comment = comment
 
         try:
-            self.regex_flags = [getattr(re, flag) for flag in regex_flags]
+            flags = process_flags(regex_flags)
         except AttributeError:
-            log.error("Invalid flags: %s" % self.regex_flags)
-            self.regex_flags = []
-
-        if self.regex_flags:
-            flags = reduce(lambda x, y: x | y, self.regex_flags)
-        else:
+            log.error("Invalid flags: %s" % regex_flags)
             flags = 0
 
         self.regex = re.compile(".*" + regex + ".*", flags=flags)
@@ -80,6 +84,15 @@ class ProfileCollection(object):
         for thing in ["shares", "files", "directories"]:
             for label, item in data.get(thing, {}).items():
                 self[thing][label] = WellKnownThing(**item)
+                regex_flags = self[thing][label].get("regex_flags", [])
+                try:
+                    flags = process_flags(regex_flags)
+                except AttributeError:
+                    log.error("Invalid flags: %s" % regex_flags)
+                    flags = 0
+                self[thing][label]["regex"] = re.compile(
+                    self[thing][label]["regex"], flags=flags
+                )
 
     def __getitem__(self, key):
         return getattr(self, key)
@@ -122,7 +135,14 @@ def collect_profiles(
     extra_files: list[pathlib.Path] = [],
     update_queries: list[str] = [],
 ) -> ProfileCollection:
-    """Search directories for profile files"""
+    """Build the profile collections
+
+    This function reads profile files from various directories to build the
+    profile. `update_queries` can override single keys. They need to be in this format:
+
+    `key1.key2.key3=value`
+
+    """
     dirs = [
         xdg_data_home() / "smbcrawler",
         pathlib.Path(os.getcwd()),
@@ -148,15 +168,19 @@ def collect_profiles(
             with open(f, "r") as fp:
                 data = yaml.safe_load(fp)
         except Exception as e:
-            print("Error while parsing file: %s\n%s" % (f, e))
+            log.error("Error while parsing file: %s\n%s" % (f, e))
         else:
             result = deep_update(result, data)
 
     for q in update_queries:
-        path, value = q.split("=")
-        update_nested_dict(result, path, value)
+        try:
+            path, value = q.split("=")
+            update_nested_dict(result, path, value)
+        except ValueError:
+            log.error(f"Ignoring update path due to parsing error: {q}")
 
-    return ProfileCollection(result)
+    collection = ProfileCollection(result)
+    return collection
 
 
 def parse_access_path(path: str) -> list[str]:
@@ -173,8 +197,10 @@ def parse_access_path(path: str) -> list[str]:
                 .replace("\\'", "'")
                 .replace("\\\\", "\\")
             )
-        else:
+        elif match.group(2):
             keys.append(match.group(2))
+        else:
+            raise ValueError(f"Couldn't parse key path: {path}")
     return keys
 
 
@@ -194,15 +220,6 @@ def find_matching_profile(
     profile_collection: ProfileCollection, type: str, name: str
 ) -> dict | None:
     for label, item in reversed(profile_collection[type].items()):
-        try:
-            regex_flags = [getattr(re, flag) for flag in item.get("regex_flags", [])]
-        except AttributeError:
-            log.error("Invalid flags: %s" % regex_flags)
-            regex_flags = []
-        if regex_flags:
-            flags = reduce(lambda x, y: x | y, regex_flags)
-        else:
-            flags = 0
-        if re.match(item["regex"], name, flags=flags):
+        if re.match(item["regex"], name):
             return item
     return None

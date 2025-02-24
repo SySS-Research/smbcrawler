@@ -197,11 +197,16 @@ def crawl(
     if ctx.parent.params["debug"]:
         log_level = "DEBUG"
     init_logger(log_level=log_level)
-    profile_collection = collect_profiles(
-        extra_profile_directory, extra_profile_file, update_profile
-    )
-
     logger = logging.getLogger(__name__)
+
+    try:
+        profile_collection = collect_profiles(
+            extra_profile_directory, extra_profile_file, update_profile
+        )
+    except Exception as e:
+        logger.critical(f"Error while collecting profiles: {e}")
+        ctx.exit(1)
+
     cmd = " ".join(
         shlex.quote(arg if arg not in [password, nthash] else "***") for arg in sys.argv
     )
