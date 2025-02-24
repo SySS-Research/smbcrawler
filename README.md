@@ -123,7 +123,8 @@ and will be deleted immediately, but be aware anyway.
 
 To decide what to do with certain shares, files or directories, SmbCrawler
 has a feature called "profiles". Take a look at the [default
-profile](/SySS-Research/smbcrawler/tree/main/src/smbcrawler/default_profile.yml).
+profile](/SySS-Research/smbcrawler/blob/main/src/smbcrawler/default_profile.yml).
+
 
 Profiles are loaded from files with the `*.yml` extension from these
 locations:
