@@ -228,6 +228,11 @@ directories:
     regex: 'WindowsImageBackup'
     comment: "Backups made with Windows board tools"
     high_value: true
+  windows_dir:
+    regex: '^Windows$'
+    comment: "Windows system directory"
+    high_value: true
+    crawl_depth: 0
 
 secrets:
   PasswordNaturalLanguage:
