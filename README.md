@@ -137,6 +137,10 @@ these locations:
 
 Profiles from each location override previous definitions.
 
+Since it can be confusing how profiles from different sources work together,
+make sure to make use of the `--dry-run` parameter. It shows you the
+effective configuration and does nothing more.
+
 Let's look at each section, which is always a list of dictionaries. Each of
 the keys of the dictionary is an arbitrary label and each of the values
 is again a dictionary with different properties.
