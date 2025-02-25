@@ -39,6 +39,8 @@ SELECT DISTINCT
 FROM
     FullPath
 WHERE parent_id IS NULL
+ORDER BY
+    target_name, share_name, path
 """,
     high_value_shares=(
         "SELECT name, 'target' AS target_id FROM Share WHERE high_value = True"
@@ -88,6 +90,8 @@ SELECT
     secret, line, line_number, target_name, share_name, path, content_hash
 FROM
     FullPath
+ORDER BY
+    secret, target_name, share_name, path
 """,
     serialized_paths="""
 WITH RECURSIVE FullPath AS (
@@ -130,7 +134,8 @@ SELECT DISTINCT
     target_name, share_name, full_path, size, high_value
 FROM
     FullPath
-
+ORDER BY
+    target_name, share_name, full_path
 """,
     summary="""
 SELECT 'number_targets' AS key, count(*) AS value FROM target

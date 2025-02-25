@@ -56,8 +56,8 @@ def generate_report(crawl_file):
     summary = run_query(crawl_file, queries.ALL_QUERIES["summary"])
     summary = format_summary(summary)
     secrets = run_query(crawl_file, queries.ALL_QUERIES["secrets_with_paths"])
-    shares = run_query(crawl_file, "SELECT * FROM Share")
-    targets = run_query(crawl_file, "SELECT * FROM Target")
+    shares = run_query(crawl_file, "SELECT * FROM Share ORDER BY target_id")
+    targets = run_query(crawl_file, "SELECT * FROM Target ORDER BY name")
     config = run_query(crawl_file, "SELECT * FROM Config")
     high_value_files = run_query(
         crawl_file,
@@ -72,7 +72,7 @@ def generate_report(crawl_file):
     result = {
         "config": config,
         "summary": summary,
-        "secrets_unique": list(set(s["secret"] for s in secrets)),
+        "secrets_unique": sorted(list(set(s["secret"] for s in secrets))),
         "secrets_cleanup_guide": create_cleanup_guide(secrets),
         "high_value_files": high_value_files,
         "high_value_shares": high_value_shares,
