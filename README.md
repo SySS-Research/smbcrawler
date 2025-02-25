@@ -220,8 +220,8 @@ mirroring all shares with symlinks pointing to the content files. The latter
 is good for grepping through all downloaded files.
 
 The data can be transformed to various formats. You can also simply access
-the database with `sqlitebrowser`, for example. Or you can output JSON and
-use `jq` to mangle the data.
+the database with `sqlitebrowser`, for example. Some useful views have been
+pre-defined. Or you can output JSON and use `jq` to mangle the data.
 
 If you want to display all shares that you were able to read beyond the root
 directory in a LaTeX table, for instance, use this query:

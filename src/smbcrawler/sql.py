@@ -133,6 +133,8 @@ def init_db(path, cmd=None):
         cmd=cmd,
     )
 
+    create_views(BaseModel)
+
     return db_instance
 
 
@@ -260,3 +262,10 @@ def run_query(pathToSqliteDb: str, query: str) -> list[dict]:
     results = cursor.fetchall()
     connection.close()
     return results
+
+
+def create_views(model: peewee.Model) -> None:
+    from smbcrawler.queries import ALL_QUERIES
+
+    for label, sql in ALL_QUERIES.items():
+        model.raw(f"CREATE VIEW {label} AS {sql}").execute()
