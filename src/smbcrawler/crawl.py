@@ -233,7 +233,8 @@ class CrawlerThread(threading.Thread):
 
         self.crawl_dir(share, depth - 1, parent=f)
 
-    @log_exceptions()
+    # Ignore untyped exceptions thrown by impacket if the service is not responding
+    @log_exceptions(silence=".* No answer!")
     def crawl_host(self, target):
         self.current_share = None
         self.current_target = target
