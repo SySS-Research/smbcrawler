@@ -227,9 +227,9 @@ class CrawlerThread(threading.Thread):
             f.high_value = True
             depth = -1
 
-        if profile and profile.get("crawl_depth"):
+        if profile and "crawl_depth" in profile:
             self.app.event_reporter.non_default_depth(str(f))
-            depth = int(profile["crawl_depth"])
+            depth = int(profile["crawl_depth"]) + 1
 
         self.crawl_dir(share, depth - 1, parent=f)
 
