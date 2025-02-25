@@ -335,6 +335,9 @@ class CrawlerThread(threading.Thread):
         return True
 
     def list_shares(self, target, as_guest=False):
+        if self.killed or self._skip_host:
+            return []
+
         self.authenticate(target, as_guest=as_guest)
 
         shares = [
@@ -346,9 +349,6 @@ class CrawlerThread(threading.Thread):
             )
             for s in self.smbClient.listShares()
         ]
-
-        if self.killed or self._skip_host:
-            return []
 
         return shares
 

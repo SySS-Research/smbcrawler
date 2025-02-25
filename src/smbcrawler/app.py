@@ -206,7 +206,11 @@ class CrawlerApp(object):
             t.kill()
         self.resume(msg="Killing threads...")
         for t in self.threads:
-            t.join()
+            try:
+                t.join()
+            except Exception as e:
+                if "cannot join current thread" not in str(e):
+                    log.error(f"Error while joining thread: {e}")
         return True
 
     def resume(self, msg="Resuming..."):
@@ -247,6 +251,7 @@ class CrawlerApp(object):
                 "aborting to prevent account lockout; "
                 "consider using the 'force' flag to continue anyway" % target
             )
+            self.cred_lock.release()
             self.kill_threads()
         else:
             log.warning("[%s] Logon failure" % target)
