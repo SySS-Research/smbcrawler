@@ -53,33 +53,25 @@ def generate(crawl_file, format, outputfile, section=None):
 
 
 def generate_report(crawl_file):
-    summary = run_query(crawl_file, queries.ALL_QUERIES["summary"])
-    summary = format_summary(summary)
-    secrets = run_query(crawl_file, queries.ALL_QUERIES["secrets_with_paths"])
-    shares = run_query(crawl_file, "SELECT * FROM Share ORDER BY target_id")
-    targets = run_query(crawl_file, "SELECT * FROM Target ORDER BY name")
-    config = run_query(crawl_file, "SELECT * FROM Config")
-    high_value_files = run_query(
-        crawl_file,
-        queries.ALL_QUERIES["high_value_files"],
-    )
-    high_value_shares = run_query(
-        crawl_file,
-        queries.ALL_QUERIES["high_value_shares"],
-    )
     # TODO undeleted directories
 
-    result = {
-        "config": config,
-        "summary": summary,
-        "secrets_unique": sorted(list(set(s["secret"] for s in secrets))),
-        "secrets_cleanup_guide": create_cleanup_guide(secrets),
-        "high_value_files": high_value_files,
-        "high_value_shares": high_value_shares,
-        "secrets": secrets,
-        "shares": shares,
-        "targets": targets,
-    }
+    result = dict(queries.ALL_QUERIES)
+    result.update(
+        dict(
+            shares="SELECT * FROM Share ORDER BY target_id",
+            targets="SELECT * FROM Target ORDER BY name",
+            config="SELECT * FROM Config",
+        )
+    )
+    for k, v in result.items():
+        result[k] = run_query(crawl_file, v)
+        if k == "summary":
+            result[k] = format_summary(result[k])
+
+    result["secrets"] = result["secrets_with_paths"]
+    del result["secrets_with_paths"]
+
+    result["secrets_cleanup_guide"] = create_cleanup_guide(result["secrets"])
 
     return result
 

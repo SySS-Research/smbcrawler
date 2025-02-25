@@ -45,6 +45,14 @@ ORDER BY
     high_value_shares=(
         "SELECT name, 'target' AS target_id FROM Share WHERE high_value = True"
     ),
+    secrets_unique="""
+    SELECT DISTINCT
+        secret
+    FROM
+        secret
+    ORDER BY
+        secret
+    """,
     secrets_with_paths="""
 WITH RECURSIVE FullPath AS (
     -- Base case: select the root entries
