@@ -2,7 +2,6 @@ import collections
 import re
 import os
 import pathlib
-import glob
 import logging
 import typing
 from functools import reduce
@@ -156,26 +155,27 @@ def collect_profiles(
     ]
 
     for d in dirs:
-        for f in glob.glob(str(d / "*.yml")):
-            files.append(pathlib.Path(d) / f)
+        for pattern in ["**/*.yml", "**/*.yaml"]:
+            for path in d.rglob(pattern):
+                files.append(path)
 
     files.extend(map(pathlib.Path, extra_files))
 
     result: dict[str, object] = {}
 
-    for f in map(str, files):
+    for file in map(str, files):
         try:
-            with open(f, "r") as fp:
+            with open(file, "r") as fp:
                 data = yaml.safe_load(fp)
         except Exception as e:
-            log.error("Error while parsing file: %s\n%s" % (f, e))
+            log.error("Error while parsing file: %s\n%s" % (file, e))
         else:
             result = deep_update(result, data)
 
     for q in update_queries:
         try:
-            path, value = q.split("=")
-            update_nested_dict(result, path, value)
+            key_path, value = q.split("=")
+            update_nested_dict(result, key_path, value)
         except ValueError:
             log.error(f"Ignoring update path due to parsing error: {q}")
 

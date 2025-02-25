@@ -126,8 +126,8 @@ has a feature called "profiles". Take a look at the [default
 profile](https://github.com/SySS-Research/smbcrawler/blob/main/src/smbcrawler/default_profile.yml).
 
 
-Profiles are loaded from files with the `*.yml` extension from these
-locations:
+Profiles are loaded from files with extensions `*.yml` or `*.yaml` from
+these locations:
 
 * The built-in default profile
 * `$XDG_DATA_HOME/smbcrawler/` (`~/.local/share/smbcrawler` by default)
