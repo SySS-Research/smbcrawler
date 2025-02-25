@@ -1,6 +1,5 @@
 import io
 import os
-import re
 import ipaddress
 import sys
 import hashlib
@@ -12,19 +11,16 @@ log = logging.getLogger(__name__)
 
 
 def parse_targets(s):
-    # TODO ipv6
-    if re.match(r"^[a-zA-Z0-9-.]+(:[0-9]{1,5})?$", s) or re.match(
-        r"^([0-9]{1,3}\.){3}[0-9]{1,3}(:[0-9]{1,5})?$", s
-    ):
-        # single ip or host name
-        return [s]
-    elif re.match(r"^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$", s):
-        # ip range
-        net = ipaddress.ip_network(s, False)
-        return [str(ip) for ip in net.hosts()]
+    if "/" in s:
+        # looks like an ip range
+        try:
+            net = ipaddress.ip_network(s, False)
+            return [str(ip) for ip in net.hosts()]
+        except ValueError:
+            log.error("Invalid address range: %s" % s)
+            return []
     else:
-        log.error("Invalid host name or IP address: %s" % s)
-        return []
+        return [s]
 
 
 def parse_xml_file(filename):
