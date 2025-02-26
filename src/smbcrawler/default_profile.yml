@@ -224,7 +224,7 @@ directories:
     regex: '^Windows$'
     comment: "Windows system directory"
     high_value: true
-    crawl_depth: 0
+    crawl_depth: 2
 
 secrets:
   PasswordNaturalLanguage:
