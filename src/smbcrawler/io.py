@@ -48,6 +48,9 @@ def parse_plain_file(filename):
         for line in sys.stdin:
             targets += parse_targets(line)
     else:
+        if not os.path.exists(filename):
+            log.error(f"File not found: {filename}")
+            return []
         with open(filename, "r") as f:
             for line in f:
                 # strip newlines
@@ -72,6 +75,9 @@ def get_targets(targets, inputfilename):
             log.error("Module 'libnmap' not found, treating as a flat file")
         except NmapParserException:
             log.debug("Not an XML file, treating as flat file")
+        except FileNotFoundError:
+            log.error(f"File not found: {inputfilename}")
+
         if t is None:
             t = parse_plain_file(inputfilename)
         if t:
