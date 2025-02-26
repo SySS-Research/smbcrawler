@@ -195,26 +195,18 @@ files:
 shares:
   printers:
     regex: 'print\$'
-    regex_flags:
-      - IGNORECASE
     comment: "Probably only contains drivers"
     crawl_depth: 0
   software_repos:
     regex: 'wsus.*|sccm.*|sms.*|msscvm.*|.*reminst.*'
-    regex_flags:
-      - IGNORECASE
     comment: "Contains only binary packages"
     crawl_depth: 0
   binary_backups:
     regex: 'WinSxS|backup'
-    regex_flags:
-      - IGNORECASE
     comment: "Backups of binaries"
     crawl_depth: 0
   admin:
     regex: 'C\$|Admin\$'
-    regex_flags:
-      - IGNORECASE
     comment: "Admin shares"
     crawl_depth: 0
     high_value: true
@@ -238,42 +230,28 @@ secrets:
   PasswordNaturalLanguage:
     comment: "A password in several languages"
     regex: '(Password|Passwort|Kennwort|Wachtwoord|Adgangskode|L(ö|o|oe)senord|Salasana|Hasło|Parola|şifre|jelszó|Mot de passe|Senha|Пароль|密码|पासवर्ड|Contrase(ñ|n)a):\s*\b(?P<secret>.{3,24})\b'
-    regex_flags:
-      - IGNORECASE
   NetUser:
     comment: "'net user' command in script"
     regex: 'net user [^ ]+ (?P<secret>[^/> ]{3,})'
-    regex_flags:
-      - IGNORECASE
   NetUse:
     comment: "'net use' command in script"
     regex: 'net use .*\\.*/user:.* (?P<secret>[^/> ]{3,})'
-    regex_flags:
-      - IGNORECASE
   NetUseAlt:
     # alternative regex
     comment: "'net use' command in script"
     regex: 'net use .*\\.* (?P<secret>[^/> ]{3,}).*/user:'
-    regex_flags:
-      - IGNORECASE
   RunAs:
     comment: "'RunAs' command in script"
     regex: 'runas(\.exe)? .*/user.*'
-    regex_flags:
-      - IGNORECASE
   SecureString:
     comment: "'ConvertTo-SecureString' command in script"
     regex: "ConvertTo-SecureString .*"
-    regex_flags:
-      - IGNORECASE
   TrackITPassword:
     comment: "TrackIT uses a static key"
     regex: 'TRACKIT_PASSWORD=(?P<secret>[A-Za-z0-9+/=]*)'
   PasswordConfig:
     comment: "'password =' in config"
     regex: '(password|pwd|passwd)[a-z]*\s*=\s*(?P<secret>..+)'
-    regex_flags:
-      - IGNORECASE
     false_positives:
       - "true"
       - "false"
@@ -282,13 +260,9 @@ secrets:
   PasswordJson:
     comment: "'password' value in JSON file"
     regex: '"[a-z]*(password|pwd|passwd)[a-z]*":\s*"(?P<secret>..+)"'
-    regex_flags:
-      - IGNORECASE
   PasswordYaml:
     comment: "'password' value in YAML file"
     regex: '\s*[a-z]*passw[a-z]*:\s*(?P<secret>..+)'
-    regex_flags:
-      - IGNORECASE
     false_positives:
       - "true"
       - "false"
@@ -297,8 +271,6 @@ secrets:
   PasswordXml:
     comment: "'password' element in XML file"
     regex: "<[a-z]*pass[^>]*>(?P<secret>[^<]+)</[a-z]*pass"
-    regex_flags:
-      - IGNORECASE
   PasswordUnattend:
     comment: "password in unattend.xml"
     regex: '<Password>\s*<Value>(?P<secret>[^<]+)</Value'

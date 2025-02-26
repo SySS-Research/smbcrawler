@@ -16,11 +16,13 @@ log = logging.getLogger(__name__)
 
 
 def process_flags(flags: list[str]) -> int:
-    regex_flags = [getattr(re, flag) for flag in flags]
-    if regex_flags:
-        result = reduce(lambda x, y: x | y, regex_flags)
-    else:
-        result = 0
+    result = re.IGNORECASE
+    try:
+        regex_flags = [re.IGNORECASE] + [getattr(re, flag) for flag in flags]
+        if regex_flags:
+            result = reduce(lambda x, y: x | y, regex_flags)
+    except AttributeError:
+        log.error("Invalid flags: %s" % regex_flags)
     return result
 
 
@@ -34,11 +36,7 @@ class Secret(object):
     ) -> None:
         self.comment = comment
 
-        try:
-            flags = process_flags(regex_flags)
-        except AttributeError:
-            log.error("Invalid flags: %s" % regex_flags)
-            flags = 0
+        flags = process_flags(regex_flags)
 
         self.regex = re.compile(".*" + regex + ".*", flags=flags)
 
@@ -84,11 +82,7 @@ class ProfileCollection(object):
             for label, item in data.get(thing, {}).items():
                 self[thing][label] = WellKnownThing(**item)
                 regex_flags = self[thing][label].get("regex_flags", [])
-                try:
-                    flags = process_flags(regex_flags)
-                except AttributeError:
-                    log.error("Invalid flags: %s" % regex_flags)
-                    flags = 0
+                flags = process_flags(regex_flags)
                 self[thing][label]["regex"] = re.compile(
                     self[thing][label]["regex"], flags=flags
                 )

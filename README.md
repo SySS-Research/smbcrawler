@@ -125,7 +125,6 @@ To decide what to do with certain shares, files or directories, SmbCrawler
 has a feature called "profiles". Take a look at the [default
 profile](https://github.com/SySS-Research/smbcrawler/blob/main/src/smbcrawler/default_profile.yml).
 
-
 Profiles are loaded from files with extensions `*.yml` or `*.yaml` from
 these locations:
 
@@ -136,6 +135,10 @@ these locations:
 * The extra files defined by `--extra-profile-file`
 
 Profiles from each location override previous definitions.
+
+The `regex` value defines whether a profile matches, and the last matching
+profile will be used. All regular expressions are case-insensitive, mirroring
+the most common behavior in the Windows world.
 
 Since it can be confusing how profiles from different sources work together,
 make sure to make use of the `--dry-run` parameter. It shows you the
