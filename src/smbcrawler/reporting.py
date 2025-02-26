@@ -9,10 +9,12 @@ from smbcrawler import queries
 from smbcrawler import html
 from smbcrawler.sql import run_query
 
+from typing import Any
+
 logger = logging.getLogger(__name__)
 
 
-def generate(crawl_file, format, outputfile, section=None):
+def generate(crawl_file, format, outputfile, section=None) -> None:
     if format == "html":
         if section:
             logger.warn(
@@ -32,41 +34,44 @@ def generate(crawl_file, format, outputfile, section=None):
         output = yaml.dump(report)
     elif format == "csv":
         if isinstance(report, dict):
-            report = [report]
+            report_ = [report]
+        else:
+            report_ = report
         skip_header = False
-        for i, line in enumerate(report):
+        for i, line in enumerate(report_):
             if not isinstance(line, dict):
                 skip_header = True
-                report[i] = {"value": line}
+                report_[i] = {"value": line}
 
-        fieldnames = report[0].keys()
+        fieldnames = report_[0].keys()
 
         output_io = io.StringIO()
         writer = csv.DictWriter(output_io, fieldnames=fieldnames, delimiter="\t")
         if not skip_header:
             writer.writeheader()
 
-        writer.writerows(report)
+        writer.writerows(report_)
         output = output_io.getvalue()
 
     outputfile.write(output)
 
 
-def generate_report(crawl_file):
+def generate_report(crawl_file: str) -> dict[str, Any]:
     # TODO undeleted directories
 
-    result = dict(queries.ALL_QUERIES)
-    result.update(
+    queries_ = dict(queries.ALL_QUERIES)
+    queries_.update(
         dict(
             shares="SELECT * FROM Share ORDER BY target_id",
             targets="SELECT * FROM Target ORDER BY name",
             config="SELECT * FROM Config",
         )
     )
-    for k, v in result.items():
+    result = {}
+    for k, v in queries_.items():
         result[k] = run_query(crawl_file, v)
         if k == "summary":
-            result[k] = format_summary(result[k])
+            result[k] = format_summary(queries_[k])  # type: ignore
 
     result["secrets"] = result["secrets_with_paths"]
     del result["secrets_with_paths"]
@@ -96,7 +101,7 @@ def format_summary(summary: list[dict]) -> dict:
     return result
 
 
-def create_cleanup_guide(secrets):
+def create_cleanup_guide(secrets: list[dict]) -> list[dict]:
     # Group by line first, then group by the groups
 
     secret_map = defaultdict(list)
@@ -121,7 +126,7 @@ def create_cleanup_guide(secrets):
     return result
 
 
-def show_log(crawl_file):
+def show_log(crawl_file: str) -> None:
     log = run_query(crawl_file, "SELECT * FROM LogItem")
     for line in log:
         msg = "{level[0]} [{timestamp}] {message}".format(**line)
