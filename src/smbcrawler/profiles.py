@@ -156,10 +156,16 @@ def collect_profiles(
     if load_default:  # Conditionally add the default profile
         files.append(SCRIPT_PATH / "default_profile.yml")
 
-    for d in dirs:
-        for pattern in ["**/*.yml", "**/*.yaml"]:
-            for path in d.rglob(pattern):
-                files.append(path)
+    for i, d in enumerate(dirs):
+        for pattern in ["*.yml", "*.yaml"]:
+            if i == 1:
+                # Don't look recursively in CWD for yaml files
+                for path in d.glob(pattern):
+                    files.append(path)
+            else:
+                # Recursively look in other folders
+                for path in d.rglob(pattern):
+                    files.append(path)
 
     files.extend(map(pathlib.Path, extra_files))
 
