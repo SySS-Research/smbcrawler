@@ -145,6 +145,9 @@ FROM
 ORDER BY
     target_name, share_name, full_path
 """,
+    shares_listable_root="SELECT * FROM share WHERE read_level > 0 ORDER BY target_id, name",
+    shares_listable_root_as_guest='SELECT * FROM share WHERE read_level > 0 AND guest_access = "1" ORDER BY target_id, name',
+    shares_writable='SELECT * FROM share WHERE write_access = "1" ORDER BY target_id, name',
     summary="""
 SELECT 'number_targets' AS key, count(*) AS value FROM target
 UNION ALL
@@ -154,11 +157,11 @@ SELECT 'number_targets_with_open_shares' AS key, count(DISTINCT target_id) AS va
 UNION ALL
 SELECT 'number_shares' AS key, count(*) AS value FROM share
 UNION ALL
-SELECT 'number_shares_listable_root' AS key, count(*) AS value FROM share WHERE read_level > 0
+SELECT 'number_shares_listable_root' AS key, count(*) AS value FROM shares_listable_root
 UNION ALL
-SELECT 'number_shares_listable_root_as_guest' AS key, count(*) AS value FROM share WHERE read_level > 0 AND guest_access = '1'
+SELECT 'number_shares_listable_root_as_guest' AS key, count(*) AS value FROM shares_listable_root_as_guest
 UNION ALL
-SELECT 'number_shares_writable' AS key, count(*) AS value FROM share WHERE write_access = "1"
+SELECT 'number_shares_writable' AS key, count(*) AS value FROM shares_writable
 UNION ALL
 SELECT 'number_paths' AS key, count(*) AS value FROM path
 UNION ALL
