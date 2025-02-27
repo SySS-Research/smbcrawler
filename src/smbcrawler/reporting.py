@@ -23,10 +23,7 @@ def generate(crawl_file, format, outputfile, section=None) -> None:
         html.generate_html(crawl_file, outputfile)
         return
 
-    report = generate_report(crawl_file)
-
-    if section:
-        report = report[section]
+    report = generate_report(crawl_file, section)
 
     if format == "json":
         output = json.dumps(report)
@@ -56,10 +53,11 @@ def generate(crawl_file, format, outputfile, section=None) -> None:
     outputfile.write(output)
 
 
-def generate_report(crawl_file: str) -> dict[str, Any]:
+def generate_report(crawl_file: str, section: str) -> list[Any]:
     # TODO undeleted directories
 
     queries_ = dict(queries.ALL_QUERIES)
+
     queries_.update(
         dict(
             shares="SELECT * FROM Share ORDER BY target_id",
@@ -67,16 +65,19 @@ def generate_report(crawl_file: str) -> dict[str, Any]:
             config="SELECT * FROM Config",
         )
     )
-    result = {}
-    for k, v in queries_.items():
-        result[k] = run_query(crawl_file, v)
-        if k == "summary":
-            result[k] = format_summary(queries_[k])  # type: ignore
 
-    result["secrets"] = result["secrets_with_paths"]
-    del result["secrets_with_paths"]
+    if section == "secrets":
+        result = run_query(crawl_file, queries_["secrets_with_paths"])
+    elif section == "secrets_cleanup_guide":
+        result = run_query(crawl_file, queries_["secrets"])
+        result = create_cleanup_guide(result)
+    else:
+        result = run_query(crawl_file, queries_[section])
 
-    result["secrets_cleanup_guide"] = create_cleanup_guide(result["secrets"])
+    if section == "summary":
+        result = format_summary(result)  # type: ignore
+    elif section == "secrets_unique":
+        result = [s["secret"] for s in result]
 
     return result
 
