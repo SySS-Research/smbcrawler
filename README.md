@@ -25,10 +25,13 @@ you make sure you [have `pipx`
 installed](https://pipx.pypa.io/stable/installation/) and run `pipx install
 smbcrawler`.
 
-When building the package from source, the `pdftotext` dependency will be
-compiled during the installation, which requires the poppler C++ headers. On
-Debian-based systems like Kali or Ubuntu, they can be installed with `apt
-install libpoppler-cpp-dev`.
+SmbCrawler can automatically convert some binary files like PDF, XLSX, DOCX, ZIP, etc. to plain text using [MarkItDown](https://github.com/microsoft/markitdown).
+Because this package is pulling a lot of dependencies, it is marked as an extra.
+However, it is highly recommended to get the best results. If you want to automatically convert binaries, install SmbCrawler like this:
+
+```console
+pipx install 'smbcrawler[binary-conversion]'
+```
 
 Adding shell completion is highly recommended. As a Python app using the
 `click` library, you can add tab completion to bash, zsh and fish using the [usual

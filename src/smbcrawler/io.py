@@ -1,9 +1,10 @@
-import io
 import os
 import ipaddress
 import sys
 import hashlib
 import logging
+
+import magic
 
 from smbcrawler.shares import Target
 
@@ -108,8 +109,13 @@ def get_hash_of_file(path):
     return sha.hexdigest()
 
 
-def decode_bytes(data, file_type):
-    """Decode bytes from all encodings"""
+def load_as_utf8(path):
+    """Attempt to load binary content as UTF-8"""
+
+    with open(path, "rb") as fp:
+        data = fp.read()
+
+    file_type = magic.from_buffer(data)
 
     if "UTF-8 (with BOM)" in file_type:
         return data.decode("utf-8-sig", errors="replace")
@@ -124,21 +130,26 @@ def decode_bytes(data, file_type):
     return data.decode(errors="replace")
 
 
-def convert(data, mime, file_type):
-    """Convert bytes to string"""
+def convert(path):
+    """Convert potentially binary content to string"""
 
-    if mime.endswith("charset-binary") or file_type.endswith("data"):
-        if mime.startswith("application/pdf"):
-            import pdftotext
+    try:
+        try:
+            from markitdown import (
+                MarkItDown,
+                FileConversionException,
+                UnsupportedFormatException,
+            )
 
-            with io.BytesIO(data) as fp:
-                pdf = pdftotext.PDF(fp)
-            return "\n\n".join(pdf)
-        else:
-            # TODO convert docx, xlsx
-            return ""
-    else:
-        return decode_bytes(data, file_type)
+            result = (
+                MarkItDown(exiftool_path="/usr/bin/exiftool").convert(path).text_content
+            )
+        except (FileConversionException, UnsupportedFormatException):
+            result = load_as_utf8(path)
+    except ImportError:
+        result = load_as_utf8(path)
+
+    return result
 
 
 def find_secrets(content, secret_profiles):

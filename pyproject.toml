@@ -26,7 +26,6 @@ dependencies = [
     'impacket>=0.9.20',
     'python-libnmap',
     'lxml',
-    'pdftotext',
     'python-magic',
     'peewee',
     'click',
@@ -34,6 +33,9 @@ dependencies = [
     'pyyaml',
     'zundler>=0.2.1',
 ]
+
+[project.optional-dependencies]
+binary-conversion = ["markitdown"]
 
 [tool.setuptools]
 packages = ["smbcrawler"]
@@ -47,12 +49,6 @@ enabled = true
 
 [project.scripts]
 smbcrawler = "smbcrawler.__main__:main"
-
-[project.optional-dependencies]
-tests = [
-  'pytest',
-  'pdbpp',
-]
 
 [tool.hatch.version]
 source = "vcs"

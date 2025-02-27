@@ -2,8 +2,6 @@ import os
 import logging
 import tempfile
 
-import magic
-
 from smbcrawler.sql import QueuedDBWriter, DbLinkPaths, DbInsert, DbUpdate
 from smbcrawler.log import init_db_logger
 from smbcrawler.io import convert, find_secrets, create_link
@@ -260,13 +258,11 @@ class EventReporter(object):
             os.unlink(local_path)
             return
 
-        data = open(local_path, "rb").read()
         os.rename(local_path, new_filename)
-        mime = magic.from_buffer(data, mime=True)
-        file_type = magic.from_buffer(data)
 
+        clean_content = None
         try:
-            clean_content = convert(data, mime, file_type)
+            clean_content = convert(new_filename)
         except Exception:
             log.debug(
                 "Unable to parse",
@@ -275,8 +271,11 @@ class EventReporter(object):
             )
             return
 
-        if clean_content and clean_content.encode() != data:
-            open(new_filename + ".txt", "w").write(clean_content)
+        with open(new_filename, "rb") as fp:
+            old_content = fp.read()
+        if clean_content and clean_content.encode() != old_content:
+            with open(new_filename + ".txt", "w") as fp:
+                fp.write(clean_content)
 
         secrets = find_secrets(clean_content, self.profile_collection["secrets"])
 
