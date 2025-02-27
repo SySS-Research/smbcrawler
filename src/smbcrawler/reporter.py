@@ -194,6 +194,10 @@ class EventReporter(object):
         )
 
     def found_secret(self, target, share, path, secret, content_hash):
+        # Reduce number of false positives
+        if len(secret) < 3:
+            return
+
         log.success(
             f"Found potential secret ({secret.get('comment')}): {secret['secret']}",
             extra=dict(
