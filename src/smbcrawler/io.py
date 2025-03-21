@@ -130,23 +130,23 @@ def load_as_utf8(path):
     return data.decode(errors="replace")
 
 
-def convert(path):
+def convert(path: str) -> str:
     """Convert potentially binary content to string"""
 
     try:
-        try:
-            from markitdown import (
-                MarkItDown,
-                FileConversionException,
-                UnsupportedFormatException,
-            )
-
-            result = (
-                MarkItDown(exiftool_path="/usr/bin/exiftool").convert(path).text_content
-            )
-        except (FileConversionException, UnsupportedFormatException):
-            result = load_as_utf8(path)
+        from markitdown import (
+            MarkItDown,
+            FileConversionException,
+            UnsupportedFormatException,
+        )
     except ImportError:
+        return load_as_utf8(path)
+
+    try:
+        result = (
+            MarkItDown(exiftool_path="/usr/bin/exiftool").convert(path).text_content
+        )
+    except (FileConversionException, UnsupportedFormatException):
         result = load_as_utf8(path)
 
     return result
