@@ -84,6 +84,7 @@ def get_targets(targets, inputfilename):
         if t:
             _targets += t
 
+    _targets = list(set(_targets))
     result = [Target(t) for t in _targets]
     log.info("Loaded %s hosts" % len(result))
     return result
