@@ -31,6 +31,7 @@ def deactivate_password_prompt(ctx, param, value):
 @click.option(
     "-C",
     "--crawl-file",
+    type=click.Path(dir_okay=False),
     default="output.crwl",
     show_default=True,
     help="Path to output file",
@@ -127,12 +128,14 @@ def cli(debug, verbose, crawl_file):
 @click.option(
     "-Y",
     "--extra-profile-directory",
+    type=click.Path(exists=True, file_okay=False),
     multiple=True,
     help="Path to a directory containing extra profiles in the form of *.yml files. Can be supplied multiple times.",
 )
 @click.option(
     "-F",
     "--extra-profile-file",
+    type=click.Path(exists=True, dir_okay=False),
     multiple=True,
     help="Path to a file containing extra profiles. Can be supplied multiple times.",
 )
@@ -151,6 +154,7 @@ def cli(debug, verbose, crawl_file):
 @click.option(
     "-i",
     "--input",
+    type=click.Path(exists=True, dir_okay=False, allow_dash=True),
     help="input from list of hosts/networks (use - for stdin);"
     " can either be XML output from nmap or a target"
     " specification on each line",
