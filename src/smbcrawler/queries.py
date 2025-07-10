@@ -54,45 +54,73 @@ ORDER BY
         secret
     """,
     secrets_with_paths="""
-WITH RECURSIVE FullPath AS (
-    -- Base case: select the root entries
-    SELECT
-        p.id,
-        p.parent_id,
-        p.content_hash,
-        secret.secret,
-        secret.line,
-        secret.line_number,
-        t.name AS target_name,
-        s.name AS share_name,
-        p.name AS path
-    FROM
-        secret AS secret
-    JOIN
-        path AS p ON p.content_hash = secret.content_hash
-    JOIN
-        target AS t ON p.target_id = t.name
-    JOIN
-        share AS s ON p.share_id = s.name
+WITH
 
-    UNION
+    -- First: formulate recursive CTE to construct the full path.
+    -- This CTE contains the reflexive-transitive closure of the parent-relationship.
+    -- I.e. for an example full path dir1/dir2/file.txt,
+    -- it contains rows for file.txt, dir2/file.txt, and dir1/dir2/file.txt.
+    RECURSIVE FullPath__ AS (
+        -- Base case: select the root entries
+        SELECT
+            p.id,
+            p.parent_id,
+            p.content_hash,
+            secret.secret,
+            secret.line,
+            secret.line_number,
+            t.name AS target_name,
+            s.name AS share_name,
+            p.name AS path,
+            -- Propagate the original id (primary key) of the secret;
+            -- it is used later for grouping.
+            p.id as orig_id
+        FROM
+            secret AS secret
+        JOIN
+            path AS p ON p.content_hash = secret.content_hash
+        JOIN
+            target AS t ON p.target_id = t.name
+        JOIN
+            share AS s ON p.share_id = s.name
 
-    -- Recursive case: append parent paths
-    SELECT
-        p.id,
-        p.parent_id,
-        fp.content_hash,
-        fp.secret,
-        fp.line,
-        fp.line_number,
-        fp.target_name,
-        fp.share_name,
-        p.name || '\\' || fp.path AS path
-    FROM
-        FullPath AS fp
-    JOIN
-        path AS p ON p.id = fp.parent_id
-)
+        UNION
+
+        -- Recursive case: append parent paths
+        SELECT
+            p.id,
+            p.parent_id,
+            fp.content_hash,
+            fp.secret,
+            fp.line,
+            fp.line_number,
+            fp.target_name,
+            fp.share_name,
+            p.name || '\\' || fp.path AS path,
+            fp.orig_id as orig_id
+        FROM
+            FullPath__ AS fp
+        JOIN
+            path AS p ON p.id = fp.parent_id
+    ),
+
+    -- Second: group/partition the previous CTE by file/secret and
+    -- inside each of those order the entries by length descending.
+    -- => the first entry by rowid in each partition is the full path (the longest).
+    FullPath_ AS (
+        SELECT *, ROW_NUMBER() OVER (PARTITION BY orig_id ORDER BY length(path) DESC) AS rn
+        FROM FullPath__
+    ),
+
+    -- Third: For all parent-paths originating from a specific file/secret,
+    -- now only select the longest one; this is the full path.
+    -- Thereby, intermediate paths are removed from the query result.
+    FullPath AS (
+        SELECT *
+        FROM FullPath_
+        WHERE rn = 1
+    )
+
 -- Final selection from the recursive CTE
 SELECT
     secret, line, line_number, target_name, share_name, path, content_hash
