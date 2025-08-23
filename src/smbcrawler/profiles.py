@@ -1,6 +1,5 @@
 import collections
 import re
-import os
 import pathlib
 import logging
 import typing
@@ -139,7 +138,6 @@ def collect_profiles(
     """
     dirs = [
         xdg_data_home() / "smbcrawler",
-        pathlib.Path(os.getcwd()),
     ]
 
     for d in extra_dirs:

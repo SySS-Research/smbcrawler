@@ -133,7 +133,6 @@ these locations:
 
 * The built-in default profile
 * `$XDG_DATA_HOME/smbcrawler/` (`~/.local/share/smbcrawler` by default)
-* The current working directory
 * The extra directory defined by `--extra-profile-directory`
 * The extra files defined by `--extra-profile-file`
 
