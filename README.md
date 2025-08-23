@@ -181,19 +181,24 @@ is again a dictionary with different properties.
 
 ### Typical workflow
 
-It makes sense to first run SmbCrawler with crawling depth 0 to get an idea of
+It makes sense to first run SmbCrawler with crawling depth 1 to get an idea of
 what you're dealing with. In this first run, you can enable the write check
 with `-w`:
 
 ```
-$ smbcrawler -C permissions_check.crwl crawl -D0 -t10 -w \
+$ smbcrawler -C permissions_check.crwl crawl -D1 -t10 -w \
     -i <INPUT FILE> -u <USER> -d <DOMAIN> -p <PASSWORD>
 ```
 
-Afterwards, you can identify interesting and boring shares for your next run
-or several runs. Some shares like `SYSVOL` and `NETLOGON` appear many times,
-so you should set the crawl depth to zero on your next run and pick one host
-to scan these duplicate shares in a third run. Here is an example:
+Note that this checks for write and read premissions in the root directory of
+each share only. Only a full run will tell you more about how deep the read
+permissions go.
+
+After the initial permissions check, you can identify interesting and boring
+shares for your next run or several runs. Some shares like `SYSVOL` and
+`NETLOGON` appear many times, so you should set the crawl depth to zero on your
+next run and pick one host to scan these duplicate shares in a third run. Here
+is an example:
 
 ```
 $ smbcrawler -C dc_only.crwl crawl -D -1 <DC IP> \
