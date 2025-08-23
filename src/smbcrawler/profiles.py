@@ -167,12 +167,13 @@ def collect_profiles(
 
     for file in map(str, files):
         try:
+            log.debug(f"Loading profile file: {file}")
             with open(file, "r") as fp:
                 data = yaml.safe_load(fp)
+            if isinstance(data, dict):
+                result = deep_update(result, data)
         except Exception as e:
             log.error("Error while parsing file: %s\n%s" % (file, e))
-        else:
-            result = deep_update(result, data)
 
     for q in update_queries:
         try:

@@ -210,16 +210,12 @@ def crawl(
     init_logger(log_level=log_level)
     logger = logging.getLogger(__name__)
 
-    try:
-        profile_collection = collect_profiles(
-            extra_dirs=extra_profile_directory,
-            extra_files=extra_profile_file,
-            update_queries=update_profile,
-            load_default=not no_default,
-        )
-    except Exception as e:
-        logger.critical(f"Error while collecting profiles: {e}")
-        ctx.exit(1)
+    profile_collection = collect_profiles(
+        extra_dirs=extra_profile_directory,
+        extra_files=extra_profile_file,
+        update_queries=update_profile,
+        load_default=not no_default,
+    )
 
     cmd = " ".join(
         shlex.quote(arg if arg not in [password, nthash] else "***") for arg in sys.argv
