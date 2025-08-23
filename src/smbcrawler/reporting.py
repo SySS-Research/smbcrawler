@@ -69,7 +69,7 @@ def generate_report(crawl_file: str, section: str) -> list[Any]:
     if section == "secrets":
         result = run_query(crawl_file, queries_["secrets_with_paths"])
     elif section == "secrets_cleanup_guide":
-        result = run_query(crawl_file, queries_["secrets"])
+        result = run_query(crawl_file, queries_["secrets_with_paths"])
         result = create_cleanup_guide(result)
     else:
         result = run_query(crawl_file, queries_[section])
