@@ -57,6 +57,15 @@ class Secret(object):
         if self.secret in self.false_positives:
             self.secret = None
 
+    def as_dict(self):
+        return {
+            "comment": self.comment,
+            "regex": self.regex.pattern,
+            "false_positives": self.false_positives,
+            "secret": self.secret,
+            "line": self.line,
+        }
+
 
 class WellKnownThing(typing.TypedDict):
     regex: str
@@ -101,11 +110,23 @@ class ProfileCollection(object):
     def as_dict(self):
         data = {}
         for k in self.keys():
-            data[k] = self[k]
+            if k == "secrets":
+                # Convert Secret objects to dict with regex pattern as string
+                data[k] = {}
+                for label, secret in self[k].items():
+                    data[k][label] = secret.as_dict()
+            else:
+                # Convert regex objects to their pattern strings for shares/files/directories
+                data[k] = {}
+                for label, item in self[k].items():
+                    item_dict = dict(item)
+                    if "regex" in item_dict and hasattr(item_dict["regex"], "pattern"):
+                        item_dict["regex"] = item_dict["regex"].pattern
+                    data[k][label] = item_dict
         return data
 
     def __str__(self):
-        result = yaml.dump(self.as_dict())
+        result = yaml.dump(self.as_dict(), default_flow_style=False, sort_keys=False)
         return result
 
     def __repr__(self):
