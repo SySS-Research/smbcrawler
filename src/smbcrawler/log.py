@@ -66,7 +66,7 @@ class SMBFormatter(ColoredFormatter):
 
 
 class ColoredFormatterDebug(ColoredFormatter):
-    _format = "%(levelname).1s %(asctime)-15s " "%(filename)s:%(lineno)d %(message)s"
+    _format = "%(levelname).1s %(asctime)-15s %(filename)s:%(lineno)d %(message)s"
     FORMATS = color_map(_format)
 
 
