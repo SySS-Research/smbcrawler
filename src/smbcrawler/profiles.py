@@ -141,7 +141,7 @@ def collect_profiles(
     ]
 
     for d in extra_dirs:
-        dirs.append(d)
+        dirs.append(pathlib.Path(d))
 
     files = []
 
