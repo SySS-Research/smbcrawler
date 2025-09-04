@@ -122,12 +122,15 @@ WITH
     )
 
 -- Final selection from the recursive CTE
-SELECT
-    secret, line, line_number, target_name, share_name, path, content_hash
-FROM
-    FullPath
-ORDER BY
-    secret, target_name, share_name, path
+SELECT *
+FROM (
+    SELECT
+        secret, line, line_number, target_name, share_name, path, content_hash
+    FROM
+        FullPath
+    ORDER BY
+        secret, target_name, share_name, path
+)
 """,
     serialized_paths="""
 WITH RECURSIVE FullPath AS (
@@ -166,12 +169,15 @@ WITH RECURSIVE FullPath AS (
         FullPath AS fp ON p.parent_id = fp.id
 )
 -- Final selection from the recursive CTE
-SELECT DISTINCT
-    target_name, share_name, full_path, size, high_value
-FROM
-    FullPath
-ORDER BY
-    target_name, share_name, full_path
+SELECT *
+FROM (
+    SELECT DISTINCT
+        target_name, share_name, full_path, size, high_value
+    FROM
+        FullPath
+    ORDER BY
+        target_name, share_name, full_path
+)
 """,
     shares_listable_root="SELECT * FROM share WHERE read_level > 0 ORDER BY target_id, name",
     shares_listable_root_as_guest='SELECT * FROM share WHERE read_level > 0 AND guest_access = "1" ORDER BY target_id, name',
