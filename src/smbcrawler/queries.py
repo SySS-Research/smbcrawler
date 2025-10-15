@@ -179,7 +179,7 @@ FROM (
         target_name, share_name, full_path
 )
 """,
-    shares_listable_root="SELECT * FROM share WHERE read_level > 0 ORDER BY target_id, name",
+    shares_listable_root='SELECT * FROM share WHERE read_level > 0 OR (read_level = "0" AND maxed_out = "1") ORDER BY target_id, name',
     shares_listable_root_as_guest='SELECT * FROM share WHERE read_level > 0 AND guest_access = "1" ORDER BY target_id, name',
     shares_writable='SELECT * FROM share WHERE write_access = "1" ORDER BY target_id, name',
     summary="""
