@@ -70,6 +70,27 @@ def cli(debug, verbose, crawl_file):
     callback=deactivate_password_prompt,
 )
 @click.option(
+    "--aeskey",
+    help="AES key (for Kerberos authentication), can be used instead of a password",
+    callback=deactivate_password_prompt,
+)
+@click.option(
+    "--dc-ip",
+    help="IP address or hostname of the domain controller (for Kerberos authentication)",
+)
+@click.option(
+    "-k",
+    "--use-kerberos",
+    is_flag=True,
+    help="Use Kerberos authentication; credentials are taken either from ccache file in KRB5CCNAME, or from password/nthash/aesKey",
+)
+@click.option(
+    "--use-ccache",
+    is_flag=True,
+    help="Use Kerberos authentication; credentials are always taken from ccache file in KRB5CCNAME (no password prompt shows)",
+    callback=deactivate_password_prompt,
+)
+@click.option(
     "-f",
     "--force",
     default=False,
@@ -175,6 +196,10 @@ def crawl(
     domain,
     password,
     nthash,
+    aeskey,
+    dc_ip,
+    use_kerberos,
+    use_ccache,
     force,
     timeout,
     threads,
@@ -217,13 +242,16 @@ def crawl(
         load_default=not no_default,
     )
 
+    if aeskey or use_ccache:
+        use_kerberos = True
+
     cmd = " ".join(
         shlex.quote(arg if arg not in [password, nthash] else "***") for arg in sys.argv
     )
     logger.info(f"Starting up with these arguments: {cmd}")
 
     app = CrawlerApp(
-        Login(user, domain, password, nthash),
+        Login(user, domain, password, nthash, aeskey, dc_ip, use_kerberos),
         targets=target,
         crawl_file=ctx.parent.params["crawl_file"],
         threads=threads,

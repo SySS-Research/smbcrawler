@@ -17,14 +17,17 @@ log = logging.getLogger(__name__)
 
 
 class Login(object):
-    def __init__(self, username, domain, password="", hash=""):
+    def __init__(self, username, domain, password="", nthash="", aeskey="", kdchost=None, use_kerberos=False):
         self.username = username
         self.domain = domain
         self.password = password
-        self.hash = hash
+        self.nthash = nthash
+        self.aeskey = aeskey
+        self.kdchost = kdchost
+        self.use_kerberos = use_kerberos
 
     def __str__(self):
-        return f"{self.domain}/{self.username}:{self.password or self.hash}"
+        return f"{self.domain}/{self.username}:{self.password or self.nthash or self.aeskey}"
 
 
 class CrawlerApp(object):

@@ -360,17 +360,29 @@ class CrawlerThread(threading.Thread):
             if self.killed:
                 return
             if as_guest:
+                # Note that for checking guest logins, NTLM (not Kerberos) is always used because of the empty username.
                 username = " "
                 password = " "
             else:
                 username = self.login.username or ""
                 password = self.login.password or ""
-            self.smbClient.login(
-                username,
-                password,
-                domain=self.login.domain,
-                nthash=self.login.hash or "",
-            )
+            if not as_guest and self.login.use_kerberos:
+                self.smbClient.kerberosLogin(
+                    "" if self.login.username == " " else self.login.username,
+                    password,
+                    domain="" if (self.login.domain == "." or not self.login.domain) else self.login.domain,
+                    nthash=self.login.nthash or "",
+                    aesKey=self.login.aeskey or "",
+                    kdcHost=self.login.kdchost,
+                )
+            else:
+                self.smbClient.login(
+                    username,
+                    password,
+                    domain=self.login.domain,
+                    nthash=self.login.nthash or "",
+                )
+
             if not as_guest:
                 self.app.confirm_credentials()
         except SessionError as e:
