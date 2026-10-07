@@ -179,13 +179,13 @@ FROM (
         target_name, share_name, full_path
 )
 """,
-    shares_listable_root='SELECT * FROM share WHERE read_level > 0 OR (read_level = "0" AND maxed_out = "1") ORDER BY target_id, name',
-    shares_listable_root_as_guest='SELECT * FROM share WHERE read_level > 0 AND guest_access = "1" ORDER BY target_id, name',
-    shares_writable='SELECT * FROM share WHERE write_access = "1" ORDER BY target_id, name',
+    shares_listable_root="SELECT * FROM share WHERE read_level > 0 OR (read_level = 0 AND maxed_out = 1) ORDER BY target_id, name",
+    shares_listable_root_as_guest="SELECT * FROM share WHERE read_level > 0 AND guest_access = 1 ORDER BY target_id, name",
+    shares_writable="SELECT * FROM share WHERE write_access = 1 ORDER BY target_id, name",
     summary="""
 SELECT 'number_targets' AS key, count(*) AS value FROM target
 UNION ALL
-SELECT 'number_targets_with_open_ports' AS key, count(*) AS value FROM target WHERE port_open = "1"
+SELECT 'number_targets_with_open_ports' AS key, count(*) AS value FROM target WHERE port_open = 1
 UNION ALL
 SELECT 'number_targets_with_open_shares' AS key, count(DISTINCT target_id) AS value FROM share
 UNION ALL
@@ -203,8 +203,8 @@ SELECT 'number_secrets' AS key, count(*) AS value FROM secret
 UNION ALL
 SELECT 'number_unique_secrets' AS key, count(DISTINCT secret) AS value FROM secret
 UNION ALL
-SELECT 'number_high_value_files' AS key, count(*) AS value FROM path WHERE high_value = '1'
+SELECT 'number_high_value_files' AS key, count(*) AS value FROM path WHERE high_value = 1
 UNION ALL
-SELECT 'number_high_value_shares' AS key, count(*) AS value FROM share WHERE high_value = '1'
+SELECT 'number_high_value_shares' AS key, count(*) AS value FROM share WHERE high_value = 1
 """,
 )
