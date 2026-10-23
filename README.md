@@ -13,6 +13,8 @@ hosts and 'crawls' (or 'spiders') through those shares. Features:
 - pass-the-hash support
 - auto-download interesting files
 - report potential secrets
+- automatically converts and searches through some binary files like PDF,
+  office, etc. using [MarkItDown](https://github.com/microsoft/markitdown)
 - threaded
 - pausable
 - interactively skip single shares and hosts
@@ -21,24 +23,13 @@ hosts and 'crawls' (or 'spiders') through those shares. Features:
 
 If you require instructions on how to install a Python package, I
 recommend you make sure you [have `pipx`
-installed](https://pipx.pypa.io/stable/installation/) and run
+installed](https://pipx.pypa.io/stable/how-to/install-pipx.html) and run
 `pipx install smbcrawler`.
-
-SmbCrawler can automatically convert some binary files like PDF, XLSX,
-DOCX, ZIP, etc. to plain text using
-[MarkItDown](https://github.com/microsoft/markitdown). Because this
-package is pulling a lot of dependencies, it is marked as an extra.
-However, it is highly recommended to get the best results. If you want
-to automatically convert binaries, install SmbCrawler like this:
-
-``` console
-pipx install 'smbcrawler[binary-conversion]'
-```
 
 Adding shell completion is highly recommended. As a Python app using the
 `click` library, you can add tab completion to bash, zsh and fish using
 the [usual
-mechanism](https://click.palletsprojects.com/en/8.1.x/shell-completion/#enabling-completion).
+mechanism](https://click.palletsprojects.com/en/stable/shell-completion/#enabling-completion).
 
 ## Example
 
